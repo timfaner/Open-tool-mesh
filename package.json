@@ -7,11 +7,11 @@
     "node": ">=22.0.0"
   },
   "scripts": {
-    "build": "pnpm -r run build",
+    "build": "corepack pnpm -r run build",
     "dev": "turbo run dev --parallel",
-    "lint": "pnpm -r run lint",
-    "test": "pnpm -r run test",
-    "typecheck": "pnpm -r run typecheck",
+    "lint": "corepack pnpm -r run lint",
+    "test": "corepack pnpm -r run test",
+    "typecheck": "corepack pnpm -r run typecheck",
     "demo:publish": "node --experimental-strip-types scripts/publish-tool.ts",
     "demo:seed": "node --experimental-strip-types scripts/seed-capability-index.ts",
     "demo:run": "node --experimental-strip-types scripts/demo-run.ts",

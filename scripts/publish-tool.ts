@@ -1,30 +1,36 @@
 import { readFile } from "node:fs/promises";
-import {
-  createLocalDevnetClientDeps,
-  createOpenToolMeshClient,
-  findWorkspaceRoot,
-  hashManifest,
-  seedCapabilityIndex,
-  seedPeerRegistry
-} from "../packages/sdk/src/index.ts";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
 
 async function main() {
-  const rootDir = await findWorkspaceRoot(new URL(".", import.meta.url).pathname);
-  const client = createOpenToolMeshClient(createLocalDevnetClientDeps(rootDir));
+  const rootDir = new URL("..", import.meta.url).pathname;
+  await execFileAsync("corepack", ["pnpm", "--filter", "@opentoolmesh/sdk", "build"], { cwd: rootDir });
+  const {
+    createLocalDevnetClientDeps,
+    createOpenToolMeshClient,
+    findWorkspaceRoot,
+    hashManifest,
+    seedCapabilityIndex,
+    seedPeerRegistry
+  } = await import("../packages/sdk/dist/sdk/src/index.js");
+  const workspaceRoot = await findWorkspaceRoot(rootDir);
+  const client = createOpenToolMeshClient(createLocalDevnetClientDeps(workspaceRoot));
   const manifest = JSON.parse(
     await readFile(new URL("../manifests/solidity-pattern-scanner.manifest.json", import.meta.url), "utf8")
   );
   const nextManifest = structuredClone(manifest);
   nextManifest.integrity.manifestHash = hashManifest(nextManifest);
 
-  await seedPeerRegistry(rootDir, {
+  await seedPeerRegistry(workspaceRoot, {
     "axl-peer-solidity-01": "http://127.0.0.1:4318"
   });
 
   const published = await client.publishManifest({ manifest: nextManifest });
   nextManifest.storage.manifestUri = published.manifestUri;
   nextManifest.integrity.manifestHash = published.manifestHash;
-  await seedCapabilityIndex(rootDir, nextManifest);
+  await seedCapabilityIndex(workspaceRoot, nextManifest);
 
   console.log(
     JSON.stringify(

@@ -1,17 +1,8 @@
 import { randomUUID } from "node:crypto";
+import { execFile } from "node:child_process";
 import { readFile, rm } from "node:fs/promises";
 import { resolve } from "node:path";
-import {
-  createLocalDevnetClientDeps,
-  createLocalDevnetPaths,
-  createOpenToolMeshClient,
-  findWorkspaceRoot,
-  hashJson,
-  hashManifest,
-  seedCapabilityIndex,
-  seedPeerRegistry
-} from "../packages/sdk/src/index.ts";
-import { createToolNodeServer } from "../services/tool-node/src/server.ts";
+import { promisify } from "node:util";
 
 interface ScannerFinding {
   ruleId: string;
@@ -20,8 +11,24 @@ interface ScannerFinding {
   message: string;
 }
 
+const execFileAsync = promisify(execFile);
+
 async function main() {
-  const rootDir = await findWorkspaceRoot(new URL(".", import.meta.url).pathname);
+  const startDir = new URL("..", import.meta.url).pathname;
+  await execFileAsync("corepack", ["pnpm", "--filter", "@opentoolmesh/sdk", "build"], { cwd: startDir });
+  await execFileAsync("corepack", ["pnpm", "--filter", "@opentoolmesh/tool-node", "build"], { cwd: startDir });
+  const {
+    createLocalDevnetClientDeps,
+    createLocalDevnetPaths,
+    createOpenToolMeshClient,
+    findWorkspaceRoot,
+    hashJson,
+    hashManifest,
+    seedCapabilityIndex,
+    seedPeerRegistry
+  } = await import("../packages/sdk/dist/sdk/src/index.js");
+  const { createToolNodeServer } = await import("../services/tool-node/dist/services/tool-node/src/server.js");
+  const rootDir = await findWorkspaceRoot(startDir);
   const paths = createLocalDevnetPaths(rootDir);
 
   await rm(paths.stateDir, { recursive: true, force: true });
