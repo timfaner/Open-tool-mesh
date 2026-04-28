@@ -2,9 +2,9 @@
 
 ## 1. 项目定位
 
-OpenTool Mesh 是一个面向 AI agents 的去中心化工具注册、发现、调用与执行记忆层。
+OpenTool Mesh 是一个面向 AI agents 的去中心化工具发现、调用与执行记忆层。
 
-它解决的问题不是“如何再做一个 agent”，而是“如何让 agent 使用工具这件事，从本地硬编码配置，升级为可发现、可验证、可远程调用、可复盘的基础设施能力”。
+它解决的问题不是“再做一个 agent”，而是“让 agent 使用工具这件事，从本地硬编码配置升级为可发现、可验证、可远程调用、可复盘的基础设施能力”。
 
 一句话定义：
 
@@ -14,9 +14,16 @@ OpenTool Mesh 是一个面向 AI agents 的去中心化工具注册、发现、�
 
 > OpenTool Mesh 把写死在本地配置里的 agent 工具，变成可发现、可验证、可远程调用、可追踪复盘的工具网络。
 
+对外叙事必须固定强调：
+
+- 它不是 marketplace
+- 它不是 payment layer
+- 它不是 agent swarm
+- 它是 agent tool discovery + invocation + memory layer
+
 ## 2. 目标用户与使用场景
 
-OpenTool Mesh 面向的是开发者基础设施场景，不是普通 C 端用户。
+OpenTool Mesh 面向开发者基础设施场景，不面向普通 C 端用户。
 
 核心目标用户：
 
@@ -28,14 +35,14 @@ OpenTool Mesh 面向的是开发者基础设施场景，不是普通 C 端用户
 
 核心使用场景：
 
-- agent 需要按 capability 动态发现第三方工具，而不是本地写死 endpoint
-- agent 需要在调用前验证工具 manifest、schema、owner、version
-- agent 需要通过远程节点调用工具，而不是把工具内置为本地函数
-- agent 需要把每次调用过程沉淀为可审计、可回放、可归档的 execution trace
+- agent 需要按 capability 动态发现第三方工具，而不是在本地写死 endpoint
+- agent 需要在调用前验证 manifest、schema、owner、version、hash
+- agent 需要通过远程节点调用工具，而不是把工具实现内嵌成 agent 内部函数
+- agent 需要把每次工具调用沉淀为可审计、可回放、可归档的 execution trace
 
 ## 3. 核心叙事
 
-今天大多数 agent 工具调用流程是：
+今天大多数 agent 的工具调用流程是：
 
 - 开发者手动配置工具
 - 工具 endpoint 写死在本地
@@ -44,7 +51,11 @@ OpenTool Mesh 面向的是开发者基础设施场景，不是普通 C 端用户
 - 远程工具调用缺少统一 trace
 - 调用结果难以审计和复盘
 
-OpenTool Mesh 的目标流程是：
+OpenTool Mesh 要把它改造成下面这条闭环：
+
+> publish → discover → verify → call → trace → report
+
+对应流程：
 
 1. 工具发布方发布一个 tool identity
 2. agent 通过 ENS 解析工具身份
@@ -52,18 +63,47 @@ OpenTool Mesh 的目标流程是：
 4. agent 验证 schema、owner、version、manifest hash
 5. agent 通过 Gensyn AXL 调用远程 tool node
 6. 调用输入、输出、manifest、状态、artifact 被写入 0G trace
-7. dashboard 展示完整工具生命周期
+7. dashboard 与最终 report 展示完整生命周期
 
-赞助方分工可统一表述为：
+赞助方能力边界固定表述为：
 
-- ENS：工具身份和发现入口
-- 0G：manifest、artifact 和 execution memory
-- Gensyn AXL：agent 与远程 tool node 的 P2P 调用
-- MCP：工具接口兼容语义
+- ENS：工具身份和解析入口
+- 0G Storage：manifest、trace、artifact、final report 的不可变存储
+- 0G KV：capability index、latest manifest pointer、trace summary
+- Gensyn AXL：agent 与远程 tool node 的 P2P 调用通道
+- MCP-compatible manifest：工具能力、输入输出 schema 与调用契约描述
 
-## 4. 产品边界定义
+## 4. 四层职责边界
 
-### 4.1 OpenTool Mesh 是什么
+为避免产品文档与技术架构漂移，职责边界固定为四层：
+
+### 4.1 Identity & Discovery
+
+- ENS 负责 tool identity 命名与解析入口
+- 0G KV 负责 capability 到 tool identity 的最小索引
+- agent 必须先 discover，再 resolve，不能直接跳到硬编码调用
+
+### 4.2 Manifest & Verification
+
+- 0G Storage 保存版本化 manifest
+- manifest 描述 capability、owner、schema、invocation、compatibility、integrity
+- agent 调用前必须验证 manifest hash、owner、schema、version compatibility
+
+### 4.3 Invocation
+
+- Gensyn AXL 负责 agent runtime 与 remote tool node 的跨节点调用
+- tool node 必须是独立进程或独立节点，不可退化为 agent 内部函数
+- tool node 返回结构化结果，由 agent 端统一消费
+
+### 4.4 Memory & Report
+
+- 0G Storage 保存 request、response、artifact、trace、final report
+- 0G KV 保存 trace summary 供 dashboard 检索
+- dashboard 读取 discovery / manifest / invocation / memory 证据，最终 report 引用 trace id 或 trace uri
+
+## 5. 产品边界定义
+
+### 5.1 OpenTool Mesh 是什么
 
 OpenTool Mesh 是：
 
@@ -73,7 +113,7 @@ OpenTool Mesh 是：
 - agent remote invocation layer
 - agent execution memory layer
 
-### 4.2 OpenTool Mesh 不是什么
+### 5.2 OpenTool Mesh 不是什么
 
 OpenTool Mesh 不是：
 
@@ -85,7 +125,7 @@ OpenTool Mesh 不是：
 - 不是 tool reputation platform
 - 不是多 agent 协作平台
 
-### 4.3 和 MCP 的关系
+### 5.3 和 MCP 的关系
 
 推荐对外表述：
 
@@ -100,14 +140,7 @@ OpenTool Mesh 不是：
 - “我们在做 MCP Registry 替代品”
 - “因为 MCP 没有 registry，所以我们补一个 registry”
 
-推荐表述重点应始终落在：
-
-- decentralized identity
-- verifiable manifest
-- P2P invocation
-- execution trace
-
-## 5. 黑客松版本最终目标
+## 6. 黑客松版本最终目标
 
 黑客松版本不做完整平台，而是交付一个清晰、可运行、可展示的最小闭环：
 
@@ -120,17 +153,18 @@ OpenTool Mesh 不是：
 3. manifest 存到 0G
 4. capability index 存到 0G
 5. audit agent 根据 capability 发现工具
-6. agent 验证 manifest
-7. agent 通过 AXL 调用远程 tool node
-8. tool node 返回审计结果
-9. agent 把 execution trace 写回 0G
-10. dashboard 展示整个过程
+6. agent 解析 ENS identity 并读取 manifest
+7. agent 验证 manifest
+8. agent 通过 AXL 调用 remote tool node
+9. tool node 返回结构化审计结果
+10. agent 把 trace、artifact、report 写回 0G
+11. dashboard 展示 Discovery、Manifest、Invocation、Memory 四段链路
 
 只要这个闭环跑通，项目就成立。
 
-## 6. 推荐 Demo 场景
+## 7. 推荐 Demo 场景
 
-推荐最终 demo 为：`Solidity Audit Agent`
+推荐最终 demo 为 `Solidity Audit Agent`。
 
 用户提交一个 Solidity 合约后，agent 本身不预置具体工具地址，只知道自己需要的能力：
 
@@ -158,9 +192,9 @@ OpenTool Mesh 不是：
 - `solidity-pattern-scanner`：输出漏洞发现、模式命中、风险解释
 - `test-case-suggester`：输出测试建议、攻击路径建议、验证方向
 
-## 7. MVP 范围
+## 8. MVP 范围
 
-### 7.1 必须包含
+### 8.1 必须包含
 
 黑客松 MVP 必须包含：
 
@@ -175,7 +209,7 @@ OpenTool Mesh 不是：
 9. AXL-based remote invocation
 10. manifest verification flow
 
-### 7.2 推荐包含
+### 8.2 推荐包含
 
 这些能力会显著提升竞争力：
 
@@ -188,7 +222,7 @@ OpenTool Mesh 不是：
 7. manifest version mismatch / rejection demo
 8. 一个轻量 0G Chain registry contract
 
-### 7.3 明确不做
+### 8.3 明确不做
 
 黑客松版本不要做：
 
@@ -203,9 +237,51 @@ OpenTool Mesh 不是：
 9. 面向 C 端的工具商店
 10. 所有类型工具的通用生态
 
-## 8. 最终验收边界
+## 9. SDK、CLI 与 Dashboard 的最小产品要求
 
-### 8.1 功能验收边界
+### 9.1 SDK
+
+SDK 只需要覆盖最核心生命周期：
+
+- `resolveIdentity`
+- `discoverTools`
+- `loadManifest`
+- `verifyManifest`
+- `invokeTool`
+- `recordTrace`
+- `saveArtifact`
+- `publishManifest`
+- `buildAuditReport`
+
+其中 `saveArtifact` 必须明确保留在 SDK 必含能力中，因为 trace 与最终 report 的可追溯性依赖 artifact 独立持久化。
+
+### 9.2 CLI
+
+CLI 推荐最小支持：
+
+- `publish`
+- `resolve`
+- `discover`
+- `verify`
+- `call`
+- `trace`
+
+### 9.3 Dashboard
+
+Dashboard 是核心展示物，只服务一个目标：
+
+> 把抽象 infra 变成评委能一眼看懂的完整链路。
+
+至少需要四个区块：
+
+1. Discovery
+2. Manifest
+3. Invocation
+4. Memory
+
+## 10. 最终验收边界
+
+### 10.1 功能验收边界
 
 #### 验收 1：工具可以被发布
 
@@ -317,14 +393,7 @@ OpenTool Mesh 不是：
 
 #### 验收 6：dashboard 能讲清楚完整链路
 
-dashboard 是核心展示物，至少需要四个区块：
-
-1. Discovery
-2. Manifest
-3. Invocation
-4. Memory
-
-每个区块都应让评委一眼看懂：
+dashboard 至少需要让评委一眼看懂：
 
 - ENS 用在哪里
 - 0G 用在哪里
@@ -341,6 +410,9 @@ dashboard 是核心展示物，至少需要四个区块：
 - resolved tool identity
 - manifest URI
 - manifest hash
+- owner
+- version
+- schema status
 - AXL peer
 - tool call status
 - input hash
@@ -348,9 +420,9 @@ dashboard 是核心展示物，至少需要四个区块：
 - trace URI
 - final report
 
-### 8.2 Demo 验收边界
+### 10.2 Demo 验收边界
 
-最终 demo 必须能跑通这条路径：
+最终 demo 必须跑通这条路径：
 
 用户提交 Solidity 合约
 ↓
@@ -374,7 +446,7 @@ dashboard 展示 trace 和审计报告
 
 只要这条路径跑通，项目就达到黑客松验收边界。
 
-### 8.3 非验收内容
+### 10.3 非验收内容
 
 以下不作为最终验收要求：
 
@@ -389,132 +461,7 @@ dashboard 展示 trace 和审计报告
 9. 不要求 tool node 具有生产级 SLA
 10. 不要求完全可复现执行环境
 
-这部分是范围控制的关键，需要在 README、demo 讲解和评委沟通中反复强调。
-
-## 9. 技术路线与推荐产品形态
-
-### 9.1 总体技术路线
-
-推荐使用 TypeScript-first stack。
-
-原因：
-
-- SDK、CLI、dashboard、agent example、tool node adapter 共用语言生态
-- 降低集成成本
-- 便于黑客松周期内快速闭环
-
-### 9.2 技术选型表
-
-| 层级 | 推荐选择 | 用途 | 选择理由 |
-| --- | --- | --- | --- |
-| SDK | TypeScript | OpenTool Mesh SDK | 易于和 agent framework / MCP / web dashboard 对接 |
-| CLI | Node.js + TypeScript | publish / resolve / discover / call / trace | 开发速度快，便于 demo |
-| Dashboard | React / Next.js | 展示工具生命周期 | 展示效果好，适合黑客松 |
-| Agent Example | TypeScript agent | Solidity audit agent | 与 SDK 共享代码 |
-| Tool Node | Node.js service | 远程工具执行节点 | 与 AXL / SDK 集成成本低 |
-| Tool Interface | MCP-compatible manifest | 工具能力和 schema 描述 | 不重造工具接口语义 |
-| Identity | ENS | 工具身份、metadata 入口 | 适合作为 tool identity root |
-| Storage / Memory | 0G Storage + 0G KV | manifest、artifact、trace、index | 同时覆盖不可变记录和动态索引 |
-| Optional Registry | 0G Chain contract | latest manifest pointer / publication event | 增强 0G 集成可信度 |
-| Transport | Gensyn AXL | agent 到 tool node 的 P2P 调用 | 符合 inter-node communication 场景 |
-| Validation | JSON Schema + signature verification | manifest / input / output 验证 | 能体现 trust boundary |
-| Demo Tool | Solidity pattern scanner | 审计场景主工具 | 稳定、容易理解、依赖少 |
-| Secondary Tool | Test suggester / mock test runner | 第二个工具节点 | 展示多工具发现与调用能力 |
-
-### 9.3 推荐产品形态
-
-最终交付建议拆成：
-
-1. `@opentoolmesh/sdk`
-2. `opentool` CLI
-3. tool node adapter
-4. audit agent example
-5. dashboard
-6. demo manifests
-7. README + architecture diagram
-
-不建议把项目包装成一个单一网页 app。
-
-更好的定位是：
-
-> 一个 developer infrastructure project，dashboard 只是可视化窗口。
-
-## 10. 推荐 MVP 结构
-
-### 10.1 SDK
-
-SDK 只需要覆盖最核心生命周期：
-
-- `resolve`
-- `discover`
-- `verify`
-- `call`
-- `recordTrace`
-- `saveArtifact`
-
-SDK 不需要承担复杂 agent planning。
-
-SDK 的产品意义是让评委相信：
-
-- 这不是一次性 demo
-- 这是其他 agent builder 可以复用的 tool layer
-
-### 10.2 CLI
-
-CLI 推荐最小支持：
-
-- `publish`
-- `resolve`
-- `discover`
-- `call`
-- `trace`
-
-CLI 的产品意义：
-
-- 增强 developer tooling 感
-- 证明项目不是只为网页演示写的一次性脚本
-
-### 10.3 Dashboard
-
-Dashboard 只服务一个目标：
-
-> 把抽象 infra 变成评委能一眼看懂的完整链路。
-
-它不需要：
-
-- 登录系统
-- 复杂交互
-- 生产级 UI
-
-它应该展示：
-
-- agent 想要什么 capability
-- 发现了哪个 ENS tool identity
-- manifest 存在哪里
-- manifest 是否验证通过
-- AXL 调用了哪个 peer
-- 工具返回了什么结果
-- trace 写到了哪里
-- 最终报告引用了哪些 trace
-
-### 10.4 Tool Nodes
-
-黑客松版本推荐两个 tool node：
-
-- Tool Node 1：Solidity Pattern Scanner
-- Tool Node 2：Test Case Suggester
-
-要求：
-
-- 第一个必须跑通
-- 第二个作为竞争力增强项
-
-建议：
-
-- 一开始不要重度依赖完整 Slither / Foundry 集成
-- 可把真实工具接入作为 stretch goal
-
-## 11. 交付优先级
+## 11. P0 / P1 / P2 优先级
 
 ### P0：项目成立的最低闭环
 
@@ -554,39 +501,157 @@ P1 完成后，项目会更像 infra，而不是 demo app。
 
 P2 不应影响 P0 交付节奏。
 
-## 12. 对开发与演示的产品要求
+## 12. 与技术架构对齐的最小数据示例
 
-### 12.1 对工程实现的约束
+### 12.1 Manifest 最小示例
+
+下面这个最小示例足以支持产品验收中对 capability、owner、schema、invocation、integrity 的要求：
+
+```json
+{
+  "schemaVersion": "otm.manifest.v1",
+  "toolId": "otm:ens:solidity-scanner.auditagent.eth",
+  "name": "Solidity Pattern Scanner",
+  "version": "0.1.0",
+  "description": "Remote static analysis tool for Solidity contracts",
+  "owner": {
+    "address": "0x1234567890abcdef1234567890abcdef12345678",
+    "ensName": "auditagent.eth"
+  },
+  "capabilities": [
+    {
+      "id": "solidity-static-analysis",
+      "description": "Detect common Solidity patterns and vulnerabilities"
+    }
+  ],
+  "mcp": {
+    "toolName": "solidity-pattern-scanner",
+    "protocol": "mcp-compatible",
+    "inputSchema": {
+      "type": "object",
+      "required": ["source"],
+      "properties": {
+        "source": { "type": "string" }
+      }
+    },
+    "outputSchema": {
+      "type": "object",
+      "required": ["findings", "summary"],
+      "properties": {
+        "findings": { "type": "array" },
+        "summary": { "type": "object" }
+      }
+    }
+  },
+  "invocation": {
+    "transport": "axl",
+    "axlPeerId": "axl-peer-solidity-01",
+    "axlMethod": "invokeTool",
+    "timeoutMs": 20000
+  },
+  "storage": {
+    "manifestUri": "0g://manifests/solidity-scanner/0.1.0.json",
+    "traceNamespace": "traces/solidity-scanner"
+  },
+  "compatibility": {
+    "sdkVersionRange": "^0.1.0",
+    "manifestApiVersion": "v1"
+  },
+  "integrity": {
+    "manifestHash": "sha256:manifest123",
+    "createdAt": "2026-04-28T00:00:00.000Z"
+  }
+}
+```
+
+### 12.2 Trace 最小示例
+
+下面这个最小示例足以支持 dashboard 对 requested capability、tool identity、manifest、AXL peer、input/output hash、trace uri 的展示：
+
+```json
+{
+  "traceId": "trace_01",
+  "runId": "audit_run_01",
+  "agentId": "audit-agent-example",
+  "requestedCapability": "solidity-static-analysis",
+  "tool": {
+    "toolId": "otm:ens:solidity-scanner.auditagent.eth",
+    "ensName": "solidity-scanner.auditagent.eth",
+    "manifestUri": "0g://manifests/solidity-scanner/0.1.0.json",
+    "manifestHash": "sha256:manifest123",
+    "version": "0.1.0",
+    "ownerAddress": "0x1234567890abcdef1234567890abcdef12345678"
+  },
+  "discovery": {
+    "candidateCount": 1,
+    "selectedReason": "best capability match",
+    "resolvedAt": "2026-04-28T00:00:10.000Z"
+  },
+  "verification": {
+    "manifestHashValid": true,
+    "ownerValid": true,
+    "schemaValid": true,
+    "versionCompatible": true,
+    "verifiedAt": "2026-04-28T00:00:12.000Z"
+  },
+  "invocation": {
+    "transport": "axl",
+    "peerId": "axl-peer-solidity-01",
+    "method": "invokeTool",
+    "status": "ok",
+    "startedAt": "2026-04-28T00:00:14.000Z",
+    "finishedAt": "2026-04-28T00:00:18.000Z"
+  },
+  "io": {
+    "inputHash": "sha256:input123",
+    "outputHash": "sha256:output123"
+  },
+  "artifacts": [
+    {
+      "kind": "tool-output",
+      "uri": "0g://artifacts/trace_01/findings.json",
+      "hash": "sha256:artifact123",
+      "mediaType": "application/json"
+    }
+  ],
+  "storage": {
+    "traceUri": "0g://traces/trace_01.json",
+    "persistedAt": "2026-04-28T00:00:19.000Z",
+    "backend": "0g-storage"
+  }
+}
+```
+
+## 13. 对开发与演示的产品要求
+
+### 13.1 对工程实现的约束
 
 - 不允许把 tool endpoint 直接硬编码在 agent 逻辑里作为唯一调用路径
 - 允许存在最小 capability index，但必须能证明“发现”先于“调用”
 - manifest 校验需要对外可见，不能只在内部静默执行
-- trace 必须具备可引用 ID 或 URI，保证报告与 dashboard 可回链
+- trace 必须具备可引用 ID 或 URI，保证 report 与 dashboard 可回链
+- tool node 与 agent 必须保持独立运行边界，不能用本地函数伪装远程调用
 
-### 12.2 对 dashboard 的要求
+### 13.2 对 dashboard 的要求
 
-dashboard 是最重要的展示物，不只是辅助页面。
-
-它需要承担三件事：
+dashboard 需要承担三件事：
 
 1. 解释 OpenTool Mesh 为什么成立
 2. 证明调用链条不是硬编码
 3. 证明 trace 不是日志，而是可验证 provenance
 
-### 12.3 对 demo 讲解的建议顺序
+### 13.3 对 demo 讲解的建议顺序
 
 推荐讲解顺序：
 
 1. 先讲问题：今天 agent 工具是 hardcoded 的
 2. 再讲机制：ENS + 0G + AXL + MCP-compatible manifest
-3. 然后跑 demo：discover → verify → call → trace → report
+3. 然后跑 demo：publish → discover → verify → call → trace → report
 4. 最后讲意义：可移植、可验证、可复盘的 agent tool infra
 
-## 13. README 可复用主描述
+## 14. README 可直接复用描述
 
-以下内容可直接沉淀到项目 README：
-
-### 13.1 English
+### 14.1 English
 
 ```md
 # OpenTool Mesh
@@ -602,7 +667,7 @@ In the demo, a Solidity audit agent receives a smart contract, discovers a remot
 OpenTool Mesh is not a marketplace, payment layer, or agent swarm. It is infrastructure for agent builders who want portable, verifiable, and memory-backed tool usage.
 ```
 
-### 13.2 中文
+### 14.2 中文
 
 ```md
 # OpenTool Mesh
@@ -618,7 +683,7 @@ OpenTool Mesh 把工具变成可发现的网络资源。每个工具拥有 ENS-b
 OpenTool Mesh 不是 marketplace，不是 payment layer，也不是 agent swarm。它是给 agent builders 使用的可移植、可验证、带执行记忆的工具基础设施。
 ```
 
-## 14. 最终结论
+## 15. 最终结论
 
 OpenTool Mesh 的产品成立条件，不是“做了多少页面”或“接了多少工具”，而是是否跑通下面这个最小闭环：
 
