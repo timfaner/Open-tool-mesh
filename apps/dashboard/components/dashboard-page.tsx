@@ -14,12 +14,20 @@ export function DashboardPage() {
     <main className={styles.pageShell}>
       <div className={styles.pageFrame}>
         <header className={styles.header}>
-          <div>
+          <div className={styles.headerLead}>
             <p className={styles.kicker}>Decentralized Tool Discovery + Execution Memory</p>
             <div className={styles.headerTitles}>
               <h1>OpenTool Mesh</h1>
-              <span className={styles.runTitle}>Solidity Audit Run</span>
             </div>
+            <p className={styles.headerSummary}>
+              One verifiable Solidity audit run, explained as protocol evidence from publish through final report.
+            </p>
+          </div>
+
+          <div className={styles.headerCenter}>
+            <span className={styles.centerLabel}>Run Focus</span>
+            <strong className={styles.runTitle}>Solidity Audit Run</strong>
+            <span className={styles.runIdBadge}>Run #{demoRun.runId}</span>
           </div>
 
           <div className={styles.headerStatus}>
@@ -36,7 +44,7 @@ export function DashboardPage() {
           <aside className={styles.rail}>
             <div className={styles.railHeader}>
               <span className={styles.railLabel}>Run Lifecycle</span>
-              <span className={styles.railId}>Run #{demoRun.runId}</span>
+              <span className={styles.railId}>{demoRun.discovery.requestedCapability}</span>
             </div>
 
             <ol className={styles.stepList}>
@@ -77,12 +85,13 @@ export function DashboardPage() {
                 </div>
                 <div className={styles.discoveryList}>
                   <InfoRow label="Resolved tool identity" value={demoRun.discovery.resolvedIdentity} mono />
+                  <InfoRow label="ENS name" value={demoRun.discovery.ensName} mono />
                   <InfoRow label="Primary tool" value={demoRun.discovery.tool} />
                   <InfoRow label="Capability index" value={demoRun.discovery.capabilityIndex} mono />
                   <InfoRow label="Capability matches" value={demoRun.discovery.capabilityMatches} />
                   <InfoRow label="Selected reason" value={demoRun.discovery.selectedReason} />
-                  <InfoRow label="Resolved at" value={demoRun.discovery.resolvedAt} mono />
                   <InfoRow label="Invocation mode" value={demoRun.discovery.invocationMode} />
+                  <InfoRow label="Resolved at" value={demoRun.discovery.resolvedAt} mono />
                 </div>
               </SectionCard>
 
@@ -98,9 +107,10 @@ export function DashboardPage() {
                   <InfoRow label="Owner" value={demoRun.manifest.owner} mono />
                   <InfoRow label="Verification" value={demoRun.manifest.verificationOutcome} status="success" />
                   <InfoRow label="Manifest hash check" value={demoRun.manifest.hashStatus} status="success" />
+                  <InfoRow label="Owner attestation" value={demoRun.manifest.ownerStatus} status="success" />
                   <InfoRow label="Schema" value={demoRun.manifest.schemaStatus} status="success" />
-                  <InfoRow label="Version range" value={demoRun.manifest.compatibility} status="success" />
                   <InfoRow label="SDK compatibility" value={demoRun.manifest.versionStatus} status="success" />
+                  <InfoRow label="Version range" value={demoRun.manifest.compatibility} status="success" />
                   <InfoRow label="Verified at" value={demoRun.manifest.verifiedAt} mono />
                   <div className={styles.hashBlock}>
                     <span className={styles.hashLabel}>Manifest hash</span>
@@ -128,6 +138,7 @@ export function DashboardPage() {
                 </div>
                 <div className={styles.cardStack}>
                   <InfoRow label="AXL peer" value={demoRun.invocation.peer} mono />
+                  <InfoRow label="Method" value={demoRun.invocation.method} mono />
                   <InfoRow label="Tool call" value={demoRun.invocation.status} status="success" />
                   <InfoRow label="Started at" value={demoRun.invocation.startedAt} mono />
                   <InfoRow label="Finished at" value={demoRun.invocation.finishedAt} mono />

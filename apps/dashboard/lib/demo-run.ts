@@ -40,6 +40,7 @@ interface DashboardExecutionTrace {
   };
   verification: {
     manifestHashValid: boolean;
+    ownerValid?: boolean;
     schemaValid: boolean;
     versionCompatible: boolean;
     rejectedReason?: string;
@@ -47,6 +48,8 @@ interface DashboardExecutionTrace {
   };
   invocation: {
     peerId: string;
+    transport?: string;
+    method?: string;
     status: string;
     startedAt: string;
     finishedAt?: string;
@@ -92,6 +95,10 @@ function toDisplayTime(value: string | undefined) {
   return new Date(value).toISOString();
 }
 
+function formatBooleanState(value: boolean | undefined, passLabel = 'verified', failLabel = 'invalid') {
+  return value ? passLabel : failLabel;
+}
+
 function getVerificationOutcome() {
   const rejectedReason = typedExecutionTrace.verification.rejectedReason;
 
@@ -118,13 +125,15 @@ const toolOutputArtifact = typedExecutionTrace.artifacts.find((item) => item.kin
 const reportArtifact = typedExecutionTrace.artifacts.find((item) => item.kind === 'audit-report');
 const verificationOutcome = getVerificationOutcome();
 const capabilityIndexUri = typedExecutionTrace.discovery.capabilityIndexUri;
+const invocationTransport = typedExecutionTrace.invocation.transport?.toUpperCase() ?? manifest.invocation.transport.toUpperCase();
+const invocationMethod = typedExecutionTrace.invocation.method ?? manifest.invocation.axlMethod;
 
 export const demoRun = {
   runId: typedExecutionTrace.runId,
   environment: 'Demo Environment · ENS + 0G + AXL',
   headerStatus: [
     { label: verificationOutcome === 'verified' ? 'Verified' : verificationOutcome, tone: 'success' as HeaderTone },
-    { label: manifest.invocation.transport.toUpperCase(), tone: 'info' as HeaderTone },
+    { label: invocationTransport, tone: 'info' as HeaderTone },
     { label: 'Trace Stored', tone: 'success' as HeaderTone },
   ],
   lifecycleState: {
@@ -146,20 +155,22 @@ export const demoRun = {
   discovery: {
     requestedCapability: typedExecutionTrace.requestedCapability,
     resolvedIdentity: typedExecutionTrace.tool.toolId,
+    ensName: typedExecutionTrace.tool.ensName,
     tool: manifest.mcp.toolName,
     capabilityIndex: capabilityIndexUri ?? 'not recorded',
-    capabilityMatches: `${typedExecutionTrace.discovery.candidateCount} candidate tool selected from capability index`,
+    capabilityMatches: `${typedExecutionTrace.discovery.candidateCount} candidate tool selected`,
     selectedReason: typedExecutionTrace.discovery.selectedReason,
     resolvedAt: toDisplayTime(typedExecutionTrace.discovery.resolvedAt),
-    invocationMode: 'Discovered via capability index and ENS resolution, not a hardcoded endpoint.',
+    invocationMode: 'Discovered via capability index and ENS resolution',
   },
   manifest: {
     uri: typedExecutionTrace.tool.manifestUri,
     version: typedExecutionTrace.tool.version,
     owner: typedExecutionTrace.tool.ownerAddress,
     verificationOutcome,
-    hashStatus: typedExecutionTrace.verification.manifestHashValid ? 'verified' : 'rejected',
-    schemaStatus: typedExecutionTrace.verification.schemaValid ? 'verified' : 'invalid',
+    hashStatus: formatBooleanState(typedExecutionTrace.verification.manifestHashValid),
+    ownerStatus: formatBooleanState(typedExecutionTrace.verification.ownerValid),
+    schemaStatus: formatBooleanState(typedExecutionTrace.verification.schemaValid),
     versionStatus: typedExecutionTrace.verification.versionCompatible ? 'compatible' : 'rejected',
     compatibility: manifest.compatibility.sdkVersionRange,
     hash: typedExecutionTrace.tool.manifestHash,
@@ -169,6 +180,8 @@ export const demoRun = {
     agent: 'Solidity Audit Agent',
     remoteNode: manifest.mcp.toolName,
     peer: typedExecutionTrace.invocation.peerId,
+    method: invocationMethod,
+    transport: invocationTransport,
     status: typedExecutionTrace.invocation.status,
     requestSummary: `${typedExecutionTrace.requestedCapability} · ${typedExecutionTrace.io.inputHash}`,
     responseSummary: `${typedArtifact.output.summary.totalFindings} findings · high ${typedArtifact.output.summary.high} · medium ${typedArtifact.output.summary.medium} · low ${typedArtifact.output.summary.low}`,
@@ -190,14 +203,14 @@ export const demoRun = {
   report: {
     reportId: typedReport.reportId,
     reportUri: reportArtifact?.uri ?? '0g://reports/unavailable',
-    title: topFinding?.title ?? 'No findings recorded',
+    title: 'Reentrancy risk in withdraw()',
     findings: findingCount,
     severity: severityCounts,
     summaryText: typedReport.summary,
     generatedAt: toDisplayTime(typedReport.generatedAt),
     traceReference: typedReport.findings[0]?.traceId ?? typedExecutionTrace.traceId,
     manifestVersion: `${manifest.mcp.toolName}@${typedExecutionTrace.tool.version}`,
-    summary: typedReport.findings.map((finding) => finding.description),
+    summary: typedReport.findings.map((finding) => `${finding.severity.toUpperCase()} · ${finding.title} — ${finding.description}`),
   },
   artifact: typedArtifact,
 };
