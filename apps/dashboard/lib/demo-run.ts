@@ -1,7 +1,16 @@
 import manifest from '../../../manifests/solidity-pattern-scanner.manifest.json';
-import executionTrace from '../../../examples/audit-agent/fixtures/sample-execution-trace.json';
+import artifact from '../../../.opentoolmesh/storage/artifacts/18a821cd-57ec-4cf4-8bd1-2c72f5ef64b9.json';
+import report from '../../../.opentoolmesh/storage/reports/report_1777388349430.json';
+import executionTrace from '../../../.opentoolmesh/storage/traces/18a821cd-57ec-4cf4-8bd1-2c72f5ef64b9.json';
 
-const findingCount = 3;
+const findingCount = report.findings.length;
+const severityOrder = ['high', 'medium', 'low'] as const;
+const severityCounts = severityOrder.map((label) => ({
+  label: label.charAt(0).toUpperCase() + label.slice(1),
+  value: report.findings.filter((finding) => finding.severity === label).length,
+  tone: label as 'high' | 'medium' | 'low',
+}));
+const topFinding = report.findings[0];
 
 export const demoRun = {
   runId: executionTrace.runId,
@@ -36,13 +45,13 @@ export const demoRun = {
     invocationMode: 'Discovered via capability index and ENS resolution, not a hardcoded endpoint.',
   },
   manifest: {
-    uri: manifest.storage.manifestUri,
-    version: manifest.version,
-    owner: manifest.owner.address,
+    uri: executionTrace.tool.manifestUri,
+    version: executionTrace.tool.version,
+    owner: executionTrace.tool.ownerAddress,
     schemaStatus: executionTrace.verification.schemaValid ? 'verified' : 'invalid',
     ownerSignature: executionTrace.verification.ownerValid ? 'valid' : 'invalid',
     compatibility: manifest.compatibility.sdkVersionRange,
-    hash: manifest.integrity.manifestHash,
+    hash: executionTrace.tool.manifestHash,
   },
   invocation: {
     agent: 'Solidity Audit Agent',
@@ -57,24 +66,19 @@ export const demoRun = {
     traceUri: executionTrace.storage.traceUri,
     inputHash: executionTrace.io.inputHash,
     outputHash: executionTrace.io.outputHash,
-    artifactReference: executionTrace.artifacts[0]?.uri ?? '0g://artifacts/unavailable',
-    reportReference: `0g://reports/${executionTrace.runId}.md`,
+    artifactReference: artifact.traceId
+      ? executionTrace.artifacts.find((item) => item.kind === 'tool-output')?.uri ?? '0g://artifacts/unavailable'
+      : '0g://artifacts/unavailable',
+    reportReference:
+      executionTrace.artifacts.find((item) => item.kind === 'audit-report')?.uri ?? '0g://reports/unavailable',
     traceStatus: 'stored with provenance',
   },
   report: {
-    title: 'Reentrancy risk in withdraw()',
+    title: topFinding?.title ?? 'No findings recorded',
     findings: findingCount,
-    severity: [
-      { label: 'High', value: 1, tone: 'high' as const },
-      { label: 'Medium', value: 1, tone: 'medium' as const },
-      { label: 'Low', value: 1, tone: 'low' as const },
-    ],
+    severity: severityCounts,
     traceReference: executionTrace.storage.traceUri,
-    manifestVersion: `${manifest.mcp.toolName}@${manifest.version}`,
-    summary: [
-      'Unchecked external call path exposes a reentrancy window before state finalization.',
-      'Owner-only emergency withdrawal lacks event emission, weakening incident forensics.',
-      'Missing negative-path tests for paused-state transfers were suggested for the follow-up node.',
-    ],
+    manifestVersion: `${manifest.mcp.toolName}@${executionTrace.tool.version}`,
+    summary: report.findings.map((finding) => finding.description),
   },
 };
