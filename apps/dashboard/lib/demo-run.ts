@@ -83,12 +83,80 @@ type ArtifactRecord = {
   };
 };
 
-const fixtureDemoRun = {
+export interface DashboardRun {
+  source: 'fixture' | 'runtime';
+  runId: string;
+  environment: string;
+  contractReference: string;
+  headerStatus: Array<{ label: string; tone: ChipTone }>;
+  lifecycleState: Record<'Publish' | 'Discover' | 'Verify' | 'Call' | 'Trace' | 'Report', string>;
+  stepDetails: Record<'Publish' | 'Discover' | 'Verify' | 'Call' | 'Trace' | 'Report', string>;
+  discovery: {
+    requestedCapability: string;
+    candidateCount: string;
+    resolvedIdentity: string;
+    ensName: string;
+    capabilityIndex: string;
+    selectedReason: string;
+    resolvedAt: string;
+    notHardcoded: string;
+  };
+  manifest: {
+    uri: string;
+    version: string;
+    owner: string;
+    schemaStatus: string;
+    sdkVersionRange: string;
+    ownerValid: string;
+    versionCompatible: string;
+    hash: string;
+  };
+  invocation: {
+    agent: string;
+    remoteNode: string;
+    peer: string;
+    method: string;
+    transport: string;
+    status: string;
+    requestUri: string;
+    responseSummary: string;
+    startedAt: string;
+    finishedAt: string;
+  };
+  memory: {
+    traceId: string;
+    traceUri: string;
+    inputHash: string;
+    outputHash: string;
+    artifact: string;
+    backend: string;
+    reportUri: string;
+    reportHash: string;
+    persistedAt: string;
+  };
+  report: {
+    reportId: string;
+    reportUri: string;
+    title: string;
+    findings: number;
+    severity: Array<{ label: string; value: number; tone: SeverityTone }>;
+    summaryText: string;
+    generatedAt: string;
+    traceReference: string;
+    toolReference: string;
+    summary: string[];
+  };
+  artifact: ArtifactRecord;
+}
+
+const fixtureDemoRun: DashboardRun = {
+  source: 'fixture' as const,
   runId: 'c1f7441a-42fe-4a2d-b000-ea1bf1e673b4',
-  environment: 'Demo Environment · ENS + 0G + AXL',
+  environment: 'Hackathon MVP',
+  contractReference: 'Vault.sol',
   headerStatus: [
     { label: 'Verified', tone: 'success' as ChipTone },
-    { label: 'AXL', tone: 'info' as ChipTone },
+    { label: 'AXL Live', tone: 'info' as ChipTone },
     { label: 'Trace Stored', tone: 'success' as ChipTone },
   ],
   lifecycleState: {
@@ -109,51 +177,46 @@ const fixtureDemoRun = {
   },
   discovery: {
     requestedCapability: 'solidity-static-analysis',
+    candidateCount: '1 candidate',
     resolvedIdentity: 'otm:ens:solidity-scanner.auditagent.eth',
     ensName: 'solidity-scanner.auditagent.eth',
-    tool: 'solidity-pattern-scanner',
     capabilityIndex: '0g://indexes/capabilities/solidity-static-analysis.json',
-    capabilityMatches: '1 candidate tool selected',
-    selectedReason: 'selected from capability discovery candidates for solidity-static-analysis',
+    selectedReason: 'best capability match',
     resolvedAt: '2026-04-28T14:56:11.921Z',
-    invocationMode: 'Fixture fallback',
+    notHardcoded: 'yes',
   },
   manifest: {
     uri: '0g://manifests/otm_ens_solidity-scanner.auditagent.eth-0.1.0.json',
     version: '0.1.0',
     owner: '0x1234567890abcdef1234567890abcdef12345678',
-    verificationOutcome: 'verified',
-    hashStatus: 'verified',
-    ownerStatus: 'verified',
     schemaStatus: 'verified',
-    versionStatus: 'compatible',
-    compatibility: '^0.1.0',
+    sdkVersionRange: '^0.1.0',
+    ownerValid: 'true',
+    versionCompatible: 'true',
     hash: 'sha256:ddd20540138a8fb9711cb3d751f940964390d3a9fb54e147c0284e6205f64524',
-    verifiedAt: '2026-04-28T14:56:11.921Z',
   },
   invocation: {
     agent: 'Solidity Audit Agent',
     remoteNode: 'solidity-pattern-scanner',
     peer: 'axl-peer-solidity-01',
     method: 'invokeTool',
-    transport: 'AXL',
+    transport: 'axl',
     status: 'ok',
-    requestSummary: 'solidity-static-analysis · sha256:e86c47ebdbb303887f746b75a3877f806a6ffed429ad208f8249a751d9c290b4',
-    responseSummary: '3 findings · high 1 · medium 1 · low 1',
-    findingsBadge: 'Structured response · findings: 3',
+    requestUri: 'n/a',
+    responseSummary: '3 findings returned',
     startedAt: '2026-04-28T14:56:11.891Z',
     finishedAt: '2026-04-28T14:56:11.921Z',
   },
   memory: {
+    traceId: 'c1f7441a-42fe-4a2d-b000-ea1bf1e673b4',
     traceUri: '0g://traces/c1f7441a-42fe-4a2d-b000-ea1bf1e673b4.json',
     inputHash: 'sha256:e86c47ebdbb303887f746b75a3877f806a6ffed429ad208f8249a751d9c290b4',
     outputHash: 'sha256:69bb4650459cd22722f676912cb5315d073d40ced1f79c5ac88602072eb47b00',
-    artifactReference: '0g://artifacts/c1f7441a-42fe-4a2d-b000-ea1bf1e673b4.json',
-    artifactHash: 'sha256:13861cfa1ff46ccaaf17d4a36ccf7a63f174f9784ed3f1a6a213a479485f8d35',
-    reportReference: '0g://reports/report_1777390727691.json',
+    artifact: '0g://artifacts/c1f7441a-42fe-4a2d-b000-ea1bf1e673b4.json',
+    backend: '0g-storage',
+    reportUri: '0g://reports/report_1777390727691.json',
     reportHash: 'sha256:8b5ac39ae14e83e9d889ae2251dafebba2c7565edc9f92a19cc86ccb1a2f21cb',
     persistedAt: '2026-04-28T14:56:11.921Z',
-    traceStatus: '0g-storage persisted',
   },
   report: {
     reportId: 'report_1777390727691',
@@ -169,7 +232,7 @@ const fixtureDemoRun = {
       'Capability discovery resolved solidity-static-analysis to a remote Solidity scanner, then completed the AXL invocation and trace persistence.',
     generatedAt: '2026-04-28T14:56:11.950Z',
     traceReference: 'c1f7441a-42fe-4a2d-b000-ea1bf1e673b4',
-    manifestVersion: 'solidity-pattern-scanner@0.1.0',
+    toolReference: 'solidity-pattern-scanner',
     summary: [
       'HIGH · Reentrancy risk in withdraw() — Unchecked external call before state update can enable reentrancy in withdraw().',
       'LOW · Administrative path lacks event emission — Owner-controlled actions should emit events for auditability.',
@@ -177,6 +240,7 @@ const fixtureDemoRun = {
     ],
   },
   artifact: {
+    traceId: 'c1f7441a-42fe-4a2d-b000-ea1bf1e673b4',
     output: {
       findings: [
         {
@@ -231,7 +295,7 @@ function getStorageFilePath(uri: string | undefined): string | null {
   return path.join(storageRoot, uri.slice('0g://'.length));
 }
 
-function buildRuntimeDemoRun() {
+function buildRuntimeDemoRun(): DashboardRun | null {
   const latestTracePath = getMostRecentTraceFile();
   if (!latestTracePath) {
     return null;
@@ -277,11 +341,13 @@ function buildRuntimeDemoRun() {
   const transportLabel = (trace.invocation?.transport ?? 'axl').toUpperCase();
 
   return {
+    source: 'runtime' as const,
     runId: trace.runId ?? trace.traceId,
-    environment: 'Demo Environment · ENS + 0G + AXL',
+    environment: 'Hackathon MVP',
+    contractReference: report.contractName ?? fixtureDemoRun.contractReference,
     headerStatus: [
       { label: 'Verified', tone: 'success' as ChipTone },
-      { label: transportLabel, tone: 'info' as ChipTone },
+      { label: 'AXL Live', tone: 'info' as ChipTone },
       { label: 'Trace Stored', tone: 'success' as ChipTone },
     ],
     lifecycleState: {
@@ -302,51 +368,46 @@ function buildRuntimeDemoRun() {
     },
     discovery: {
       requestedCapability: trace.requestedCapability ?? fixtureDemoRun.discovery.requestedCapability,
+      candidateCount: `${trace.discovery?.candidateCount ?? 1} candidate${(trace.discovery?.candidateCount ?? 1) === 1 ? '' : 's'}`,
       resolvedIdentity: trace.tool?.toolId ?? fixtureDemoRun.discovery.resolvedIdentity,
       ensName: trace.tool?.ensName ?? fixtureDemoRun.discovery.ensName,
-      tool: (trace.tool?.toolId ?? fixtureDemoRun.discovery.tool).split(':').pop() ?? fixtureDemoRun.discovery.tool,
       capabilityIndex: trace.discovery?.capabilityIndexUri ?? fixtureDemoRun.discovery.capabilityIndex,
-      capabilityMatches: `${trace.discovery?.candidateCount ?? 1} candidate tool selected`,
       selectedReason: trace.discovery?.selectedReason ?? fixtureDemoRun.discovery.selectedReason,
       resolvedAt: trace.discovery?.resolvedAt ?? fixtureDemoRun.discovery.resolvedAt,
-      invocationMode: 'Latest successful demo:run runtime',
+      notHardcoded: 'yes',
     },
     manifest: {
       uri: trace.tool?.manifestUri ?? fixtureDemoRun.manifest.uri,
       version: trace.tool?.version ?? manifest.version ?? fixtureDemoRun.manifest.version,
       owner: trace.tool?.ownerAddress ?? manifest.publisher?.address ?? fixtureDemoRun.manifest.owner,
-      verificationOutcome: 'verified',
-      hashStatus: trace.verification?.manifestHashValid ? 'verified' : 'unknown',
-      ownerStatus: trace.verification?.ownerValid ? 'verified' : 'unknown',
       schemaStatus: trace.verification?.schemaValid ? 'verified' : 'unknown',
-      versionStatus: trace.verification?.versionCompatible ? 'compatible' : 'unknown',
-      compatibility: `^${trace.tool?.version ?? manifest.version ?? fixtureDemoRun.manifest.version}`,
+      sdkVersionRange: `^${trace.tool?.version ?? manifest.version ?? fixtureDemoRun.manifest.version}`,
+      ownerValid: trace.verification?.ownerValid ? 'true' : 'false',
+      versionCompatible: trace.verification?.versionCompatible ? 'true' : 'false',
       hash: trace.tool?.manifestHash ?? fixtureDemoRun.manifest.hash,
-      verifiedAt: trace.verification?.verifiedAt ?? fixtureDemoRun.manifest.verifiedAt,
     },
     invocation: {
       agent: report.contractName ? `${report.contractName} Audit Agent` : fixtureDemoRun.invocation.agent,
       remoteNode: trace.tool?.ensName?.split('.').shift() ?? fixtureDemoRun.invocation.remoteNode,
       peer: trace.invocation?.peerId ?? fixtureDemoRun.invocation.peer,
       method: trace.invocation?.method ?? fixtureDemoRun.invocation.method,
-      transport: transportLabel,
+      transport: (trace.invocation?.transport ?? fixtureDemoRun.invocation.transport).toLowerCase(),
       status: trace.invocation?.status ?? fixtureDemoRun.invocation.status,
-      requestSummary: `${trace.requestedCapability ?? fixtureDemoRun.discovery.requestedCapability} · ${trace.io?.inputHash ?? fixtureDemoRun.memory.inputHash}`,
-      responseSummary: `${summary?.totalFindings ?? findings.length} findings · high ${summary?.high ?? 0} · medium ${summary?.medium ?? 0} · low ${summary?.low ?? 0}`,
-      findingsBadge: `Structured response · findings: ${summary?.totalFindings ?? findings.length}`,
+      requestUri: 'n/a',
+      responseSummary: `${summary?.totalFindings ?? findings.length} findings returned`,
       startedAt: trace.invocation?.startedAt ?? fixtureDemoRun.invocation.startedAt,
       finishedAt: trace.invocation?.finishedAt ?? fixtureDemoRun.invocation.finishedAt,
     },
     memory: {
+      traceId: trace.traceId,
       traceUri: trace.storage?.traceUri ?? fixtureDemoRun.memory.traceUri,
       inputHash: trace.io?.inputHash ?? fixtureDemoRun.memory.inputHash,
       outputHash: trace.io?.outputHash ?? fixtureDemoRun.memory.outputHash,
-      artifactReference: toolOutputArtifact?.uri ?? fixtureDemoRun.memory.artifactReference,
-      artifactHash: toolOutputArtifact?.hash ?? fixtureDemoRun.memory.artifactHash,
-      reportReference: reportArtifact?.uri ?? fixtureDemoRun.memory.reportReference,
+      artifact: toolOutputArtifact?.uri ?? fixtureDemoRun.memory.artifact,
+      backend: trace.storage?.backend ?? fixtureDemoRun.memory.backend,
+      reportUri: reportArtifact?.uri ?? fixtureDemoRun.memory.reportUri,
       reportHash: reportArtifact?.hash ?? fixtureDemoRun.memory.reportHash,
       persistedAt: trace.storage?.persistedAt ?? fixtureDemoRun.memory.persistedAt,
-      traceStatus: `${trace.storage?.backend ?? 'storage'} persisted`,
     },
     report: {
       reportId: report.reportId,
@@ -361,7 +422,7 @@ function buildRuntimeDemoRun() {
       summaryText: report.summary ?? fixtureDemoRun.report.summaryText,
       generatedAt: report.generatedAt ?? fixtureDemoRun.report.generatedAt,
       traceReference: trace.traceId,
-      manifestVersion: `${trace.tool?.ensName?.split('.').shift() ?? 'tool'}@${trace.tool?.version ?? manifest.version ?? fixtureDemoRun.manifest.version}`,
+      toolReference: trace.tool?.ensName?.split('.').shift() ?? fixtureDemoRun.report.toolReference,
       summary: findings.map(
         (finding) =>
           `${(finding.severity ?? 'low').toUpperCase()} · ${finding.title ?? 'Untitled finding'} — ${finding.description ?? 'No description provided.'}`,
@@ -371,4 +432,8 @@ function buildRuntimeDemoRun() {
   };
 }
 
-export const demoRun = buildRuntimeDemoRun() ?? fixtureDemoRun;
+export async function getDashboardRun(): Promise<DashboardRun> {
+  return buildRuntimeDemoRun() ?? fixtureDemoRun;
+}
+
+export const demoRun = await getDashboardRun();
