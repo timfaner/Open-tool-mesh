@@ -1,125 +1,102 @@
-# OpenTool Mesh Demo 最终彩排 Runbook
+# OpenTool Mesh Demo 部署与启动编排
 
-## 1. 文档目标
+## 1. 目标与边界
 
-本文回填 OpenTool Mesh 黑客松 demo 的真实启动命令、真实仓库路径、真实 trace / report 引用与评委讲解脚本。唯一主线固定为：
+本文件只覆盖 demo 彩排与现场展示所需的运行编排，不改 `apps/dashboard` 页面实现。主链路固定为：
 
 `publish -> discover -> verify -> call -> trace -> report`
 
-所有演示动作都围绕 `/workspace/project/docs/product/opentool-mesh-产品说明与验收边界.md` 的验收边界展开，不扩展到 marketplace、payment、swarm 或 MCP Registry 替代叙事。
+所有命令默认在仓库根目录 `/workspace/project` 执行，除非命令块里另有说明。
 
-## 2. 本次彩排的真实基线
+## 2. 当前仓库现状
 
-### 2.1 仓库根目录
+截至 `2026-04-28`，需要先明确三件事：
 
-- 所有命令默认从 `/workspace/project` 执行。
-- 不要从 `packages/cli` 目录单独跑 `call`，因为 `examples/audit-agent/fixtures/sample-contract-input.json` 里的 `sourceFile` 使用当前工作目录解析。
+1. `docs/demo` 里原有 runbook 引用的 `.opentoolmesh` 运行时数据并不在当前工作树内，不能再当作“仓库自带证据”。
+2. `apps/dashboard/lib/demo-run.ts` 当前直接 import 真实 manifest / trace / report / artifact JSON，不再是纯占位常量。
+3. `packages/cli/dist` 当前已存在，可直接作为 CLI 入口；`services/tool-node` 与 `examples/audit-agent` 仍缺少 `dist` 产物，若要完整跑 demo，必须先构建这两个包。
 
-### 2.2 当前可直接引用的 demo 证据
+因此，本编排把命令分成两类：
 
-- manifest 文件：`/workspace/project/manifests/solidity-pattern-scanner.manifest.json`
-- ENS 本地解析记录：`/workspace/project/.opentoolmesh/ens-records.json`
-- AXL peer registry：`/workspace/project/.opentoolmesh/axl-peers.json`
-- Solidity 输入：`/workspace/project/examples/audit-agent/fixtures/sample-contract.sol`
-- CLI 调用输入：`/workspace/project/examples/audit-agent/fixtures/sample-contract-input.json`
+- `可立即检查`：不依赖运行中的服务，可直接核对环境与文件。
+- `可启动演示`：依赖 workspace 安装与构建完成后执行。
 
-### 2.3 推荐作为“成功回放”的真实 run
+## 3. 目录与关键文件
 
-优先使用 audit agent 跑出的这一条成功 run：
+- demo 文档：`/workspace/project/docs/demo/opentool-mesh-demo-runbook.md`
+- 环境自检：`/workspace/project/docs/demo/demo-prereflight.sh`
+- 健康检查：`/workspace/project/docs/demo/demo-health-check.sh`
+- 根 manifest：`/workspace/project/manifests/solidity-pattern-scanner.manifest.json`
+- tool-node manifest：`/workspace/project/services/tool-node/manifests/solidity-pattern-scanner.manifest.json`
+- dashboard 健康接口：`/workspace/project/apps/dashboard/app/api/health/route.ts`
+- tool-node 服务：`/workspace/project/services/tool-node/src/server.ts`
+- CLI 入口：`/workspace/project/packages/cli/src/index.ts`
+- audit agent：`/workspace/project/examples/audit-agent/src/run-audit.ts`
+- 示例 trace：`/workspace/project/examples/audit-agent/fixtures/sample-execution-trace.json`
 
-- trace id：`5ba66c85-a4fe-40dd-9b5f-fe94b42846fe`
-- trace URI：`0g://traces/5ba66c85-a4fe-40dd-9b5f-fe94b42846fe.json`
-- trace 文件：`/workspace/project/.opentoolmesh/storage/traces/5ba66c85-a4fe-40dd-9b5f-fe94b42846fe.json`
-- report id：`report_1777388216943`
-- report URI：`0g://reports/report_1777388216943.json`
-- report 文件：`/workspace/project/.opentoolmesh/storage/reports/report_1777388216943.json`
-- tool output artifact：`/workspace/project/.opentoolmesh/storage/artifacts/5ba66c85-a4fe-40dd-9b5f-fe94b42846fe.json`
+## 4. 环境前提
 
-这条 run 的关键字段已经一致：
+### 4.1 必备运行时
 
-- requested capability：`solidity-static-analysis`
-- tool identity：`otm:ens:solidity-scanner.auditagent.eth`
-- ENS name：`solidity-scanner.auditagent.eth`
-- manifest URI：`0g://manifests/otm_ens_solidity-scanner.auditagent.eth-0.1.0.json`
-- manifest hash：`sha256:ddd20540138a8fb9711cb3d751f940964390d3a9fb54e147c0284e6205f64524`
-- owner：`0x1234567890abcdef1234567890abcdef12345678`
-- AXL peer：`axl-peer-solidity-01`
+- `node >= 22`
+- `npm` 或 `corepack`
+- 仓库根目录可写：因为本地 devnet 会在运行时生成 `.opentoolmesh/`
 
-## 3. 演示形态
+### 4.2 必备依赖状态
 
-### 3.1 最低展示形态
+当前仓库未发现 workspace 级 `node_modules`。这意味着：
 
-- 终端 A：Agent / CLI
-- 终端 B：Remote tool node
-- 浏览器：dashboard
-- 一次完整成功 run 或一条成功 run 回放
+- `apps/dashboard` 只有 `package-lock.json`，可以单独用 `npm install` / `npm run dev` 解决前端依赖。
+- monorepo 其余包默认依赖 workspace 解析；若未先安装，`packages/cli`、`services/tool-node`、`examples/audit-agent` 无法直接执行。
 
-### 3.2 必须明确说出的口径
-
-- “这里是两个独立进程，不是 agent 内部直接调用本地函数。”
-- “agent 只知道 capability，不预置具体工具 endpoint。”
-- “ENS 负责 identity，0G 负责 manifest / trace / artifact，AXL 负责远程调用。”
-
-## 4. 启动前检查
-
-### 4.1 环境前提
-
-当前环境里没有全局 `pnpm`。如需重新构建，优先使用：
+建议先运行：
 
 ```bash
-corepack pnpm <command>
+cd /workspace/project
+bash docs/demo/demo-prereflight.sh
 ```
 
-但本仓库根目录 `corepack pnpm build` / `corepack pnpm test` 当前会因为 `turbo` 的 package manager binary 解析失败而中断，因此现场彩排以仓库内现成 `dist` 产物为准。
+## 5. 启动矩阵
 
-### 4.2 启动前确认
+### 5.1 终端 A：dashboard
 
-1. `node` 可用。
-2. `/workspace/project/services/tool-node/dist/services/tool-node/src/server.js` 存在。
-3. `/workspace/project/packages/cli/dist/cli/src/index.js` 存在。
-4. `/workspace/project/examples/audit-agent/dist/examples/audit-agent/src/run-audit.js` 存在。
-5. `/workspace/project/.opentoolmesh/axl-peers.json` 中存在：
-
-```json
-{
-  "peers": {
-    "axl-peer-solidity-01": "http://127.0.0.1:4318"
-  }
-}
-```
-
-## 5. 标准启动顺序
-
-### 5.1 浏览器：启动 dashboard
-
-dashboard 位于 `/workspace/project/apps/dashboard`。
-
-启动命令：
+仅当前端依赖已安装时执行：
 
 ```bash
 cd /workspace/project/apps/dashboard
-corepack pnpm dev
+npm run dev
 ```
 
-健康检查接口：
+默认地址：
 
-```bash
-curl -s http://127.0.0.1:3000/api/health
+```text
+http://127.0.0.1:3000
 ```
 
-说明：
-
-- 当前 dashboard 页面数据源是静态文件 `/workspace/project/apps/dashboard/lib/demo-run.ts`。
-- 这意味着浏览器页面不是直接实时读取 `.opentoolmesh/storage`，而是展示一份 demo 数据模型。
-- 因此现场要么提前把 `lib/demo-run.ts` 同步成与本次成功 run 一致的值，要么诚实说明 dashboard 是“基于真实 run 字段映射的静态展示层”。
-
-### 5.2 终端 B：启动 remote tool node
-
-命令：
+健康检查：
 
 ```bash
-cd /workspace/project/services/tool-node
-PORT=4318 node dist/services/tool-node/src/server.js
+curl -fsS http://127.0.0.1:3000/api/health
+```
+
+当前接口返回：
+
+```json
+{"ok":true,"service":"dashboard-scaffold"}
+```
+
+这表示 dashboard 进程活着，但不代表 demo 数据已经和最新闭环 run 对齐。
+
+### 5.2 终端 B：tool-node
+
+仅当 workspace 依赖已安装且构建完成后执行：
+
+```bash
+cd /workspace/project
+npm run build --workspace @opentoolmesh/shared
+npm run build --workspace @opentoolmesh/sdk
+npm run build --workspace @opentoolmesh/tool-node
+PORT=4318 node services/tool-node/dist/services/tool-node/src/server.js
 ```
 
 成功标志：
@@ -128,328 +105,182 @@ PORT=4318 node dist/services/tool-node/src/server.js
 OpenTool Mesh tool node listening on http://127.0.0.1:4318
 ```
 
-这一步对应：
+可达性检查：
 
-- remote node 独立进程
-- AXL peer base URL 为 `http://127.0.0.1:4318`
-- 调用方法为 `invokeTool`
-- `4318` 是当前仓库已写入 `.opentoolmesh/axl-peers.json` 的复用端口；如果现场该端口已被别的本地进程占用，可以改成例如 `PORT=4320 ...`，但必须同时把 `.opentoolmesh/axl-peers.json` 里的 `axl-peer-solidity-01` 映射改成同一个新端口，否则 CLI / audit agent 会继续请求旧地址。
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:4318/invokeTool
+```
 
-### 5.3 终端 A：准备 publish / discover / resolve / call
+预期返回 `404`。这里的 `404` 不是故障，而是因为健康探测使用了 `GET`，而服务只接受 `POST /invokeTool`。
 
-所有 CLI 命令都从项目根目录执行：
+### 5.3 终端 C：publish / discover / call / trace
+
+CLI 当前已有 `dist`，但 `audit-agent` 仍需先构建。
+
+先构建缺失项：
 
 ```bash
 cd /workspace/project
+npm run build --workspace @opentoolmesh/cli
+npm run build --workspace @opentoolmesh/audit-agent
 ```
 
-## 6. 真实演示命令
-
-### 6.1 Publish
+发布：
 
 ```bash
 node packages/cli/dist/cli/src/index.js publish --manifest manifests/solidity-pattern-scanner.manifest.json
 ```
 
-预期输出要点：
-
-```json
-{
-  "toolId": "otm:ens:solidity-scanner.auditagent.eth",
-  "manifestUri": "0g://manifests/otm_ens_solidity-scanner.auditagent.eth-0.1.0.json",
-  "manifestHash": "sha256:ddd20540138a8fb9711cb3d751f940964390d3a9fb54e147c0284e6205f64524",
-  "version": "0.1.0",
-  "capabilities": ["solidity-static-analysis"]
-}
-```
-
-发布后可立即佐证：
-
-- ENS 记录文件：`/workspace/project/.opentoolmesh/ens-records.json`
-- manifest 持久化文件：`/workspace/project/.opentoolmesh/storage/manifests/otm_ens_solidity-scanner.auditagent.eth-0.1.0.json`
-
-### 6.2 Discover
+按 capability 发现：
 
 ```bash
 node packages/cli/dist/cli/src/index.js discover --capability solidity-static-analysis
 ```
 
-评委要看到：
-
-- capability 是 `solidity-static-analysis`
-- 返回对象里有 `ensName`
-- 返回对象里有 `manifestUri`
-- 这一步不是读取本地硬编码 endpoint
-
-### 6.3 Resolve
+按 ENS 名解析：
 
 ```bash
 node packages/cli/dist/cli/src/index.js resolve --tool solidity-scanner.auditagent.eth
 ```
 
-评委要看到：
-
-- `latestManifestUri`
-- `latestManifestHash`
-- `latestVersion`
-- `ownerAddress`
-
-### 6.4 Call
+远程调用：
 
 ```bash
 node packages/cli/dist/cli/src/index.js call --tool solidity-scanner.auditagent.eth --input examples/audit-agent/fixtures/sample-contract-input.json
 ```
 
-真实成功输出示例字段：
-
-```json
-{
-  "traceId": "2280458b-aefa-4a50-95f2-3a800f7d36b0",
-  "status": "ok",
-  "traceUri": "0g://traces/2280458b-aefa-4a50-95f2-3a800f7d36b0.json"
-}
-```
-
-说明：
-
-- 这条 CLI run 证明了 `publish -> discover/resolve -> verify -> call -> trace` 可以从 CLI 走通。
-- 如果要展示 final report 引用 trace id，优先切换到下方 audit agent 的完整 run。
-
-### 6.5 Audit Agent 完整 run
+完整 audit run：
 
 ```bash
-cd /workspace/project/examples/audit-agent
-node dist/examples/audit-agent/src/run-audit.js
+node examples/audit-agent/dist/examples/audit-agent/src/run-audit.js
 ```
 
-当前已验证成功的输出字段：
+### 5.4 运行时产物位置
 
-```json
-{
-  "requestedCapability": "solidity-static-analysis",
-  "toolId": "otm:ens:solidity-scanner.auditagent.eth",
-  "manifestUri": "0g://manifests/otm_ens_solidity-scanner.auditagent.eth-0.1.0.json",
-  "traceId": "5ba66c85-a4fe-40dd-9b5f-fe94b42846fe",
-  "traceUri": "0g://traces/5ba66c85-a4fe-40dd-9b5f-fe94b42846fe.json",
-  "report": {
-    "reportId": "report_1777388216943"
-  }
-}
-```
-
-这一条是本次 demo 推荐主证据，因为它同时具备：
-
-- discovery
-- manifest verification
-- remote call
-- trace
-- final report
-
-### 6.6 Trace 查询
-
-查询 CLI run：
-
-```bash
-cd /workspace/project
-node packages/cli/dist/cli/src/index.js trace --trace 2280458b-aefa-4a50-95f2-3a800f7d36b0
-```
-
-查询 audit agent 基准 run：
-
-```bash
-cd /workspace/project
-cat .opentoolmesh/storage/traces/5ba66c85-a4fe-40dd-9b5f-fe94b42846fe.json
-cat .opentoolmesh/storage/reports/report_1777388216943.json
-cat .opentoolmesh/storage/artifacts/5ba66c85-a4fe-40dd-9b5f-fe94b42846fe.json
-```
-
-## 7. 双终端演示脚本
-
-### 7.1 开场
-
-“OpenTool Mesh 不是再做一个 agent，而是把 agent 工具调用从本地硬编码升级为可发现、可验证、可远程调用、可复盘的基础设施层。今天只演示最小闭环：publish -> discover -> verify -> call -> trace -> report。”
-
-### 7.2 Publish
-
-终端 A 执行 `publish`。
-
-口径：
-
-- “这里发布的不是本地函数，而是一个带 ENS identity、0G manifest 和 capability index 的远程工具。”
-- “评委现在看到的是 tool identity、manifest URI、manifest hash、version 和 capability。”
-
-### 7.3 Discover
-
-终端 A 执行 `discover`。
-
-口径：
-
-- “Agent 不知道 endpoint，只知道自己需要 `solidity-static-analysis`。”
-- “这一步先走 capability index，再拿到 ENS identity。”
-
-### 7.4 Resolve / Verify
-
-终端 A 执行 `resolve`，并对照 manifest / ENS 文件。
-
-口径：
-
-- “在真正调用前，agent 会校验 manifest hash、owner、version 和 schema compatibility。”
-- “最低验收要求里的 manifest hash、owner、version、schema status 在这里都有证据。”
-
-### 7.5 Call
-
-终端 A 执行 `call` 或 `run-audit`，终端 B 保持 tool node 日志可见。
-
-口径：
-
-- “现在发生的是 agent 到 remote tool node 的 AXL 调用，而不是 agent 内部函数执行。”
-- “两个独立终端对应两个独立节点。”
-
-评委应看到：
-
-- 终端 A 发起请求
-- 终端 B 维持独立 node 进程
-- trace id / trace URI 被返回
-
-### 7.6 Trace
-
-打开 `/workspace/project/.opentoolmesh/storage/traces/5ba66c85-a4fe-40dd-9b5f-fe94b42846fe.json`。
-
-重点指给评委看：
-
-- `tool.toolId`
-- `tool.manifestUri`
-- `tool.manifestHash`
-- `verification.manifestHashValid`
-- `verification.ownerValid`
-- `verification.schemaValid`
-- `invocation.peerId`
-- `io.inputHash`
-- `io.outputHash`
-- `storage.traceUri`
-
-### 7.7 Report
-
-打开 `/workspace/project/.opentoolmesh/storage/reports/report_1777388216943.json`。
-
-重点指给评委看：
-
-- `reportId`
-- `findings`
-- 每条 finding 里的 `traceId`
-- `toolId`
-
-口径：
-
-- “最终报告不是孤立文本，它回指 trace id，所以这份审计结果可以追溯到具体工具、具体 manifest 和具体远程调用。”
-
-## 8. Dashboard 讲解重点
-
-dashboard 必须只承担“把抽象 infra 讲清楚”的职责。
-
-### 8.1 当前事实
-
-- 页面源码：`/workspace/project/apps/dashboard/components/dashboard-page.tsx`
-- demo 数据：`/workspace/project/apps/dashboard/lib/demo-run.ts`
-- 当前 `demo-run.ts` 仍是占位数据，例如 `scanner.audittool.eth`、`0g://traces/run-2048`，不是本次真实 run。
-
-### 8.2 彩排前必须同步的字段
-
-如果要让浏览器展示与真实 run 一致，至少把 `lib/demo-run.ts` 改成下面这组值：
-
-- resolved identity：`solidity-scanner.auditagent.eth`
-- manifest URI：`0g://manifests/otm_ens_solidity-scanner.auditagent.eth-0.1.0.json`
-- manifest hash：`sha256:ddd20540138a8fb9711cb3d751f940964390d3a9fb54e147c0284e6205f64524`
-- owner：`0x1234567890abcdef1234567890abcdef12345678`
-- AXL peer：`axl-peer-solidity-01`
-- trace URI：`0g://traces/5ba66c85-a4fe-40dd-9b5f-fe94b42846fe.json`
-- artifact ref：`0g://artifacts/5ba66c85-a4fe-40dd-9b5f-fe94b42846fe.json`
-- report ref：`0g://reports/report_1777388216943.json`
-- findings：`3`
-- severity：`high=1, medium=1, low=1`
-
-### 8.3 四段讲法
-
-- Discovery：requested capability 先行，不是 hardcoded endpoint
-- Manifest：展示 URI、hash、owner、version、schema verified
-- Invocation：展示 agent 到 remote tool node 的 AXL 调用
-- Memory：展示 input hash、output hash、trace URI、artifact / report 引用
-
-## 9. 故障兜底
-
-### 9.1 Publish 失败
-
-直接切到已发布状态，展示：
+一旦 `publish` 或 `call` 真正执行，本地 devnet 会自动创建：
 
 - `/workspace/project/.opentoolmesh/ens-records.json`
-- `/workspace/project/.opentoolmesh/storage/manifests/otm_ens_solidity-scanner.auditagent.eth-0.1.0.json`
+- `/workspace/project/.opentoolmesh/axl-peers.json`
+- `/workspace/project/.opentoolmesh/storage/manifests/*.json`
+- `/workspace/project/.opentoolmesh/storage/traces/*.json`
+- `/workspace/project/.opentoolmesh/storage/reports/*.json`
+- `/workspace/project/.opentoolmesh/storage/artifacts/*.json`
 
-口径：
+这些文件是“运行后证据”，不是仓库静态前置条件。
 
-“现场不重复发布，直接使用已发布结果，重点展示 discover、verify、call、trace、report。”
+## 6. 建议执行顺序
 
-### 9.2 AXL 实时调用失败
+### 6.1 彩排前 5 分钟
 
-立即切到成功回放：
+```bash
+cd /workspace/project
+bash docs/demo/demo-prereflight.sh
+```
 
-- trace：`/workspace/project/.opentoolmesh/storage/traces/5ba66c85-a4fe-40dd-9b5f-fe94b42846fe.json`
-- report：`/workspace/project/.opentoolmesh/storage/reports/report_1777388216943.json`
-- artifact：`/workspace/project/.opentoolmesh/storage/artifacts/5ba66c85-a4fe-40dd-9b5f-fe94b42846fe.json`
+目标：
 
-口径：
+- 确认 `node` 版本
+- 确认 manifest、源码入口、前端健康接口文件存在
+- 识别 `node_modules` 与 `dist` 是否缺失
+- 提前判断 demo 只能走“实时演示”还是“静态回放”
 
-“这里回放的是同一版本代码已成功跑通的一次 AXL 调用，目的是证明链路结构与 provenance 字段。”
+### 6.2 彩排前 2 分钟
 
-### 9.3 Dashboard 未刷新
+```bash
+cd /workspace/project
+bash docs/demo/demo-health-check.sh
+```
 
-dashboard 当前本身就是静态 demo 数据驱动，不要假装它是实时面板。
+目标：
 
-口径：
+- 若 dashboard 已启动，验证 `3000/api/health`
+- 若 tool-node 已启动，验证 `4318/invokeTool`
+- 若任一服务未启动，立即给出缺失项
 
-“dashboard 用来解释一条完整 run 的字段映射，实时证据在终端输出和 `.opentoolmesh/storage` 文件里。”
+### 6.3 正式演示
 
-### 9.4 根目录 build / test 失败
+推荐顺序：
 
-如评委问到构建：
+1. dashboard 打开页面，只承担解释字段结构
+2. tool-node 单独进程启动，证明 remote node 独立存在
+3. 终端执行 `publish`
+4. 终端执行 `discover`
+5. 终端执行 `resolve`
+6. 终端执行 `call` 或 `run-audit`
+7. 打开 `.opentoolmesh/storage/traces/*.json` 与 `reports/*.json` 讲 provenance
 
-- 诚实说明当前环境的 `turbo` 通过 `corepack pnpm` 运行时存在 package manager binary 解析问题
-- 本次 demo 以仓库内已有 `dist` 产物和真实成功 run 为准
+## 7. 健康检查定义
 
-不要把这个说成代码逻辑失败。
+### 7.1 dashboard
 
-## 10. 建议节奏
+- URL：`http://127.0.0.1:3000/api/health`
+- 成功标准：HTTP `200`
+- 失败处理：
+  - 若连接失败：先检查 `apps/dashboard/node_modules`
+  - 若 `npm run dev` 已启动仍失败：看终端报错，优先处理依赖缺失或端口占用
 
-建议控制在 5 到 7 分钟：
+### 7.2 tool-node
 
-1. 30 秒：项目定位
-2. 45 秒：publish / ENS / 0G manifest
-3. 60 秒：discover / verify
-4. 90 秒：双终端展示 AXL remote call
-5. 60 秒：trace / artifact / report
-6. 45 秒：dashboard 四段总结
+- URL：`http://127.0.0.1:4318/invokeTool`
+- 成功标准：HTTP `404` 或 `400`
+- 原因：该服务没有独立 `/health`，而 `/invokeTool` 只接受 `POST`
+- 失败处理：
+  - 连接失败：确认 `PORT=4318 node services/tool-node/dist/services/tool-node/src/server.js` 是否还活着
+  - 若端口变更：同步更新 `.opentoolmesh/axl-peers.json`
 
-## 11. 验收映射
+## 8. 故障兜底
 
-| 验收项 | demo 中如何证明 |
-| --- | --- |
-| 工具可发布 | `publish` 输出 + `.opentoolmesh/ens-records.json` + `.opentoolmesh/storage/manifests/...` |
-| agent 可发现工具 | `discover --capability solidity-static-analysis` 返回 ENS identity 与 manifest 指针 |
-| manifest 可验证 | `resolve` 输出与 trace 中的 `verification` 字段、manifest hash、owner、version 对齐 |
-| agent 可远程调用 tool node | 终端 A 运行 `call` / `run-audit`，终端 B 独立运行 `server.js` |
-| trace 写入 0G | `.opentoolmesh/storage/traces/5ba66c85-a4fe-40dd-9b5f-fe94b42846fe.json` |
-| report 引用 trace | `.opentoolmesh/storage/reports/report_1777388216943.json` 内每条 finding 的 `traceId` |
-| dashboard 讲清完整链路 | 浏览器展示 Discovery / Manifest / Invocation / Memory，并口头说明其字段映射自真实 run |
+### 8.1 dashboard 起不来
 
-## 12. 本次核验结论
+兜底方案：
 
-截至 2026-04-28，本仓库里已经存在可直接彩排的真实命令与真实 run 证据：
+- 保留浏览器说明口径，但不阻塞主链路
+- 直接用终端和 JSON 文件讲 `discover -> verify -> call -> trace -> report`
 
-- tool node 实际启动命令可用
-- CLI `publish / discover / resolve / call / trace` 实际入口可用
-- audit agent 完整 `publish -> discover -> verify -> call -> trace -> report` 跑通过
-- 成功 run 固定引用 `5ba66c85-a4fe-40dd-9b5f-fe94b42846fe`
+对外口径：
 
-当前唯一需要现场保持诚实说明的点：
+“dashboard 是展示层，不是链路本身；真实证据以 CLI 输出和 trace/report JSON 为准。”
 
-- dashboard 仍然使用 `apps/dashboard/lib/demo-run.ts` 的静态 demo 数据，若不先同步成真实 run，浏览器展示将与终端证据不一致
-- 根目录 `corepack pnpm build` / `test` 当前受 `turbo` 运行环境影响，不能作为现场主链路
+### 8.2 tool-node 起不来
+
+兜底方案：
+
+- 不强行演示实时远程调用
+- 改为展示 `examples/audit-agent/fixtures/sample-execution-trace.json` 的字段结构
+- 明确说明当前 blocker 是构建产物或依赖缺失，不是协议设计缺失
+
+### 8.3 CLI 或 audit-agent 缺 dist
+
+兜底方案：
+
+- 明确这是构建前置条件未满足
+- 先让 `dev` 任务补齐代码闭环与构建产物
+- DevOps 侧继续负责启动顺序、端口约定、健康检查和运行手册
+
+### 8.4 `.opentoolmesh` 目录不存在
+
+这不是故障。它只说明还没跑过 `publish` / `call`。
+
+只有在已经执行过主链路后仍没有生成对应文件，才视为 runtime 异常。
+
+## 9. 演示口径
+
+必须说清楚三点：
+
+- “agent 先按 capability 发现工具，而不是硬编码 endpoint。”
+- “tool-node 是独立进程，和 agent 不是同一个函数调用栈。”
+- “trace / artifact / report 会在本地 devnet 的 `.opentoolmesh` 下落盘，作为 0G 存储语义的本地替身。”
+
+## 10. 当前结论
+
+当前 `docs/demo` 已经具备：
+
+- 可执行的前置自检脚本
+- 可执行的健康检查脚本
+- 按仓库现状校准后的启动编排与故障兜底
+
+当前仍依赖其他任务补齐的前置条件：
+
+- workspace 依赖安装
+- tool-node、audit-agent 的 `dist` 构建产物
+- 闭环 run 真正执行后生成的 `.opentoolmesh` 运行时证据
