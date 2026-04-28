@@ -314,18 +314,22 @@ function getStorageFilePath(uri: string | undefined): string | null {
   return path.join(storageRoot, uri.slice('0g://'.length));
 }
 
-function buildRuntimeDemoRun(): DashboardRun | null {
-  const trace = listTraceFiles()
-    .map((filePath) => {
-      try {
-        return readJsonFile<TraceRecord>(filePath);
-      } catch {
-        return null;
-      }
-    })
-    .find((candidate) => candidate?.invocation?.status === 'ok');
+function buildRuntimeDemoRunFromTrace(trace: TraceRecord): DashboardRun | null {
+  if (trace.invocation?.status !== 'ok') {
+    return null;
+  }
 
-  if (!trace) {
+  const resolvedEnsName = trace.discovery?.resolve?.ensName ?? trace.tool?.ensName;
+  const resolveEvidence = trace.discovery?.resolve?.evidence;
+  const resolvedIdentity =
+    trace.discovery?.resolve?.identityId ??
+    trace.tool?.toolId ??
+    (resolvedEnsName ? `otm:ens:${resolvedEnsName}` : undefined);
+  const resolvedAt = trace.discovery?.resolvedAt;
+
+  // Require explicit runtime resolve evidence so the dashboard can prove
+  // resolveIdentity happened before loadManifest/invokeTool, rather than inferring it.
+  if (!resolvedEnsName || !resolvedIdentity || !resolvedAt || !resolveEvidence) {
     return null;
   }
 
@@ -363,15 +367,6 @@ function buildRuntimeDemoRun(): DashboardRun | null {
   const findings = report.findings ?? [];
   const topFinding = findings.find((finding) => finding.severity === 'high') ?? findings[0];
   const transportLabel = (trace.invocation?.transport ?? 'axl').toUpperCase();
-  const resolvedIdentity =
-    trace.discovery?.resolve?.identityId ??
-    trace.tool?.toolId ??
-    (trace.tool?.ensName ? `otm:ens:${trace.tool.ensName}` : fixtureDemoRun.discovery.resolvedIdentity);
-  const resolvedEnsName = trace.discovery?.resolve?.ensName ?? trace.tool?.ensName ?? fixtureDemoRun.discovery.ensName;
-  const resolvedAt = trace.discovery?.resolvedAt ?? fixtureDemoRun.discovery.resolvedAt;
-  const resolveEvidence =
-    trace.discovery?.resolve?.evidence ??
-    `resolveIdentity(${resolvedEnsName}) before loadManifest(${trace.tool?.manifestUri ?? fixtureDemoRun.manifest.uri})`;
 
   return {
     source: 'runtime' as const,
@@ -463,6 +458,21 @@ function buildRuntimeDemoRun(): DashboardRun | null {
     },
     artifact,
   };
+}
+
+function buildRuntimeDemoRun(): DashboardRun | null {
+  for (const filePath of listTraceFiles()) {
+    try {
+      const candidate = buildRuntimeDemoRunFromTrace(readJsonFile<TraceRecord>(filePath));
+      if (candidate) {
+        return candidate;
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return null;
 }
 
 export async function getDashboardRun(): Promise<DashboardRun> {

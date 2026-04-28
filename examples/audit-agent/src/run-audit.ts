@@ -58,7 +58,7 @@ export function buildTrace(
         manifestHash: resolvedTool.latestManifestHash,
         version: resolvedTool.latestVersion,
         ownerAddress: resolvedTool.ownerAddress,
-        evidence: "discover -> resolveIdentity -> loadManifest -> verifyManifest -> invokeTool"
+        evidence: `discover(solidity-static-analysis) -> resolveIdentity(${resolvedTool.ensName}) -> loadManifest(${resolvedTool.latestManifestUri}) -> verifyManifest -> invokeTool`
       }
     },
     verification: {
