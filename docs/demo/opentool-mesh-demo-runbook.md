@@ -200,7 +200,18 @@ dashboard 会优先读取最近一次 `corepack pnpm demo:run` 生成的 `.opent
 - manifest hash：`sha256:ddd20540138a8fb9711cb3d751f940964390d3a9fb54e147c0284e6205f64524`
 - owner：`0x1234567890abcdef1234567890abcdef12345678`
 - peer：`axl-peer-solidity-01`
+- trace ID：`41f036ae-ba64-43b7-b310-1927e73396d4`
+- trace URI：`0g://traces/41f036ae-ba64-43b7-b310-1927e73396d4.json`
 - report ID：`report_demo_solidity_audit`
+- report URI：`0g://reports/report_demo_solidity_audit.json`
+
+当前 dashboard 数据源文件：
+
+- `examples/audit-agent/fixtures/sample-execution-trace.json`
+- `examples/audit-agent/fixtures/sample-tool-output.json`
+- `examples/audit-agent/fixtures/sample-report.json`
+
+这些 fixture 只作为无运行产物时的回退基线；一旦 `.opentoolmesh/storage` 内存在最近一次 `demo:run` 结果，`apps/dashboard/lib/demo-run.ts` 会优先展示运行态 trace/report/artifact 字段。
 
 ## 7. 现场讲解口径
 
@@ -219,7 +230,7 @@ dashboard 会优先读取最近一次 `corepack pnpm demo:run` 生成的 `.opent
 | agent 可远程调用 tool node | `corepack pnpm demo:tool-node` + `corepack pnpm demo:run` |
 | trace 写入存储 | `demo:run` 输出 `files.trace` |
 | report 引用 trace | `sample-report.json` 与运行时 report 都包含 `traceId` |
-| dashboard 字段一致 | `apps/dashboard/lib/demo-run.ts` 直接引用同一组 fixture |
+| dashboard 字段一致 | `apps/dashboard/lib/demo-run.ts` 优先读取 `.opentoolmesh/storage`，无运行产物时回退 fixture |
 
 ## 9. 当前结论
 

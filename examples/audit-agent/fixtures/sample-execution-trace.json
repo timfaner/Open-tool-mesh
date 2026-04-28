@@ -1,6 +1,6 @@
 {
-  "traceId": "41f036ae-ba64-43b7-b310-1927e73396d4",
-  "runId": "41f036ae-ba64-43b7-b310-1927e73396d4",
+  "traceId": "c1f7441a-42fe-4a2d-b000-ea1bf1e673b4",
+  "runId": "c1f7441a-42fe-4a2d-b000-ea1bf1e673b4",
   "agentId": "opentool-cli",
   "requestedCapability": "solidity-static-analysis",
   "tool": {
@@ -39,19 +39,19 @@
   "artifacts": [
     {
       "kind": "tool-output",
-      "uri": "0g://artifacts/41f036ae-ba64-43b7-b310-1927e73396d4.json",
+      "uri": "0g://artifacts/c1f7441a-42fe-4a2d-b000-ea1bf1e673b4.json",
       "hash": "sha256:13861cfa1ff46ccaaf17d4a36ccf7a63f174f9784ed3f1a6a213a479485f8d35",
       "mediaType": "application/json"
     },
     {
       "kind": "audit-report",
-      "uri": "0g://reports/report_demo_solidity_audit.json",
+      "uri": "0g://reports/report_1777390727691.json",
       "hash": "sha256:8b5ac39ae14e83e9d889ae2251dafebba2c7565edc9f92a19cc86ccb1a2f21cb",
       "mediaType": "application/json"
     }
   ],
   "storage": {
-    "traceUri": "0g://traces/41f036ae-ba64-43b7-b310-1927e73396d4.json",
+    "traceUri": "0g://traces/c1f7441a-42fe-4a2d-b000-ea1bf1e673b4.json",
     "persistedAt": "2026-04-28T14:56:11.921Z",
     "backend": "0g-storage"
   }

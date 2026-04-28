@@ -1,15 +1,15 @@
 {
-  "reportId": "report_demo_solidity_audit",
+  "reportId": "report_1777390727691",
   "contractName": "Vault",
   "summary": "Capability discovery resolved solidity-static-analysis to a remote Solidity scanner, then completed the AXL invocation and trace persistence.",
   "findings": [
     {
-      "id": "reentrancy-call-before-state",
+      "id": "reentrancy-withdraw",
       "severity": "high",
-      "title": "Unchecked external call can enable reentrancy",
-      "description": "External value transfer detected. Review state updates and reentrancy protection.",
-      "evidence": "External value transfer detected. Review state updates and reentrancy protection.",
-      "traceId": "41f036ae-ba64-43b7-b310-1927e73396d4",
+      "title": "Reentrancy risk in withdraw()",
+      "description": "Unchecked external call before state update can enable reentrancy in withdraw().",
+      "evidence": "Unchecked external call before state update can enable reentrancy in withdraw().",
+      "traceId": "c1f7441a-42fe-4a2d-b000-ea1bf1e673b4",
       "toolId": "otm:ens:solidity-scanner.auditagent.eth"
     },
     {
@@ -18,7 +18,7 @@
       "title": "Administrative path lacks event emission",
       "description": "Owner-controlled actions should emit events for auditability.",
       "evidence": "Owner-controlled actions should emit events for auditability.",
-      "traceId": "41f036ae-ba64-43b7-b310-1927e73396d4",
+      "traceId": "c1f7441a-42fe-4a2d-b000-ea1bf1e673b4",
       "toolId": "otm:ens:solidity-scanner.auditagent.eth"
     },
     {
@@ -27,7 +27,7 @@
       "title": "Pause flow lacks obvious negative-path assertion",
       "description": "Consider adding paused-state transfer checks or follow-up tests.",
       "evidence": "Consider adding paused-state transfer checks or follow-up tests.",
-      "traceId": "41f036ae-ba64-43b7-b310-1927e73396d4",
+      "traceId": "c1f7441a-42fe-4a2d-b000-ea1bf1e673b4",
       "toolId": "otm:ens:solidity-scanner.auditagent.eth"
     }
   ],

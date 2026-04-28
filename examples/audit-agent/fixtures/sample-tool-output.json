@@ -1,13 +1,13 @@
 {
-  "traceId": "41f036ae-ba64-43b7-b310-1927e73396d4",
+  "traceId": "c1f7441a-42fe-4a2d-b000-ea1bf1e673b4",
   "toolId": "otm:ens:solidity-scanner.auditagent.eth",
   "output": {
     "findings": [
       {
-        "ruleId": "reentrancy-call-before-state",
+        "ruleId": "reentrancy-withdraw",
         "severity": "high",
-        "title": "Unchecked external call can enable reentrancy",
-        "message": "External value transfer detected. Review state updates and reentrancy protection.",
+        "title": "Reentrancy risk in withdraw()",
+        "message": "Unchecked external call before state update can enable reentrancy in withdraw().",
         "location": {
           "file": "contract.sol",
           "lineStart": 1

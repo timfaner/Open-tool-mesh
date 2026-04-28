@@ -1,3 +1,3 @@
 export async function GET() {
-  return Response.json({ ok: true, service: 'opentool-mesh-dashboard' });
+  return Response.json({ ok: true, service: 'opentool-mesh-dashboard', route: '/' });
 }

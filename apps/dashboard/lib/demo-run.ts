@@ -180,7 +180,20 @@ function getVerificationOutcome() {
     : 'check failed';
 }
 
+function getTopFinding() {
+  return (
+    typedReport.findings.find((finding) => finding.severity === 'high') ??
+    typedReport.findings[0] ?? {
+      title: 'No findings recorded',
+      description: 'The report fixture did not include any findings.',
+      severity: 'low' as const,
+      traceId: typedExecutionTrace.traceId,
+    }
+  );
+}
+
 const findingCount = typedReport.findings.length;
+const topFinding = getTopFinding();
 const severityOrder = ['high', 'medium', 'low'] as const;
 const severityCounts = severityOrder.map((label) => ({
   label: label.charAt(0).toUpperCase() + label.slice(1),
@@ -269,12 +282,12 @@ export const demoRun = {
   report: {
     reportId: typedReport.reportId,
     reportUri: reportArtifact?.uri ?? '0g://reports/unavailable',
-    title: 'Reentrancy risk in withdraw()',
+    title: topFinding.title,
     findings: findingCount,
     severity: severityCounts,
     summaryText: typedReport.summary,
     generatedAt: toDisplayTime(typedReport.generatedAt),
-    traceReference: typedReport.findings[0]?.traceId ?? typedExecutionTrace.traceId,
+    traceReference: topFinding.traceId ?? typedExecutionTrace.traceId,
     manifestVersion: `${manifest.mcp.toolName}@${typedExecutionTrace.tool.version}`,
     summary: typedReport.findings.map((finding) => `${finding.severity.toUpperCase()} · ${finding.title} — ${finding.description}`),
   },

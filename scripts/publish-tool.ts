@@ -48,7 +48,9 @@ async function main() {
   console.log(JSON.stringify(await publishDemoTool(), null, 2));
 }
 
-main().catch((error: unknown) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch((error: unknown) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
+}
