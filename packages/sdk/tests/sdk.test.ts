@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createOpenToolMeshClient } from "../src/index.js";
+import { createOpenToolMeshClient, hashJson } from "../src/index.js";
 
 describe("sdk skeleton", () => {
   it("builds audit reports from the baseline client", async () => {
@@ -39,5 +39,9 @@ describe("sdk skeleton", () => {
     });
 
     expect(report.summary).toBe("Example report");
+  });
+
+  it("hashes json deterministically", () => {
+    expect(hashJson({ b: 1, a: 2 })).toBe(hashJson({ a: 2, b: 1 }));
   });
 });
