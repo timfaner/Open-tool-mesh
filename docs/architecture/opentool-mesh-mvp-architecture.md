@@ -35,6 +35,7 @@
 4. AXL 只做远程 invocation transport，不承担 manifest 信任或历史记忆。
 5. MCP-compatible manifest 负责工具接口语义，OpenTool Mesh 负责 discovery、verification、remote invocation、memory。
 6. SDK 必须是第一公民；CLI、agent example、dashboard 都消费同一套 SDK 接口。
+7. 仓库布局必须服务已定义 MVP 交付物：`packages/sdk`、`packages/cli`、`packages/shared`、`examples/audit-agent`、`services/tool-node`、`apps/dashboard`，不要再抽象出额外产品层。
 
 ## 3. 系统上下文与职责边界
 
@@ -65,6 +66,19 @@
 - 0G 定义工具清单与执行证据存在哪里。
 - AXL 定义 agent 如何跨节点调用工具。
 - OpenTool Mesh SDK 把这些流程组装成一条可复用的生命周期。
+
+### 3.4 黑客松最小闭环约束
+
+这四层的组合必须只服务下面这条最小链路：
+
+1. `publish`: publisher 把 manifest 写到 0G，并把 ENS 入口与 capability 索引补齐。
+2. `discover`: agent 按 capability 从 0G KV 找候选，再通过 ENS 拿到身份和 manifest 入口。
+3. `verify`: agent 校验 manifest hash、owner、schema、version compatibility。
+4. `call`: agent 通过 AXL 调用远程 tool node，而不是本地函数。
+5. `trace`: agent 把 request/response hash、artifact、trace 写回 0G。
+6. `report`: dashboard 和 audit report 只读取这次 run 的 discovery/manifest/invocation/memory 证据。
+
+超出这条链路的能力都不是 P0，包括 marketplace、支付、复杂 reputation、通用 registry 替代、multi-agent orchestration。
 
 ## 4. MVP 高层架构
 
@@ -221,6 +235,77 @@ export interface ToolManifest {
 }
 ```
 
+最小必填字段可以压缩为：
+
+- `toolId`
+- `version`
+- `owner.address`
+- `capabilities[]`
+- `mcp.inputSchema`
+- `mcp.outputSchema`
+- `invocation.axlPeerId`
+- `storage.manifestUri`
+- `integrity.manifestHash`
+
+最小示例：
+
+```json
+{
+  "schemaVersion": "otm.manifest.v1",
+  "toolId": "otm:ens:solidity-scanner.auditagent.eth",
+  "name": "Solidity Pattern Scanner",
+  "version": "0.1.0",
+  "description": "Remote static analysis tool for Solidity contracts",
+  "owner": {
+    "address": "0x1234567890abcdef1234567890abcdef12345678",
+    "ensName": "auditagent.eth"
+  },
+  "capabilities": [
+    {
+      "id": "solidity-static-analysis",
+      "description": "Detect common Solidity patterns and vulnerabilities"
+    }
+  ],
+  "mcp": {
+    "toolName": "solidity-pattern-scanner",
+    "protocol": "mcp-compatible",
+    "inputSchema": {
+      "type": "object",
+      "required": ["source"],
+      "properties": {
+        "source": { "type": "string" }
+      }
+    },
+    "outputSchema": {
+      "type": "object",
+      "required": ["findings", "summary"],
+      "properties": {
+        "findings": { "type": "array" },
+        "summary": { "type": "object" }
+      }
+    }
+  },
+  "invocation": {
+    "transport": "axl",
+    "axlPeerId": "axl-peer-solidity-01",
+    "axlMethod": "invokeTool",
+    "timeoutMs": 20000
+  },
+  "storage": {
+    "manifestUri": "0g://manifests/solidity-scanner/0.1.0.json",
+    "traceNamespace": "traces/solidity-scanner"
+  },
+  "compatibility": {
+    "sdkVersionRange": "^0.1.0",
+    "manifestApiVersion": "v1"
+  },
+  "integrity": {
+    "manifestHash": "sha256:manifest123",
+    "createdAt": "2026-04-28T00:00:00.000Z"
+  }
+}
+```
+
 ### 6.3 Capability Index 结构
 
 推荐按 capability 存独立 key，value 为候选工具列表。
@@ -342,6 +427,75 @@ export interface ExecutionTrace {
 }
 ```
 
+MVP trace 的最小验收字段必须让 dashboard 能直观看到：
+
+- `traceId`
+- `requestedCapability`
+- `tool.toolId`
+- `tool.manifestUri`
+- `tool.manifestHash`
+- `invocation.peerId`
+- `invocation.status`
+- `io.inputHash`
+- `io.outputHash`
+- `storage.traceUri`
+
+最小示例：
+
+```json
+{
+  "traceId": "trace_01",
+  "runId": "audit_run_01",
+  "agentId": "audit-agent-example",
+  "requestedCapability": "solidity-static-analysis",
+  "tool": {
+    "toolId": "otm:ens:solidity-scanner.auditagent.eth",
+    "ensName": "solidity-scanner.auditagent.eth",
+    "manifestUri": "0g://manifests/solidity-scanner/0.1.0.json",
+    "manifestHash": "sha256:manifest123",
+    "version": "0.1.0",
+    "ownerAddress": "0x1234567890abcdef1234567890abcdef12345678"
+  },
+  "discovery": {
+    "candidateCount": 1,
+    "selectedReason": "best capability match",
+    "resolvedAt": "2026-04-28T00:00:10.000Z"
+  },
+  "verification": {
+    "manifestHashValid": true,
+    "ownerValid": true,
+    "schemaValid": true,
+    "versionCompatible": true,
+    "verifiedAt": "2026-04-28T00:00:12.000Z"
+  },
+  "invocation": {
+    "transport": "axl",
+    "peerId": "axl-peer-solidity-01",
+    "method": "invokeTool",
+    "status": "ok",
+    "startedAt": "2026-04-28T00:00:14.000Z",
+    "finishedAt": "2026-04-28T00:00:18.000Z"
+  },
+  "io": {
+    "inputHash": "sha256:input123",
+    "outputHash": "sha256:output123"
+  },
+  "artifacts": [
+    {
+      "kind": "tool-output",
+      "uri": "0g://artifacts/trace_01/findings.json",
+      "hash": "sha256:artifact123",
+      "mediaType": "application/json"
+    }
+  ],
+  "storage": {
+    "traceUri": "0g://traces/trace_01.json",
+    "persistedAt": "2026-04-28T00:00:19.000Z",
+    "backend": "0g-storage"
+  }
+}
+```
+
 ### 6.6 Audit Report 结构
 
 ```ts
@@ -388,13 +542,14 @@ SDK 应围绕 domain service 组织，而不是围绕底层供应商 SDK 组织�
 
 ```ts
 export interface OpenToolMeshClient {
-  publishManifest(input: PublishManifestInput): Promise<PublishManifestResult>;
-  discoverTools(input: DiscoverToolsInput): Promise<DiscoveredTool[]>;
   resolveIdentity(input: ResolveIdentityInput): Promise<ToolIdentity>;
+  discoverTools(input: DiscoverToolsInput): Promise<DiscoveredTool[]>;
   loadManifest(input: LoadManifestInput): Promise<ToolManifest>;
   verifyManifest(input: VerifyManifestInput): Promise<ManifestVerificationResult>;
   invokeTool<TInput, TOutput>(input: InvokeToolInput<TInput>): Promise<ToolInvocationResponse<TOutput>>;
   recordTrace(input: RecordTraceInput): Promise<RecordTraceResult>;
+  saveArtifact(input: SaveArtifactInput): Promise<SaveArtifactResult>;
+  publishManifest(input: PublishManifestInput): Promise<PublishManifestResult>;
   buildAuditReport(input: BuildAuditReportInput): Promise<AuditReport>;
 }
 ```
@@ -558,25 +713,27 @@ Dashboard 是评审理解链路的关键，必须以单次 audit run 为中心�
 
 ## 11. 仓库目录建议
 
-建议直接建立 monorepo：
+建议直接建立 monorepo，并且目录名要和已分派开发任务保持一致：
 
 ```text
 /workspace/project
 ├── apps/
-│   ├── dashboard/
-│   │   ├── app/
-│   │   │   ├── runs/
-│   │   │   ├── tools/
-│   │   │   └── api/
-│   │   ├── components/
-│   │   └── lib/
-│   ├── audit-agent-example/
-│   │   ├── src/
-│   │   │   ├── run-audit.ts
-│   │   │   ├── capabilities/
-│   │   │   └── report/
-│   │   └── fixtures/
-│   └── tool-node-solidity-scanner/
+│   └── dashboard/
+│       ├── app/
+│       │   ├── runs/
+│       │   ├── tools/
+│       │   └── api/
+│       ├── components/
+│       └── lib/
+├── examples/
+│   └── audit-agent/
+│       ├── src/
+│       │   ├── run-audit.ts
+│       │   ├── capabilities/
+│       │   └── report/
+│       └── fixtures/
+├── services/
+│   └── tool-node/
 │       ├── src/
 │       │   ├── server.ts
 │       │   ├── scanner/
@@ -601,7 +758,7 @@ Dashboard 是评审理解链路的关键，必须以单次 audit run 为中心�
 │   │   │   ├── commands/
 │   │   │   └── index.ts
 │   │   └── tests/
-│   ├── schemas/
+│   ├── shared/
 │   │   ├── src/
 │   │   │   ├── manifest.ts
 │   │   │   ├── trace.ts
@@ -636,7 +793,7 @@ Dashboard 是评审理解链路的关键，必须以单次 audit run 为中心�
 
 ## 12. 模块接口建议
 
-### 12.1 `packages/schemas`
+### 12.1 `packages/shared`
 
 职责：单独沉淀所有 schema 与共享类型，避免 dashboard、SDK、CLI 各自复制结构。
 
