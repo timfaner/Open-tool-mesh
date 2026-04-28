@@ -190,6 +190,7 @@ export async function runAuditDemo() {
 
   return {
     requestedCapability: "solidity-static-analysis",
+    tool: selectedTool,
     discovery: {
       mode: "capability-discovery",
       selectedReason: trace.discovery.selectedReason,
@@ -197,8 +198,10 @@ export async function runAuditDemo() {
     },
     toolId: selectedTool.id,
     manifestUri: manifest.storage.manifestUri,
+    verification,
     traceId,
     traceUri: persistedTrace.traceUri,
+    reportUri: reportArtifact.uri,
     report,
     response
   };

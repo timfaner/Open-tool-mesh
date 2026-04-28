@@ -10,6 +10,17 @@ export function createToolNodeServer() {
     handler: scanner,
     listen(port = Number(process.env.PORT ?? "4318")) {
       const server = createServer(async (request, response) => {
+        if (request.method === "GET" && request.url === "/health") {
+          response.setHeader("content-type", "application/json");
+          response.end(
+            JSON.stringify({
+              ok: true,
+              capability: "solidity-static-analysis"
+            })
+          );
+          return;
+        }
+
         if (request.method !== "POST" || request.url !== "/invokeTool") {
           response.statusCode = 404;
           response.end("Not found");

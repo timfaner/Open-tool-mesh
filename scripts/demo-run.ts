@@ -1,226 +1,61 @@
-import { randomUUID } from "node:crypto";
-import { execFile } from "node:child_process";
-import { readFile, rm } from "node:fs/promises";
+import { access, rm } from "node:fs/promises";
+import { constants as fsConstants } from "node:fs";
 import { resolve } from "node:path";
+import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
-interface ScannerFinding {
-  ruleId: string;
-  severity: "low" | "medium" | "high" | "critical";
-  title: string;
-  message: string;
+const execFileAsync = promisify(execFile);
+const TOOL_NODE_BASE_URL = process.env.OTM_TOOL_NODE_BASE_URL ?? "http://127.0.0.1:4318";
+const TOOL_NODE_HEALTH_URL = new URL("/health", TOOL_NODE_BASE_URL).toString();
+const TOOL_NODE_DIST = "services/tool-node/dist/services/tool-node/src/server.js";
+const AUDIT_AGENT_DIST = "examples/audit-agent/dist/examples/audit-agent/src/run-audit.js";
+
+async function buildDemoPackages(rootDir: string) {
+  await execFileAsync("corepack", ["pnpm", "--filter", "@opentoolmesh/sdk", "build"], { cwd: rootDir });
+  await execFileAsync("corepack", ["pnpm", "--filter", "@opentoolmesh/tool-node", "build"], { cwd: rootDir });
+  await execFileAsync("corepack", ["pnpm", "--filter", "@opentoolmesh/audit-agent", "build"], { cwd: rootDir });
 }
 
-const execFileAsync = promisify(execFile);
+async function hasBuiltArtifact(rootDir: string, relativePath: string) {
+  try {
+    await access(resolve(rootDir, relativePath), fsConstants.F_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
-async function main() {
-  const startDir = new URL("..", import.meta.url).pathname;
-  await execFileAsync("corepack", ["pnpm", "--filter", "@opentoolmesh/sdk", "build"], { cwd: startDir });
-  await execFileAsync("corepack", ["pnpm", "--filter", "@opentoolmesh/tool-node", "build"], { cwd: startDir });
-  const {
-    createLocalDevnetClientDeps,
-    createLocalDevnetPaths,
-    createOpenToolMeshClient,
-    findWorkspaceRoot,
-    hashJson,
-    hashManifest,
-    seedCapabilityIndex,
-    seedPeerRegistry
-  } = await import("../packages/sdk/dist/sdk/src/index.js");
-  const { createToolNodeServer } = await import("../services/tool-node/dist/services/tool-node/src/server.js");
-  const rootDir = await findWorkspaceRoot(startDir);
-  const paths = createLocalDevnetPaths(rootDir);
+async function isToolNodeHealthy() {
+  try {
+    const response = await fetch(TOOL_NODE_HEALTH_URL, { method: "GET" });
 
-  await rm(paths.stateDir, { recursive: true, force: true });
-  await seedPeerRegistry(rootDir, {
-    "axl-peer-solidity-01": "http://127.0.0.1:4318"
+    if (!response.ok) {
+      return false;
+    }
+
+    const payload = (await response.json()) as { ok?: boolean; capability?: string };
+    return payload.ok === true && payload.capability === "solidity-static-analysis";
+  } catch {
+    return false;
+  }
+}
+
+async function withToolNode<T>(rootDir: string, run: (managedLocally: boolean) => Promise<T>) {
+  if (await isToolNodeHealthy()) {
+    return run(false);
+  }
+
+  const { createToolNodeServer } = await import(`../${TOOL_NODE_DIST}`);
+  const port = Number(new URL(TOOL_NODE_BASE_URL).port || "80");
+  const server = createToolNodeServer().listen(port);
+
+  await new Promise<void>((resolveReady, rejectReady) => {
+    server.once("listening", () => resolveReady());
+    server.once("error", rejectReady);
   });
 
-  const server = createToolNodeServer().listen(4318);
-  await new Promise<void>((resolveReady) => server.once("listening", () => resolveReady()));
-
   try {
-    const client = createOpenToolMeshClient(createLocalDevnetClientDeps(rootDir));
-    const manifest = JSON.parse(
-      await readFile(new URL("../manifests/solidity-pattern-scanner.manifest.json", import.meta.url), "utf8")
-    );
-    const nextManifest = structuredClone(manifest);
-    nextManifest.integrity.manifestHash = hashManifest(nextManifest);
-
-    const published = await client.publishManifest({ manifest: nextManifest });
-    nextManifest.storage.manifestUri = published.manifestUri;
-    nextManifest.integrity.manifestHash = published.manifestHash;
-    await seedCapabilityIndex(rootDir, nextManifest);
-
-    const discovered = await client.discoverTools({ capability: "solidity-static-analysis", limit: 1 });
-    const selectedTool = discovered[0];
-
-    if (!selectedTool) {
-      throw new Error("No discovered tool for capability solidity-static-analysis");
-    }
-
-    const resolved = await client.resolveIdentity({ ensName: "solidity-scanner.auditagent.eth" });
-    const loadedManifest = await client.loadManifest({ manifestUri: selectedTool.manifestUri });
-    const verification = await client.verifyManifest({
-      identity: resolved,
-      manifest: loadedManifest,
-      sdkVersion: "0.1.0"
-    });
-
-    if (!verification.ok) {
-      throw new Error(`Manifest verification failed: ${verification.errors.join(", ")}`);
-    }
-
-    const source = await readFile(resolve(rootDir, "examples/audit-agent/fixtures/sample-contract.sol"), "utf8");
-    const traceId = randomUUID();
-    const invocationStartedAt = new Date().toISOString();
-    const response = await client.invokeTool<{ source: string }, { findings: ScannerFinding[]; summary: Record<string, number>; sourceLength: number }>({
-      capability: "solidity-static-analysis",
-      tool: resolved,
-      manifest: loadedManifest,
-      agentId: "demo-runner",
-      input: { source },
-      traceId
-    });
-
-    const findings =
-      response.status === "ok"
-        ? (response.output?.findings ?? []).map((finding) => ({
-            id: finding.ruleId,
-            severity: finding.severity,
-            title: finding.title,
-            description: finding.message,
-            evidence: finding.message,
-            traceId,
-            toolId: selectedTool.id
-          }))
-        : [];
-
-    const report = await client.buildAuditReport({
-      contractName: "Vault",
-      summary:
-        "Capability discovery resolved solidity-static-analysis to a remote Solidity scanner, then completed manifest verification, AXL invocation, trace persistence, and report generation.",
-      findings
-    });
-
-    const outputArtifact =
-      response.status === "ok"
-        ? await client.saveArtifact({
-            namespace: "artifacts",
-            artifact: {
-              traceId,
-              toolId: selectedTool.id,
-              output: response.output
-            }
-          })
-        : null;
-
-    const reportArtifact = await client.saveArtifact({
-      namespace: "reports",
-      artifact: report
-    });
-
-    const trace = {
-      traceId,
-      runId: traceId,
-      agentId: "demo-runner",
-      requestedCapability: "solidity-static-analysis",
-      tool: {
-        toolId: selectedTool.id,
-        ensName: selectedTool.ensName,
-        manifestUri: loadedManifest.storage.manifestUri,
-        manifestHash: loadedManifest.integrity.manifestHash,
-        version: loadedManifest.version,
-        ownerAddress: selectedTool.ownerAddress
-      },
-      discovery: {
-        capabilityIndexUri: "0g://indexes/capabilities/solidity-static-analysis.json",
-        candidateCount: discovered.length,
-        selectedReason: "selected from capability discovery candidates for solidity-static-analysis",
-        resolvedAt: new Date().toISOString()
-      },
-      verification: {
-        ...verification.checks,
-        verifiedAt: new Date().toISOString()
-      },
-      invocation: {
-        transport: "axl" as const,
-        peerId: loadedManifest.invocation.axlPeerId,
-        method: loadedManifest.invocation.axlMethod,
-        startedAt: invocationStartedAt,
-        finishedAt: response.finishedAt,
-        status: response.status === "ok" ? "ok" as const : "error" as const
-      },
-      io: {
-        inputHash: hashJson({ source }),
-        outputHash: response.output ? hashJson(response.output) : undefined
-      },
-      artifacts: [
-        ...(outputArtifact
-          ? [
-              {
-                kind: "tool-output" as const,
-                uri: outputArtifact.uri,
-                hash: outputArtifact.hash,
-                mediaType: "application/json"
-              }
-            ]
-          : []),
-        {
-          kind: "audit-report" as const,
-          uri: reportArtifact.uri,
-          hash: reportArtifact.hash,
-          mediaType: "application/json"
-        }
-      ],
-      storage: {
-        traceUri: "",
-        persistedAt: new Date().toISOString(),
-        backend: "0g-storage" as const
-      }
-    };
-
-    const firstPersist = await client.recordTrace({ trace });
-    trace.storage.traceUri = firstPersist.traceUri;
-    const persistedTrace = await client.recordTrace({ trace });
-
-    console.log(
-      JSON.stringify(
-        {
-          publish: {
-            toolId: nextManifest.toolId,
-            manifestUri: published.manifestUri,
-            manifestHash: published.manifestHash,
-            version: published.version
-          },
-          discover: discovered,
-          resolve: resolved,
-          verify: verification,
-          call: {
-            traceId,
-            status: response.status,
-            output: response.output
-          },
-          trace: {
-            traceId,
-            traceUri: persistedTrace.traceUri
-          },
-          report: {
-            reportId: report.reportId,
-            reportUri: reportArtifact.uri
-          },
-          files: {
-            ensRecords: paths.ensFile,
-            peerRegistry: paths.peersFile,
-            trace: resolve(paths.storageDir, "traces", `${traceId}.json`),
-            artifact: resolve(paths.storageDir, "artifacts", `${traceId}.json`),
-            report: resolve(paths.storageDir, "reports", `${report.reportId}.json`)
-          }
-        },
-        null,
-        2
-      )
-    );
+    return await run(true);
   } finally {
     await new Promise<void>((resolveClosed, rejectClosed) => {
       server.close((error) => {
@@ -232,6 +67,83 @@ async function main() {
       });
     });
   }
+}
+
+async function main() {
+  const rootDir = new URL("..", import.meta.url).pathname;
+  await buildDemoPackages(rootDir);
+
+  const {
+    createLocalDevnetPaths,
+    findWorkspaceRoot
+  } = await import("../packages/sdk/dist/sdk/src/index.js");
+  const workspaceRoot = await findWorkspaceRoot(rootDir);
+  const paths = createLocalDevnetPaths(workspaceRoot);
+
+  await rm(paths.stateDir, { recursive: true, force: true });
+
+  const [toolNodeBuilt, auditAgentBuilt] = await Promise.all([
+    hasBuiltArtifact(workspaceRoot, TOOL_NODE_DIST),
+    hasBuiltArtifact(workspaceRoot, AUDIT_AGENT_DIST)
+  ]);
+
+  if (!toolNodeBuilt || !auditAgentBuilt) {
+    throw new Error("demo build artifacts missing after build step");
+  }
+
+  const { publishDemoTool } = await import("./publish-tool.ts");
+  const { runAuditDemo } = await import(`../${AUDIT_AGENT_DIST}`);
+
+  const result = await withToolNode(workspaceRoot, async (managedLocally) => {
+    const publish = await publishDemoTool();
+    const audit = await runAuditDemo();
+
+    return {
+      toolNode: {
+        baseUrl: TOOL_NODE_BASE_URL,
+        healthUrl: TOOL_NODE_HEALTH_URL,
+        mode: managedLocally ? "managed-by-demo-run" : "reused-existing-process"
+      },
+      publish,
+      discover: [
+        {
+          id: audit.tool.id,
+          ensName: audit.tool.ensName,
+          ownerAddress: audit.tool.ownerAddress,
+          latestManifestUri: audit.tool.latestManifestUri,
+          latestManifestHash: audit.tool.latestManifestHash,
+          latestVersion: audit.tool.latestVersion,
+          capabilities: audit.tool.capabilities,
+          manifestUri: audit.tool.latestManifestUri,
+          manifestHash: audit.tool.latestManifestHash
+        }
+      ],
+      resolve: audit.tool,
+      verify: audit.verification,
+      call: {
+        traceId: audit.traceId,
+        status: audit.response.status,
+        output: audit.response.output
+      },
+      trace: {
+        traceId: audit.traceId,
+        traceUri: audit.traceUri
+      },
+      report: {
+        reportId: audit.report.reportId,
+        reportUri: audit.reportUri
+      },
+      files: {
+        ensRecords: paths.ensFile,
+        peerRegistry: paths.peersFile,
+        trace: resolve(paths.storageDir, "traces", `${audit.traceId}.json`),
+        artifact: resolve(paths.storageDir, "artifacts", `${audit.traceId}.json`),
+        report: resolve(paths.storageDir, "reports", `${audit.report.reportId}.json`)
+      }
+    };
+  });
+
+  console.log(JSON.stringify(result, null, 2));
 }
 
 main().catch((error: unknown) => {
