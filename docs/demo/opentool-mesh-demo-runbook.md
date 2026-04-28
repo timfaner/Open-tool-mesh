@@ -287,7 +287,7 @@ api-tester、devops 与现场演示统一按这份 checklist 收口。只要页�
 | agent 可远程调用 tool node | `corepack pnpm demo:tool-node` + `corepack pnpm demo:run` |
 | trace 写入存储 | `demo:run` 输出 `files.trace` |
 | report 引用 trace | `sample-report.json` 与运行时 report 都包含 `traceId` |
-| dashboard 字段一致 | `apps/dashboard/lib/demo-run.ts` 运行态优先读取最新 trace，并在无运行态时回退到与 runbook 一致的 fixture 基线 |
+| dashboard 字段一致 | `apps/dashboard/lib/demo-run.ts` 运行态优先读取最近一次完整且成功的 `demo:run`，即使更新的 trace 失败或残缺也继续回看更早成功运行；仅在无可用成功运行时回退到与 runbook 一致的 fixture 基线 |
 
 ## 9. 当前结论
 

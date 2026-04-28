@@ -269,7 +269,7 @@ const fixtureDemoRun: DashboardRun = {
 };
 
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.resolve(moduleDir, '..', '..', '..');
+const repoRoot = process.env.OPENTOOLMESH_DASHBOARD_REPO_ROOT ?? path.resolve(moduleDir, '..', '..', '..');
 const storageRoot = path.join(repoRoot, '.opentoolmesh', 'storage');
 
 function readJsonFile<T>(filePath: string): T {
