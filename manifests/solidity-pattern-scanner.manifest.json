@@ -1,5 +1,61 @@
 {
-  "$schema": "../docs/architecture/manifest-schema.md",
-  "source": "../services/tool-node/manifests/solidity-pattern-scanner.manifest.json"
+  "schemaVersion": "otm.manifest.v1",
+  "toolId": "otm:ens:solidity-scanner.auditagent.eth",
+  "name": "Solidity Pattern Scanner",
+  "version": "0.1.0",
+  "description": "Remote static analysis tool for Solidity contracts",
+  "owner": {
+    "address": "0x1234567890abcdef1234567890abcdef12345678",
+    "ensName": "auditagent.eth"
+  },
+  "capabilities": [
+    {
+      "id": "solidity-static-analysis",
+      "description": "Detect common Solidity patterns and vulnerabilities"
+    }
+  ],
+  "mcp": {
+    "toolName": "solidity-pattern-scanner",
+    "protocol": "mcp-compatible",
+    "inputSchema": {
+      "type": "object",
+      "required": ["source"],
+      "properties": {
+        "source": {
+          "type": "string"
+        }
+      }
+    },
+    "outputSchema": {
+      "type": "object",
+      "required": ["findings", "summary"],
+      "properties": {
+        "findings": {
+          "type": "array"
+        },
+        "summary": {
+          "type": "object"
+        }
+      }
+    }
+  },
+  "invocation": {
+    "transport": "axl",
+    "axlPeerId": "axl-peer-solidity-01",
+    "axlMethod": "invokeTool",
+    "timeoutMs": 20000
+  },
+  "storage": {
+    "manifestUri": "0g://manifests/otm_ens_solidity-scanner.auditagent.eth-0.1.0.json",
+    "traceNamespace": "traces/solidity-scanner"
+  },
+  "compatibility": {
+    "sdkVersionRange": "^0.1.0",
+    "manifestApiVersion": "v1"
+  },
+  "integrity": {
+    "manifestHash": "sha256:ddd20540138a8fb9711cb3d751f940964390d3a9fb54e147c0284e6205f64524",
+    "createdAt": "2026-04-28T00:00:00.000Z"
+  }
 }
 

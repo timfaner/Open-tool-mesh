@@ -183,7 +183,7 @@ export function createLocalKvAdapter(paths: LocalDevnetPaths): KvIndexAdapter {
 
 export function createLocalInvocationTransport(paths: LocalDevnetPaths): InvocationTransport {
   return {
-    async invoke<TReq, TRes>(peerId, method, payload, timeoutMs) {
+    async invoke<TReq, TRes>(peerId: string, method: string, payload: TReq, timeoutMs: number) {
       const registry = await readJsonFile<AxlPeerRegistry>(paths.peersFile, { peers: {} });
       const baseUrl = registry.peers[peerId];
 
@@ -248,7 +248,7 @@ export async function seedCapabilityIndex(rootDir: string, manifest: ToolManifes
     current.tools = current.tools.filter((tool) => tool.toolId !== manifest.toolId);
     current.tools.push({
       toolId: manifest.toolId,
-      ensName: manifest.owner.ensName ?? manifest.toolId.replace("otm:ens:", ""),
+      ensName: manifest.toolId.replace("otm:ens:", ""),
       manifestUri: manifest.storage.manifestUri,
       manifestHash: manifest.integrity.manifestHash,
       version: manifest.version,

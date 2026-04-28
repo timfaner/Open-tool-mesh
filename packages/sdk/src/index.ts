@@ -3,6 +3,7 @@ export {
   createLocalDevnetClientDeps,
   createLocalDevnetPaths,
   hashJson,
+  hashManifest,
   seedCapabilityIndex,
   seedPeerRegistry
 } from "./client/local-devnet.js";

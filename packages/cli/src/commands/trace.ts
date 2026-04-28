@@ -1,10 +1,12 @@
 import type { CliCommand } from "./types.js";
+import { getFlag, readStoredTrace } from "./helpers.js";
 
 export const traceCommand: CliCommand = {
   name: "trace",
   description: "Fetch an execution trace summary",
   async run(args, context) {
-    context.stdout.log("trace command scaffold", { args, cwd: context.cwd });
+    const traceId = getFlag(args, "--trace");
+    const trace = await readStoredTrace(context.cwd, traceId);
+    context.stdout.log(JSON.stringify(trace, null, 2));
   }
 };
-

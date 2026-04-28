@@ -1,0 +1,51 @@
+{
+  "traceId": "41f036ae-ba64-43b7-b310-1927e73396d4",
+  "runId": "41f036ae-ba64-43b7-b310-1927e73396d4",
+  "agentId": "opentool-cli",
+  "requestedCapability": "solidity-static-analysis",
+  "tool": {
+    "toolId": "otm:ens:solidity-scanner.auditagent.eth",
+    "ensName": "solidity-scanner.auditagent.eth",
+    "manifestUri": "0g://manifests/otm_ens_solidity-scanner.auditagent.eth-0.1.0.json",
+    "manifestHash": "sha256:ddd20540138a8fb9711cb3d751f940964390d3a9fb54e147c0284e6205f64524",
+    "version": "0.1.0",
+    "ownerAddress": "0x1234567890abcdef1234567890abcdef12345678"
+  },
+  "discovery": {
+    "candidateCount": 1,
+    "selectedReason": "resolved from CLI tool argument",
+    "resolvedAt": "2026-04-28T14:56:11.921Z"
+  },
+  "verification": {
+    "manifestHashValid": true,
+    "ownerValid": true,
+    "schemaValid": true,
+    "versionCompatible": true,
+    "verifiedAt": "2026-04-28T14:56:11.921Z"
+  },
+  "invocation": {
+    "transport": "axl",
+    "peerId": "axl-peer-solidity-01",
+    "method": "invokeTool",
+    "startedAt": "2026-04-28T14:56:11.921Z",
+    "finishedAt": "2026-04-28T14:56:11.891Z",
+    "status": "ok"
+  },
+  "io": {
+    "inputHash": "sha256:e86c47ebdbb303887f746b75a3877f806a6ffed429ad208f8249a751d9c290b4",
+    "outputHash": "sha256:69bb4650459cd22722f676912cb5315d073d40ced1f79c5ac88602072eb47b00"
+  },
+  "artifacts": [
+    {
+      "kind": "tool-output",
+      "uri": "0g://artifacts/41f036ae-ba64-43b7-b310-1927e73396d4.json",
+      "hash": "sha256:d33d82404688b1fa256189e983db88d91e8860b08d836f6fb4ce75d3ee95ca36",
+      "mediaType": "application/json"
+    }
+  ],
+  "storage": {
+    "traceUri": "0g://traces/41f036ae-ba64-43b7-b310-1927e73396d4.json",
+    "persistedAt": "2026-04-28T14:56:11.921Z",
+    "backend": "0g-storage"
+  }
+}

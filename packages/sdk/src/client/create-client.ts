@@ -190,7 +190,8 @@ export function createOpenToolMeshClient(_deps: OpenToolMeshClientDeps): OpenToo
       storedManifest.storage.manifestUri = persisted.uri;
       storedManifest.integrity.manifestHash = hashManifest(storedManifest);
       await _deps.blob.putJson("manifests", storedManifest);
-      await _deps.ens.setTextRecords?.(storedManifest.owner.ensName ?? storedManifest.toolId.replace("otm:ens:", ""), {
+      const toolEnsName = storedManifest.toolId.replace("otm:ens:", "");
+      await _deps.ens.setTextRecords?.(toolEnsName, {
         "opentoolmesh.manifest_uri": storedManifest.storage.manifestUri,
         "opentoolmesh.manifest_hash": storedManifest.integrity.manifestHash,
         "opentoolmesh.owner": storedManifest.owner.address,
