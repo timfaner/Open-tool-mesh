@@ -1,0 +1,46 @@
+{
+  "traceId": "41f036ae-ba64-43b7-b310-1927e73396d4",
+  "toolId": "otm:ens:solidity-scanner.auditagent.eth",
+  "output": {
+    "findings": [
+      {
+        "ruleId": "reentrancy-call-before-state",
+        "severity": "high",
+        "title": "Unchecked external call can enable reentrancy",
+        "message": "External value transfer detected. Review state updates and reentrancy protection.",
+        "location": {
+          "file": "contract.sol",
+          "lineStart": 1
+        }
+      },
+      {
+        "ruleId": "missing-admin-event",
+        "severity": "low",
+        "title": "Administrative path lacks event emission",
+        "message": "Owner-controlled actions should emit events for auditability.",
+        "location": {
+          "file": "contract.sol",
+          "lineStart": 1
+        }
+      },
+      {
+        "ruleId": "missing-paused-guard-test",
+        "severity": "medium",
+        "title": "Pause flow lacks obvious negative-path assertion",
+        "message": "Consider adding paused-state transfer checks or follow-up tests.",
+        "location": {
+          "file": "contract.sol",
+          "lineStart": 1
+        }
+      }
+    ],
+    "summary": {
+      "totalFindings": 3,
+      "critical": 0,
+      "high": 1,
+      "medium": 1,
+      "low": 1
+    },
+    "sourceLength": 620
+  }
+}

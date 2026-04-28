@@ -138,8 +138,8 @@
 - `owner valid`
 - `version compatible`
 - Required values:
-- `0g://manifests/solidity-scanner/0.1.0.json`
-- `sha256:manifest123`
+- `0g://manifests/otm_ens_solidity-scanner.auditagent.eth-0.1.0.json`
+- `sha256:ddd20540138a8fb9711cb3d751f940964390d3a9fb54e147c0284e6205f64524`
 - `0x1234...5678`
 - `0.1.0`
 - `verified`

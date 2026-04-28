@@ -7,13 +7,15 @@
     "node": ">=22.0.0"
   },
   "scripts": {
-    "build": "turbo run build",
+    "build": "pnpm -r run build",
     "dev": "turbo run dev --parallel",
-    "lint": "turbo run lint",
-    "test": "turbo run test",
-    "typecheck": "turbo run typecheck",
-    "demo:run": "pnpm --filter @opentoolmesh/audit-agent demo:run",
-    "demo:tool-node": "pnpm --filter @opentoolmesh/tool-node dev"
+    "lint": "pnpm -r run lint",
+    "test": "pnpm -r run test",
+    "typecheck": "pnpm -r run typecheck",
+    "demo:publish": "node --experimental-strip-types scripts/publish-tool.ts",
+    "demo:seed": "node --experimental-strip-types scripts/seed-capability-index.ts",
+    "demo:run": "node --experimental-strip-types scripts/demo-run.ts",
+    "demo:tool-node": "corepack pnpm --filter @opentoolmesh/tool-node build && node services/tool-node/dist/services/tool-node/src/server.js"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",

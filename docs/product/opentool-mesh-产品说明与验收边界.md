@@ -550,7 +550,7 @@ P2 不应影响 P0 交付节奏。
     "timeoutMs": 20000
   },
   "storage": {
-    "manifestUri": "0g://manifests/solidity-scanner/0.1.0.json",
+    "manifestUri": "0g://manifests/otm_ens_solidity-scanner.auditagent.eth-0.1.0.json",
     "traceNamespace": "traces/solidity-scanner"
   },
   "compatibility": {
@@ -558,7 +558,7 @@ P2 不应影响 P0 交付节奏。
     "manifestApiVersion": "v1"
   },
   "integrity": {
-    "manifestHash": "sha256:manifest123",
+    "manifestHash": "sha256:ddd20540138a8fb9711cb3d751f940964390d3a9fb54e147c0284e6205f64524",
     "createdAt": "2026-04-28T00:00:00.000Z"
   }
 }
@@ -577,8 +577,8 @@ P2 不应影响 P0 交付节奏。
   "tool": {
     "toolId": "otm:ens:solidity-scanner.auditagent.eth",
     "ensName": "solidity-scanner.auditagent.eth",
-    "manifestUri": "0g://manifests/solidity-scanner/0.1.0.json",
-    "manifestHash": "sha256:manifest123",
+    "manifestUri": "0g://manifests/otm_ens_solidity-scanner.auditagent.eth-0.1.0.json",
+    "manifestHash": "sha256:ddd20540138a8fb9711cb3d751f940964390d3a9fb54e147c0284e6205f64524",
     "version": "0.1.0",
     "ownerAddress": "0x1234567890abcdef1234567890abcdef12345678"
   },

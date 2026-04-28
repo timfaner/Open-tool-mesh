@@ -42,6 +42,12 @@
       "uri": "0g://artifacts/41f036ae-ba64-43b7-b310-1927e73396d4.json",
       "hash": "sha256:d33d82404688b1fa256189e983db88d91e8860b08d836f6fb4ce75d3ee95ca36",
       "mediaType": "application/json"
+    },
+    {
+      "kind": "audit-report",
+      "uri": "0g://reports/report_demo_solidity_audit.json",
+      "hash": "sha256:report_demo_placeholder",
+      "mediaType": "application/json"
     }
   ],
   "storage": {
