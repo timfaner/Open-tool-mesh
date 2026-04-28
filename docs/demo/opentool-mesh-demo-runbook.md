@@ -177,15 +177,24 @@ bash docs/demo/demo-health-check.sh
 
 ## 6. Dashboard 对齐口径
 
-dashboard 当前展示的是“按最新已验收 demo run 结果固化的静态展示层”，不直接读取本地重新执行后生成的 `.opentoolmesh/storage`。
+dashboard 页面现在遵循唯一一套 authoritative 规则，供 devops 文档同步与 api-tester 闭环比对复用：
 
-页面数据源固定来自以下仓库内 fixture：
+1. 若本地存在 `.opentoolmesh/storage/traces/*.json`，则按 trace 内 `storage.persistedAt` 选择最近一次 `demo:run` 产物。
+2. 选中 trace 后，页面必须只展示与该 trace 绑定的运行态数据：
+   - trace：`.opentoolmesh/storage/traces/<traceId>.json`
+   - artifact：trace 内 `tool-output` artifact 指向的 `.opentoolmesh/storage/artifacts/<traceId>.json`
+   - report：trace 内 `audit-report` artifact 指向的 `.opentoolmesh/storage/reports/<reportId>.json`
+   - manifest：trace 内 `tool.manifestUri` 对应的 `.opentoolmesh/storage/manifests/<file>.json`
+3. 若本地不存在运行态 trace，才完整回退到仓库 fixture 基线；回退时 trace/report/artifact 必须来自同一组 fixture，manifest 字段必须与 fixture trace 指向的 manifest 保持一致。
+
+当前仓库内的 fixture 回退基线为：
 
 - trace：`examples/audit-agent/fixtures/sample-execution-trace.json`
 - artifact：`examples/audit-agent/fixtures/sample-tool-output.json`
 - report：`examples/audit-agent/fixtures/sample-report.json`
+- manifest：`manifests/solidity-pattern-scanner.manifest.json`
 
-这些 fixture 已对齐到 dev 闭环报告中确认的最新一组 demo 字段，作为浏览器页、文档和代码共享的展示基线：
+这组 fixture 的当前基准字段为：
 
 - requested capability：`solidity-static-analysis`
 - tool identity：`otm:ens:solidity-scanner.auditagent.eth`
@@ -198,6 +207,16 @@ dashboard 当前展示的是“按最新已验收 demo run 结果固化的静态
 - trace URI：`0g://traces/c1f7441a-42fe-4a2d-b000-ea1bf1e673b4.json`
 - report ID：`report_1777390727691`
 - report URI：`0g://reports/report_1777390727691.json`
+
+截至 2026-04-28 本地最近一次已存在的运行态 demo:run 产物为：
+
+- trace ID：`e7036857-c764-44f4-84e7-7f59a60ec7ef`
+- trace URI：`0g://traces/e7036857-c764-44f4-84e7-7f59a60ec7ef.json`
+- report ID：`report_1777391207893`
+- report URI：`0g://reports/report_1777391207893.json`
+- manifest URI：`0g://manifests/otm_ens_solidity-scanner.auditagent.eth-0.1.0.json`
+- tool name：`solidity-pattern-scanner`
+- AXL method：`invokeTool`
 
 对应的页面映射文件：
 
@@ -220,7 +239,7 @@ dashboard 当前展示的是“按最新已验收 demo run 结果固化的静态
 | agent 可远程调用 tool node | `corepack pnpm demo:tool-node` + `corepack pnpm demo:run` |
 | trace 写入存储 | `demo:run` 输出 `files.trace` |
 | report 引用 trace | `sample-report.json` 与运行时 report 都包含 `traceId` |
-| dashboard 字段一致 | `apps/dashboard/lib/demo-run.ts` 直接映射与 runbook 对齐的 fixture 字段 |
+| dashboard 字段一致 | `apps/dashboard/lib/demo-run.ts` 运行态优先读取最新 trace，并在无运行态时回退到与 runbook 一致的 fixture 基线 |
 
 ## 9. 当前结论
 
@@ -246,4 +265,4 @@ corepack pnpm demo:audit-agent
 
 - “仓库里已经有可直接复用的 `.opentoolmesh` 状态目录”
 - “CLI、tool-node、audit-agent 的 `dist` 一定已存在”
-- “dashboard 会自动展示你本地刚重跑出来的任意 trace/report”
+- “dashboard 永远只看 fixture，不会读取运行态 trace/report”
