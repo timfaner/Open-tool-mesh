@@ -1,7 +1,62 @@
 import { describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { runCallCommand } from "../src/commands/call.js";
+import type { OpenToolMeshClient } from "@opentoolmesh/sdk";
 import type { ToolIdentity, ToolManifest } from "@opentoolmesh/shared";
+
+const traceId1 = "11111111-1111-1111-1111-111111111111";
+const traceId2 = "22222222-2222-2222-2222-222222222222";
+
+function createIdentity(): ToolIdentity {
+  return {
+    id: "otm:ens:tool.eth",
+    ensName: "tool.eth",
+    latestManifestUri: "0g://manifests/tool.json",
+    latestManifestHash: "sha256:abc",
+    latestVersion: "0.1.0",
+    ownerAddress: "0x1234567890abcdef1234567890abcdef12345678",
+    capabilities: ["solidity-static-analysis"]
+  };
+}
+
+function createManifest(identity: ToolIdentity): ToolManifest {
+  return {
+    schemaVersion: "otm.manifest.v1",
+    toolId: identity.id,
+    name: "Scanner",
+    version: "0.1.0",
+    description: "Scan solidity",
+    owner: {
+      address: identity.ownerAddress,
+      signature: "sig"
+    },
+    capabilities: [{ id: "solidity-static-analysis", description: "scan" }],
+    mcp: {
+      toolName: "scanner",
+      protocol: "mcp-compatible",
+      inputSchema: { type: "object", required: ["source"], properties: { source: { type: "string" } } },
+      outputSchema: { type: "object", properties: {} }
+    },
+    invocation: {
+      transport: "axl",
+      axlPeerId: "peer-1",
+      axlMethod: "invokeTool",
+      timeoutMs: 10_000
+    },
+    storage: {
+      manifestUri: identity.latestManifestUri,
+      traceNamespace: "traces"
+    },
+    compatibility: {
+      sdkVersionRange: "^0.1.0",
+      manifestApiVersion: "v1"
+    },
+    integrity: {
+      manifestHash: identity.latestManifestHash,
+      createdAt: "2026-04-28T15:00:00.000Z"
+    }
+  };
+}
 
 describe("cli skeleton", () => {
   it("registers the trace command in the entrypoint", () => {
@@ -11,38 +66,8 @@ describe("cli skeleton", () => {
 
   it("verifies manifest before remote invocation", async () => {
     const events: string[] = [];
-    const identity: ToolIdentity = {
-      id: "otm:ens:tool.eth",
-      ensName: "tool.eth",
-      latestManifestUri: "0g://manifests/tool.json",
-      latestManifestHash: "sha256:abc",
-      latestVersion: "0.1.0",
-      ownerAddress: "0x1234567890abcdef1234567890abcdef12345678"
-    };
-    const manifest: ToolManifest = {
-      toolId: identity.id,
-      version: "0.1.0",
-      owner: {
-        address: identity.ownerAddress,
-        signature: "sig"
-      },
-      capabilities: [{ id: "solidity-static-analysis", description: "scan" }],
-      schemas: {
-        input: { type: "object", required: ["source"], properties: { source: { type: "string" } } },
-        output: { type: "object", properties: {} }
-      },
-      invocation: {
-        transport: "axl",
-        axlPeerId: "peer-1",
-        axlMethod: "invokeTool"
-      },
-      storage: {
-        manifestUri: identity.latestManifestUri
-      },
-      integrity: {
-        manifestHash: identity.latestManifestHash
-      }
-    };
+    const identity = createIdentity();
+    const manifest = createManifest(identity);
 
     const client = {
       resolveIdentity: vi.fn(async () => {
@@ -70,6 +95,9 @@ describe("cli skeleton", () => {
       invokeTool: vi.fn(async () => {
         events.push("invoke");
         return {
+          requestId: "req-1",
+          traceId: traceId1,
+          toolId: identity.id,
           status: "ok" as const,
           output: { ok: true },
           finishedAt: "2026-04-28T15:10:01.000Z"
@@ -78,60 +106,37 @@ describe("cli skeleton", () => {
       saveArtifact: vi.fn(async () => ({ uri: "0g://artifacts/1.json", hash: "sha256:out" })),
       recordTrace: vi
         .fn()
-        .mockResolvedValueOnce({ traceId: "trace-1", traceUri: "0g://traces/1.json" })
-        .mockResolvedValueOnce({ traceId: "trace-1", traceUri: "0g://traces/1.json" })
+        .mockResolvedValueOnce({ traceId: traceId1, traceUri: "0g://traces/1.json" })
+        .mockResolvedValueOnce({ traceId: traceId1, traceUri: "0g://traces/1.json" }),
+      discoverTools: vi.fn(),
+      publishManifest: vi.fn(),
+      buildAuditReport: vi.fn()
     };
     const stdout = { log: vi.fn(), error: vi.fn() };
 
     await runCallCommand(["--tool", "tool.eth", "--input", "input.json"], { cwd: "/tmp", stdout }, {
-      createCliClient: async () => ({ client, rootDir: "/tmp" }),
-      readJsonFromFile: async () => ({ source: "contract Vault {}" }),
+      createCliClient: async () => ({ client: client as unknown as OpenToolMeshClient, rootDir: "/tmp" }),
+      readJsonFromFile: async <T>() => ({ source: "contract Vault {}" } as T),
       readFile: readFileSync as never,
-      randomUUID: () => "trace-1",
+      randomUUID: () => traceId1,
       now: () => "2026-04-28T15:10:00.000Z"
     });
 
     expect(events).toEqual(["resolve", "load", "verify", "invoke"]);
     expect(client.recordTrace).toHaveBeenCalled();
-    const trace = client.recordTrace.mock.calls[0][0].trace;
+    const firstCall = client.recordTrace.mock.calls[0];
+    expect(firstCall).toBeDefined();
+    const trace = firstCall![0].trace;
     expect(trace.invocation.startedAt).toBe("2026-04-28T15:10:00.000Z");
     expect(trace.invocation.finishedAt).toBe("2026-04-28T15:10:01.000Z");
   });
 
   it("rejects remote invocation when verification fails", async () => {
+    const identity = createIdentity();
+    const manifest = createManifest(identity);
     const client = {
-      resolveIdentity: vi.fn(async () => ({
-        id: "otm:ens:tool.eth",
-        ensName: "tool.eth",
-        latestManifestUri: "0g://manifests/tool.json",
-        latestManifestHash: "sha256:abc",
-        latestVersion: "0.1.0",
-        ownerAddress: "0x1234567890abcdef1234567890abcdef12345678"
-      })),
-      loadManifest: vi.fn(async () => ({
-        toolId: "otm:ens:tool.eth",
-        version: "0.1.0",
-        owner: {
-          address: "0x1234567890abcdef1234567890abcdef12345678",
-          signature: "sig"
-        },
-        capabilities: [{ id: "solidity-static-analysis", description: "scan" }],
-        schemas: {
-          input: { type: "object", required: ["source"], properties: { source: { type: "string" } } },
-          output: { type: "object", properties: {} }
-        },
-        invocation: {
-          transport: "axl",
-          axlPeerId: "peer-1",
-          axlMethod: "invokeTool"
-        },
-        storage: {
-          manifestUri: "0g://manifests/tool.json"
-        },
-        integrity: {
-          manifestHash: "sha256:abc"
-        }
-      })),
+      resolveIdentity: vi.fn(async () => identity),
+      loadManifest: vi.fn(async () => manifest),
       verifyManifest: vi.fn(async () => ({
         ok: false,
         toolId: "otm:ens:tool.eth",
@@ -147,21 +152,26 @@ describe("cli skeleton", () => {
       saveArtifact: vi.fn(),
       recordTrace: vi
         .fn()
-        .mockResolvedValueOnce({ traceId: "trace-2", traceUri: "0g://traces/2.json" })
-        .mockResolvedValueOnce({ traceId: "trace-2", traceUri: "0g://traces/2.json" })
+        .mockResolvedValueOnce({ traceId: traceId2, traceUri: "0g://traces/2.json" })
+        .mockResolvedValueOnce({ traceId: traceId2, traceUri: "0g://traces/2.json" }),
+      discoverTools: vi.fn(),
+      publishManifest: vi.fn(),
+      buildAuditReport: vi.fn()
     };
     const stdout = { log: vi.fn(), error: vi.fn() };
 
     await runCallCommand(["--tool", "tool.eth", "--input", "input.json"], { cwd: "/tmp", stdout }, {
-      createCliClient: async () => ({ client, rootDir: "/tmp" }),
-      readJsonFromFile: async () => ({ source: "contract Vault {}" }),
+      createCliClient: async () => ({ client: client as unknown as OpenToolMeshClient, rootDir: "/tmp" }),
+      readJsonFromFile: async <T>() => ({ source: "contract Vault {}" } as T),
       readFile: readFileSync as never,
-      randomUUID: () => "trace-2",
+      randomUUID: () => traceId2,
       now: () => "2026-04-28T15:20:00.000Z"
     });
 
     expect(client.invokeTool).not.toHaveBeenCalled();
-    const trace = client.recordTrace.mock.calls[0][0].trace;
+    const firstCall = client.recordTrace.mock.calls[0];
+    expect(firstCall).toBeDefined();
+    const trace = firstCall![0].trace;
     expect(trace.invocation.status).toBe("rejected");
     expect(trace.verification.rejectedReason).toBe("manifest hash mismatch");
   });
