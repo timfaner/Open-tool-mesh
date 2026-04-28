@@ -22,6 +22,15 @@ type TraceRecord = {
     capabilityIndexUri?: string;
     selectedReason?: string;
     resolvedAt?: string;
+    resolve?: {
+      ensName?: string;
+      identityId?: string;
+      manifestUri?: string;
+      manifestHash?: string;
+      version?: string;
+      ownerAddress?: string;
+      evidence?: string;
+    };
   };
   verification?: {
     manifestHashValid?: boolean;
@@ -267,10 +276,10 @@ function readJsonFile<T>(filePath: string): T {
   return JSON.parse(readFileSync(filePath, 'utf8')) as T;
 }
 
-function getMostRecentTraceFile(): string | null {
+function listTraceFiles(): string[] {
   const tracesDir = path.join(storageRoot, 'traces');
   if (!existsSync(tracesDir)) {
-    return null;
+    return [];
   }
 
   const entries = readdirSync(tracesDir)
@@ -290,7 +299,7 @@ function getMostRecentTraceFile(): string | null {
     }))
     .sort((left, right) => right.persistedAt - left.persistedAt || right.mtimeMs - left.mtimeMs);
 
-  return entries[0]?.filePath ?? null;
+  return entries.map((entry) => entry.filePath);
 }
 
 function getArtifactByKind(trace: TraceRecord, kind: string) {
@@ -306,13 +315,17 @@ function getStorageFilePath(uri: string | undefined): string | null {
 }
 
 function buildRuntimeDemoRun(): DashboardRun | null {
-  const latestTracePath = getMostRecentTraceFile();
-  if (!latestTracePath) {
-    return null;
-  }
+  const trace = listTraceFiles()
+    .map((filePath) => {
+      try {
+        return readJsonFile<TraceRecord>(filePath);
+      } catch {
+        return null;
+      }
+    })
+    .find((candidate) => candidate?.invocation?.status === 'ok');
 
-  const trace = readJsonFile<TraceRecord>(latestTracePath);
-  if (trace.invocation?.status !== 'ok') {
+  if (!trace) {
     return null;
   }
 
@@ -332,7 +345,8 @@ function buildRuntimeDemoRun(): DashboardRun | null {
 
   const manifest = readJsonFile<{
     version?: string;
-    publisher?: { address?: string };
+    owner?: { address?: string };
+    compatibility?: { sdkVersionRange?: string };
   }>(manifestPath);
   const report = readJsonFile<ReportRecord>(reportPath);
   const artifact = readJsonFile<ArtifactRecord>(toolOutputPath);
@@ -349,7 +363,15 @@ function buildRuntimeDemoRun(): DashboardRun | null {
   const findings = report.findings ?? [];
   const topFinding = findings.find((finding) => finding.severity === 'high') ?? findings[0];
   const transportLabel = (trace.invocation?.transport ?? 'axl').toUpperCase();
-  const resolvedIdentity = trace.tool?.toolId ?? (trace.tool?.ensName ? `otm:ens:${trace.tool.ensName}` : fixtureDemoRun.discovery.resolvedIdentity);
+  const resolvedIdentity =
+    trace.discovery?.resolve?.identityId ??
+    trace.tool?.toolId ??
+    (trace.tool?.ensName ? `otm:ens:${trace.tool.ensName}` : fixtureDemoRun.discovery.resolvedIdentity);
+  const resolvedEnsName = trace.discovery?.resolve?.ensName ?? trace.tool?.ensName ?? fixtureDemoRun.discovery.ensName;
+  const resolvedAt = trace.discovery?.resolvedAt ?? fixtureDemoRun.discovery.resolvedAt;
+  const resolveEvidence =
+    trace.discovery?.resolve?.evidence ??
+    `resolveIdentity(${resolvedEnsName}) before loadManifest(${trace.tool?.manifestUri ?? fixtureDemoRun.manifest.uri})`;
 
   return {
     source: 'runtime' as const,
@@ -371,7 +393,7 @@ function buildRuntimeDemoRun(): DashboardRun | null {
     },
     stepDetails: {
       Publish: `Manifest published at ${trace.tool?.manifestUri ?? fixtureDemoRun.manifest.uri}.`,
-      Discover: `Resolved ${trace.tool?.ensName ?? fixtureDemoRun.discovery.ensName} at ${trace.discovery?.resolvedAt ?? 'unknown time'}.`,
+      Discover: `Resolved ${resolvedEnsName} at ${resolvedAt}. ${resolveEvidence}.`,
       Verify: `verified at ${trace.verification?.verifiedAt ?? 'unknown time'}.`,
       Call: `${trace.invocation?.status ?? 'unknown'} over ${transportLabel} from ${trace.invocation?.startedAt ?? 'unknown start'} to ${trace.invocation?.finishedAt ?? 'unknown end'}.`,
       Trace: `Persisted to ${trace.storage?.traceUri ?? fixtureDemoRun.memory.traceUri} at ${trace.storage?.persistedAt ?? 'unknown time'}.`,
@@ -381,21 +403,21 @@ function buildRuntimeDemoRun(): DashboardRun | null {
       requestedCapability: trace.requestedCapability ?? fixtureDemoRun.discovery.requestedCapability,
       candidateCount: `${trace.discovery?.candidateCount ?? 1} candidate${(trace.discovery?.candidateCount ?? 1) === 1 ? '' : 's'}`,
       resolvedIdentity,
-      ensName: trace.tool?.ensName ?? fixtureDemoRun.discovery.ensName,
+      ensName: resolvedEnsName,
       capabilityIndex: trace.discovery?.capabilityIndexUri ?? fixtureDemoRun.discovery.capabilityIndex,
-      selectedReason: trace.discovery?.selectedReason ?? fixtureDemoRun.discovery.selectedReason,
-      resolvedAt: trace.discovery?.resolvedAt ?? fixtureDemoRun.discovery.resolvedAt,
+      selectedReason: trace.discovery?.selectedReason ?? resolveEvidence,
+      resolvedAt,
       notHardcoded: 'yes',
     },
     manifest: {
       uri: trace.tool?.manifestUri ?? fixtureDemoRun.manifest.uri,
-      version: trace.tool?.version ?? manifest.version ?? fixtureDemoRun.manifest.version,
-      owner: trace.tool?.ownerAddress ?? manifest.publisher?.address ?? fixtureDemoRun.manifest.owner,
+      version: trace.tool?.version ?? trace.discovery?.resolve?.version ?? manifest.version ?? fixtureDemoRun.manifest.version,
+      owner: trace.tool?.ownerAddress ?? trace.discovery?.resolve?.ownerAddress ?? manifest.owner?.address ?? fixtureDemoRun.manifest.owner,
       schemaStatus: trace.verification?.schemaValid ? 'verified' : 'unknown',
-      sdkVersionRange: `^${trace.tool?.version ?? manifest.version ?? fixtureDemoRun.manifest.version}`,
+      sdkVersionRange: manifest.compatibility?.sdkVersionRange ?? `^${trace.tool?.version ?? manifest.version ?? fixtureDemoRun.manifest.version}`,
       ownerValid: trace.verification?.ownerValid ? 'true' : 'false',
       versionCompatible: trace.verification?.versionCompatible ? 'true' : 'false',
-      hash: trace.tool?.manifestHash ?? fixtureDemoRun.manifest.hash,
+      hash: trace.tool?.manifestHash ?? trace.discovery?.resolve?.manifestHash ?? fixtureDemoRun.manifest.hash,
     },
     invocation: {
       agent: report.contractName ? `${report.contractName} Audit Agent` : fixtureDemoRun.invocation.agent,

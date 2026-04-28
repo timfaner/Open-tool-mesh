@@ -12,9 +12,6 @@ describe("runAudit trace semantics", () => {
         latestVersion: "0.1.0",
         ownerAddress: "0x1234567890abcdef1234567890abcdef12345678"
       },
-      "0g://manifests/tool.json",
-      "sha256:manifest",
-      "0.1.0",
       {
         manifestHashValid: true,
         ownerValid: true,
@@ -38,5 +35,7 @@ describe("runAudit trace semantics", () => {
     expect(trace.invocation.finishedAt).toBe("2026-04-28T15:30:01.000Z");
     expect(trace.discovery.selectedReason).toContain("capability discovery");
     expect(trace.discovery.capabilityIndexUri).toBe("0g://indexes/capabilities/solidity-static-analysis.json");
+    expect(trace.discovery.resolve?.identityId).toBe("otm:ens:solidity-scanner.auditagent.eth");
+    expect(trace.discovery.resolve?.evidence).toContain("resolveIdentity");
   });
 });

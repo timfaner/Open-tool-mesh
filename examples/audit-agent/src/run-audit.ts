@@ -18,10 +18,7 @@ interface ScannerFinding {
 }
 
 export function buildTrace(
-  tool: Awaited<ReturnType<ReturnType<typeof createOpenToolMeshClient>["resolveIdentity"]>>,
-  manifestUri: string,
-  manifestHash: string,
-  version: string,
+  resolvedTool: Awaited<ReturnType<ReturnType<typeof createOpenToolMeshClient>["resolveIdentity"]>>,
   verification: {
     manifestHashValid: boolean;
     ownerValid: boolean;
@@ -42,18 +39,27 @@ export function buildTrace(
     agentId: "audit-agent-example",
     requestedCapability: "solidity-static-analysis",
     tool: {
-      toolId: tool.id,
-      ensName: tool.ensName,
-      manifestUri,
-      manifestHash,
-      version,
-      ownerAddress: tool.ownerAddress
+      toolId: resolvedTool.id,
+      ensName: resolvedTool.ensName,
+      manifestUri: resolvedTool.latestManifestUri,
+      manifestHash: resolvedTool.latestManifestHash,
+      version: resolvedTool.latestVersion,
+      ownerAddress: resolvedTool.ownerAddress
     },
     discovery: {
       candidateCount: 1,
       capabilityIndexUri: "0g://indexes/capabilities/solidity-static-analysis.json",
-      selectedReason: "selected from capability discovery candidates for solidity-static-analysis",
-      resolvedAt: new Date().toISOString()
+      selectedReason: "selected from capability discovery candidates and resolved via ENS before manifest load for solidity-static-analysis",
+      resolvedAt: new Date().toISOString(),
+      resolve: {
+        ensName: resolvedTool.ensName,
+        identityId: resolvedTool.id,
+        manifestUri: resolvedTool.latestManifestUri,
+        manifestHash: resolvedTool.latestManifestHash,
+        version: resolvedTool.latestVersion,
+        ownerAddress: resolvedTool.ownerAddress,
+        evidence: "discover -> resolveIdentity -> loadManifest -> verifyManifest -> invokeTool"
+      }
     },
     verification: {
       ...verification,
@@ -105,15 +111,16 @@ export async function runAuditDemo() {
   const rootDir = await findWorkspaceRoot(fileDir(import.meta.url));
   const client = createOpenToolMeshClient(createLocalDevnetClientDeps(rootDir));
   const discovered = await client.discoverTools({ capability: "solidity-static-analysis", limit: 1 });
-  const selectedTool = discovered[0];
+  const discoveredTool = discovered[0];
 
-  if (!selectedTool) {
+  if (!discoveredTool) {
     throw new Error("No discovered tool for capability solidity-static-analysis. Run publish first.");
   }
 
-  const manifest = await client.loadManifest({ manifestUri: selectedTool.manifestUri });
+  const resolvedTool = await client.resolveIdentity({ ensName: discoveredTool.ensName });
+  const manifest = await client.loadManifest({ manifestUri: resolvedTool.latestManifestUri });
   const verification = await client.verifyManifest({
-    identity: selectedTool,
+    identity: resolvedTool,
     manifest,
     sdkVersion: "0.1.0"
   });
@@ -127,7 +134,7 @@ export async function runAuditDemo() {
   const invocationStartedAt = new Date().toISOString();
   const response = await client.invokeTool<{ source: string }, { findings: ScannerFinding[]; summary: Record<string, number> }>({
     capability: "solidity-static-analysis",
-    tool: selectedTool,
+    tool: resolvedTool,
     manifest,
     agentId: "audit-agent-example",
     input: { source },
@@ -149,7 +156,7 @@ export async function runAuditDemo() {
             description: finding.message,
             evidence: finding.message,
             traceId,
-            toolId: selectedTool.id
+            toolId: resolvedTool.id
           })) ?? []
         : []
   });
@@ -160,7 +167,7 @@ export async function runAuditDemo() {
           namespace: "artifacts",
           artifact: {
             traceId,
-            toolId: selectedTool.id,
+            toolId: resolvedTool.id,
             output: response.output
           }
         })
@@ -171,10 +178,7 @@ export async function runAuditDemo() {
   });
 
   const trace = buildTrace(
-    selectedTool,
-    manifest.storage.manifestUri,
-    manifest.integrity.manifestHash,
-    manifest.version,
+    resolvedTool,
     verification.checks,
     response,
     hashJson({ source }),
@@ -190,13 +194,15 @@ export async function runAuditDemo() {
 
   return {
     requestedCapability: "solidity-static-analysis",
-    tool: selectedTool,
+    tool: resolvedTool,
     discovery: {
       mode: "capability-discovery",
       selectedReason: trace.discovery.selectedReason,
-      candidateCount: trace.discovery.candidateCount
+      candidateCount: trace.discovery.candidateCount,
+      resolvedIdentity: trace.discovery.resolve?.identityId,
+      resolveEvidence: trace.discovery.resolve?.evidence
     },
-    toolId: selectedTool.id,
+    toolId: resolvedTool.id,
     manifestUri: manifest.storage.manifestUri,
     verification,
     traceId,

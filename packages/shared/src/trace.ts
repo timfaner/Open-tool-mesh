@@ -16,6 +16,15 @@ export interface ExecutionTrace {
     candidateCount: number;
     selectedReason: string;
     resolvedAt: string;
+    resolve?: {
+      ensName: string;
+      identityId: string;
+      manifestUri: string;
+      manifestHash: string;
+      version: string;
+      ownerAddress: `0x${string}`;
+      evidence: string;
+    };
   };
   verification: {
     manifestHashValid: boolean;
@@ -74,4 +83,3 @@ export interface AuditReport {
   }>;
   generatedAt: string;
 }
-
