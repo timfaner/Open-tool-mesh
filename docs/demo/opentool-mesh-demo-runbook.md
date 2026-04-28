@@ -56,18 +56,20 @@ corepack pnpm demo:run
 这个命令会：
 
 1. 清理并重建本地 `.opentoolmesh` 状态目录
-2. 写入 AXL peer registry
-3. 启动本地 tool node
-4. publish manifest
-5. seed capability index
-6. discover tool
-7. resolve ENS identity
-8. verify manifest
-9. call remote tool
-10. 生成 trace / artifact / report
+2. 构建 `sdk` / `tool-node` / `audit-agent` 的 dist 产物
+3. 写入 AXL peer registry
+4. 如 `http://127.0.0.1:4318/health` 未运行 tool-node，则临时启动本地 tool node；如已运行，则直接复用
+5. publish manifest
+6. seed capability index
+7. discover tool
+8. resolve ENS identity
+9. verify manifest
+10. 由 audit-agent 可执行链路完成 remote call
+11. 生成 trace / artifact / report
 
 成功后会输出一段 JSON，包含：
 
+- `toolNode.mode`
 - `publish.manifestUri`
 - `discover[0].manifestUri`
 - `resolve.latestManifestUri`
@@ -122,7 +124,7 @@ OpenTool Mesh tool node listening on http://127.0.0.1:4318
 访问入口：
 
 - tool-node 调用入口：`http://127.0.0.1:4318/invokeTool`
-- 健康检查口径：对 `GET /invokeTool` 返回 `404` 或 `400` 视为进程存活
+- 健康检查口径：`GET http://127.0.0.1:4318/health` 返回 `200`
 
 ### 5.3 Publish
 
@@ -142,14 +144,22 @@ corepack pnpm demo:publish
 
 ### 5.4 Discover / Resolve / Verify / Call / Trace / Report
 
-当前最可靠的方式仍然是直接执行：
+如果已经单独启动了 tool-node，可执行：
+
+```bash
+cd /workspace/project
+corepack pnpm demo:publish
+corepack pnpm demo:audit-agent
+```
+
+如果希望一键跑完整链路，执行：
 
 ```bash
 cd /workspace/project
 corepack pnpm demo:run
 ```
 
-原因是这个脚本把 publish、discover、verify、call、trace、report 串成了一次完整回放，并保证产物路径与输出字段一致。
+`demo:run` 现在会自动复用已启动的 `tool-node`，不会再与 `demo:tool-node` 争抢 `4318` 端口；同时它内部复用 audit-agent 的真实构建产物，避免脚本逻辑漂移。
 
 ### 5.5 服务健康检查
 
@@ -163,19 +173,25 @@ bash docs/demo/demo-health-check.sh
 预期结果：
 
 - dashboard：`GET http://127.0.0.1:3000/api/health` 返回 `200`
-- tool-node：`GET http://127.0.0.1:4318/invokeTool` 返回 `404` 或 `400`
+- tool-node：`GET http://127.0.0.1:4318/health` 返回 `200`
 
 ## 6. Dashboard 对齐口径
 
-dashboard 当前展示的是“基于真实字段映射的静态展示层”，不是实时读取 `.opentoolmesh/storage`。
+dashboard 会优先读取最近一次 `corepack pnpm demo:run` 生成的 `.opentoolmesh/storage/{traces,artifacts,reports}` 产物。
 
-它使用的稳定基线来自仓库内 fixture，而不是运行时生成文件：
+如果运行时产物不存在，才回退到仓库内 fixture 基线：
 
 - trace：`examples/audit-agent/fixtures/sample-execution-trace.json`
 - artifact：`examples/audit-agent/fixtures/sample-tool-output.json`
 - report：`examples/audit-agent/fixtures/sample-report.json`
 
-因此浏览器页、文档和代码现在共享同一组核心字段：
+因此现场推荐顺序是：
+
+1. 先执行 `corepack pnpm demo:run`
+2. 再启动 dashboard
+3. 页面中的 `trace/report/manifest` 字段会与最近一次闭环运行结果一致
+
+回退到 fixture 时，浏览器页、文档和代码共享的默认基线字段为：
 
 - requested capability：`solidity-static-analysis`
 - tool identity：`otm:ens:solidity-scanner.auditagent.eth`
@@ -208,6 +224,22 @@ dashboard 当前展示的是“基于真实字段映射的静态展示层”，�
 ## 9. 当前结论
 
 截至 2026-04-28，仓库内可复现的主链路应以 `corepack pnpm demo:run` 为准。
+
+从仓库根目录可执行的完整演示命令为：
+
+```bash
+corepack pnpm install
+corepack pnpm build
+corepack pnpm demo:run
+```
+
+如需拆步演示，使用：
+
+```bash
+corepack pnpm demo:tool-node
+corepack pnpm demo:publish
+corepack pnpm demo:audit-agent
+```
 
 不要再使用以下已失效假设：
 

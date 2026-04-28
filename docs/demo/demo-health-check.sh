@@ -3,7 +3,7 @@
 set -euo pipefail
 
 DASHBOARD_URL="${DASHBOARD_URL:-http://127.0.0.1:3000/api/health}"
-TOOL_NODE_URL="${TOOL_NODE_URL:-http://127.0.0.1:4318/invokeTool}"
+TOOL_NODE_URL="${TOOL_NODE_URL:-http://127.0.0.1:4318/health}"
 MAX_ATTEMPTS="${MAX_ATTEMPTS:-10}"
 SLEEP_SECONDS="${SLEEP_SECONDS:-1}"
 FAILURES=0
@@ -55,7 +55,7 @@ check_endpoint() {
 echo "== OpenTool Mesh demo 健康检查 =="
 
 check_endpoint "dashboard" "$DASHBOARD_URL" "200" || true
-check_endpoint "tool-node" "$TOOL_NODE_URL" "404,400" || true
+check_endpoint "tool-node" "$TOOL_NODE_URL" "200" || true
 
 if (( FAILURES > 0 )); then
   exit 1
