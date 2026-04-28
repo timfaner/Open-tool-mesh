@@ -6,7 +6,7 @@
 
 `publish -> discover -> verify -> call -> trace -> report`
 
-所有命令默认在 `/workspace/project` 执行，且以当前仓库真实可用的源码、fixture 和脚本为准，不再依赖历史 run ID、手工保存的 `.opentoolmesh` 目录或预置 `dist` 产物。
+所有命令默认在 `/workspace/project` 执行，且以当前仓库真实可用的源码、fixture 和脚本为准；不要预设某个历史 run ID、手工保存的 `.opentoolmesh` 目录或预置 `dist` 产物一定存在。若现场已经执行过新的 `demo:run`，则应优先读取该次成功运行生成的 trace / artifact / report / manifest。
 
 ## 2. 当前仓库内的真实入口
 
@@ -175,17 +175,22 @@ bash docs/demo/demo-health-check.sh
 - dashboard：`GET http://127.0.0.1:3000/api/health` 返回 `200`
 - tool-node：`GET http://127.0.0.1:4318/health` 返回 `200`
 
+说明：
+
+- 健康检查只证明 dashboard 进程与 tool-node 进程存活，不证明页面已经展示最新运行态数据。
+- 页面展示的数据口径仍以第 6 节为准：先找最新成功 trace，再定位其绑定的 artifact / report / manifest。
+
 ## 6. Dashboard 对齐口径
 
 dashboard 页面现在遵循唯一一套 authoritative 规则，供 devops 文档同步与 api-tester 闭环比对复用：
 
-1. 若本地存在 `.opentoolmesh/storage/traces/*.json`，则按 trace 内 `storage.persistedAt` 选择最近一次 `demo:run` 产物。
+1. 若本地存在 `.opentoolmesh/storage/traces/*.json`，则按 trace 内 `storage.persistedAt` 选择最近一次成功 `demo:run` 产物。
 2. 选中 trace 后，页面必须只展示与该 trace 绑定的运行态数据：
    - trace：`.opentoolmesh/storage/traces/<traceId>.json`
    - artifact：trace 内 `tool-output` artifact 指向的 `.opentoolmesh/storage/artifacts/<traceId>.json`
    - report：trace 内 `audit-report` artifact 指向的 `.opentoolmesh/storage/reports/<reportId>.json`
    - manifest：trace 内 `tool.manifestUri` 对应的 `.opentoolmesh/storage/manifests/<file>.json`
-3. 若本地不存在运行态 trace，才完整回退到仓库 fixture 基线；回退时 trace/report/artifact 必须来自同一组 fixture，manifest 字段必须与 fixture trace 指向的 manifest 保持一致。
+3. 若本地不存在成功运行态 trace，才完整回退到仓库 fixture 基线；回退时 trace/report/artifact 必须来自同一组 fixture，manifest 字段必须与 fixture trace 指向的 manifest 保持一致。
 
 当前仓库内的 fixture 回退基线为：
 
@@ -208,22 +213,62 @@ dashboard 页面现在遵循唯一一套 authoritative 规则，供 devops 文�
 - report ID：`report_1777390727691`
 - report URI：`0g://reports/report_1777390727691.json`
 
-截至 2026-04-28 本地最近一次已存在的运行态 demo:run 产物为：
+运行态样例字段请以现场最新成功 trace 实测为准，不要把某一次 run 的 ID 当成固定基线。执行：
 
-- trace ID：`e7036857-c764-44f4-84e7-7f59a60ec7ef`
-- trace URI：`0g://traces/e7036857-c764-44f4-84e7-7f59a60ec7ef.json`
-- report ID：`report_1777391207893`
-- report URI：`0g://reports/report_1777391207893.json`
-- manifest URI：`0g://manifests/otm_ens_solidity-scanner.auditagent.eth-0.1.0.json`
-- requested capability：`solidity-static-analysis`
-- tool identity：`otm:ens:solidity-scanner.auditagent.eth`
-- tool name：`solidity-pattern-scanner`
-- peer ID：`axl-peer-solidity-01`
-- AXL method：`invokeTool`
+```bash
+cd /workspace/project
+corepack pnpm demo:run
+```
+
+随后至少核对以下运行态字段：
+
+- trace ID：来自 `.opentoolmesh/storage/traces/*.json` 中 `storage.persistedAt` 最新且 `invocation.status=ok` 的记录
+- trace URI：该 trace 的 `storage.traceUri`
+- report ID：trace 中 `audit-report` artifact 指向 report 文件内的 `reportId`
+- report URI：trace 中 `audit-report` artifact 的 `uri`
+- manifest URI：trace 中 `tool.manifestUri`
+- requested capability：trace 中 `requestedCapability`
+- tool identity：trace 中 `tool.toolId`
+- peer ID：trace 中 `invocation.peerId`
+- AXL method：trace 中 `invocation.method`
 
 对应的页面映射文件：
 
 - `apps/dashboard/lib/demo-run.ts`
+
+## 6.1 闭环测试字段核对清单
+
+api-tester、devops 与现场演示统一按这份 checklist 收口。只要页面、CLI 输出、trace/report/manifest 任一处对不上，就不能视为闭环通过。
+
+优先级规则：
+
+1. 先取最新成功运行态 trace。
+2. 没有成功运行态 trace 时，整组回退到 fixture 基线。
+3. 不允许 trace 用运行态、report 用 fixture 这类混搭。
+
+必须核对的字段：
+
+- trace：`traceId`、`runId`、`requestedCapability`、`tool.toolId`、`tool.ensName`、`tool.manifestUri`、`tool.manifestHash`、`invocation.peerId`、`invocation.method`、`invocation.status`、`storage.traceUri`、`storage.persistedAt`
+- report：`reportId`、`generatedAt`、`summary`、`findings[].traceId`、`findings[].toolId`
+- manifest：`toolId`、`version`、`owner.address`、`storage.manifestUri`、`integrity.manifestHash`、`invocation.axlPeerId`、`invocation.axlMethod`
+- artifact：trace 中 `tool-output` 与 `audit-report` 两个 artifact 的 `uri` / `hash` 必须能分别对应到本地 artifact 与 report 文件
+
+字段对应关系：
+
+- `trace.tool.manifestUri` 必须等于 manifest 的 `storage.manifestUri`
+- `trace.tool.manifestHash` 必须等于 manifest 的 `integrity.manifestHash`
+- `trace.invocation.peerId` 必须等于 manifest 的 `invocation.axlPeerId`
+- `trace.invocation.method` 必须等于 manifest 的 `invocation.axlMethod`
+- `report.reportId` 必须与 trace 中 `audit-report` artifact 指向的 report 文件一致
+- `report.findings[].traceId` 必须全部等于当前 trace 的 `traceId`
+- `report.findings[].toolId` 必须全部等于当前 trace 的 `tool.toolId`
+
+执行顺序建议：
+
+1. `corepack pnpm demo:run`
+2. `bash docs/demo/demo-health-check.sh`
+3. 打开 dashboard 页面，确认其展示字段与最新运行态 trace 对齐
+4. 若 dashboard 未读取到运行态，再检查是否因为本地没有成功 trace 而回退到 fixture；只有这种情况下才允许展示 fixture 基线
 
 ## 7. 现场讲解口径
 
