@@ -1,6 +1,3 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { readdir } from 'node:fs/promises';
-import { resolve } from 'node:path';
 import manifest from '../../../manifests/solidity-pattern-scanner.manifest.json';
 import artifact from '../../../examples/audit-agent/fixtures/sample-tool-output.json';
 import report from '../../../examples/audit-agent/fixtures/sample-report.json';
@@ -91,68 +88,9 @@ type DashboardToolOutputArtifact = {
 const typedFixtureExecutionTrace = executionTrace as DashboardExecutionTrace;
 const typedFixtureReport = report as DashboardReport;
 const typedFixtureArtifact = artifact as DashboardToolOutputArtifact;
-
-function getRepoRoot() {
-  return resolve(process.cwd(), '..', '..');
-}
-
-function readJsonFile<T>(path: string): T | null {
-  if (!existsSync(path)) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(readFileSync(path, 'utf8')) as T;
-  } catch {
-    return null;
-  }
-}
-
-async function getLatestTraceFromRuntime() {
-  const tracesDir = resolve(getRepoRoot(), '.opentoolmesh', 'storage', 'traces');
-
-  try {
-    const entries = await readdir(tracesDir);
-    const traceIds = entries.filter((entry) => entry.endsWith('.json')).sort().reverse();
-
-    for (const entry of traceIds) {
-      const loadedTrace = readJsonFile<DashboardExecutionTrace>(resolve(tracesDir, entry));
-      if (!loadedTrace) {
-        continue;
-      }
-
-      const traceId = loadedTrace.traceId;
-      const storageRoot = resolve(getRepoRoot(), '.opentoolmesh', 'storage');
-      const loadedArtifact = readJsonFile<DashboardToolOutputArtifact>(
-        resolve(storageRoot, 'artifacts', `${traceId}.json`)
-      );
-
-      const reportRef = loadedTrace.artifacts.find((item) => item.kind === 'audit-report');
-      const reportFileName = reportRef?.uri?.split('/').pop();
-      const loadedReport = reportFileName
-        ? readJsonFile<DashboardReport>(resolve(storageRoot, 'reports', reportFileName))
-        : null;
-
-      if (loadedArtifact && loadedReport) {
-        return {
-          trace: loadedTrace,
-          artifact: loadedArtifact,
-          report: loadedReport,
-          source: 'runtime' as const,
-        };
-      }
-    }
-  } catch {
-    return null;
-  }
-
-  return null;
-}
-
-const runtimeData = await getLatestTraceFromRuntime();
-const typedExecutionTrace = runtimeData?.trace ?? typedFixtureExecutionTrace;
-const typedReport = runtimeData?.report ?? typedFixtureReport;
-const typedArtifact = runtimeData?.artifact ?? typedFixtureArtifact;
+const typedExecutionTrace = typedFixtureExecutionTrace;
+const typedReport = typedFixtureReport;
+const typedArtifact = typedFixtureArtifact;
 
 function toDisplayTime(value: string | undefined) {
   if (!value) {
@@ -209,7 +147,7 @@ const invocationMethod = typedExecutionTrace.invocation.method ?? manifest.invoc
 
 export const demoRun = {
   runId: typedExecutionTrace.runId,
-  environment: runtimeData ? 'Demo Environment · ENS + 0G + AXL · Runtime Synced' : 'Demo Environment · ENS + 0G + AXL · Fixture Baseline',
+  environment: 'Demo Environment · ENS + 0G + AXL',
   headerStatus: [
     { label: verificationOutcome === 'verified' ? 'Verified' : verificationOutcome, tone: 'success' as HeaderTone },
     { label: invocationTransport, tone: 'info' as HeaderTone },

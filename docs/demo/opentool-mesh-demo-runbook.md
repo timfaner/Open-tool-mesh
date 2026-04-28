@@ -177,21 +177,15 @@ bash docs/demo/demo-health-check.sh
 
 ## 6. Dashboard 对齐口径
 
-dashboard 会优先读取最近一次 `corepack pnpm demo:run` 生成的 `.opentoolmesh/storage/{traces,artifacts,reports}` 产物。
+dashboard 当前展示的是“按最新已验收 demo run 结果固化的静态展示层”，不直接读取本地重新执行后生成的 `.opentoolmesh/storage`。
 
-如果运行时产物不存在，才回退到仓库内 fixture 基线：
+页面数据源固定来自以下仓库内 fixture：
 
 - trace：`examples/audit-agent/fixtures/sample-execution-trace.json`
 - artifact：`examples/audit-agent/fixtures/sample-tool-output.json`
 - report：`examples/audit-agent/fixtures/sample-report.json`
 
-因此现场推荐顺序是：
-
-1. 先执行 `corepack pnpm demo:run`
-2. 再启动 dashboard
-3. 页面中的 `trace/report/manifest` 字段会与最近一次闭环运行结果一致
-
-回退到 fixture 时，浏览器页、文档和代码共享的默认基线字段为：
+这些 fixture 已对齐到 dev 闭环报告中确认的最新一组 demo 字段，作为浏览器页、文档和代码共享的展示基线：
 
 - requested capability：`solidity-static-analysis`
 - tool identity：`otm:ens:solidity-scanner.auditagent.eth`
@@ -200,18 +194,14 @@ dashboard 会优先读取最近一次 `corepack pnpm demo:run` 生成的 `.opent
 - manifest hash：`sha256:ddd20540138a8fb9711cb3d751f940964390d3a9fb54e147c0284e6205f64524`
 - owner：`0x1234567890abcdef1234567890abcdef12345678`
 - peer：`axl-peer-solidity-01`
-- trace ID：`41f036ae-ba64-43b7-b310-1927e73396d4`
-- trace URI：`0g://traces/41f036ae-ba64-43b7-b310-1927e73396d4.json`
-- report ID：`report_demo_solidity_audit`
-- report URI：`0g://reports/report_demo_solidity_audit.json`
+- trace ID：`c1f7441a-42fe-4a2d-b000-ea1bf1e673b4`
+- trace URI：`0g://traces/c1f7441a-42fe-4a2d-b000-ea1bf1e673b4.json`
+- report ID：`report_1777390727691`
+- report URI：`0g://reports/report_1777390727691.json`
 
-当前 dashboard 数据源文件：
+对应的页面映射文件：
 
-- `examples/audit-agent/fixtures/sample-execution-trace.json`
-- `examples/audit-agent/fixtures/sample-tool-output.json`
-- `examples/audit-agent/fixtures/sample-report.json`
-
-这些 fixture 只作为无运行产物时的回退基线；一旦 `.opentoolmesh/storage` 内存在最近一次 `demo:run` 结果，`apps/dashboard/lib/demo-run.ts` 会优先展示运行态 trace/report/artifact 字段。
+- `apps/dashboard/lib/demo-run.ts`
 
 ## 7. 现场讲解口径
 
@@ -230,7 +220,7 @@ dashboard 会优先读取最近一次 `corepack pnpm demo:run` 生成的 `.opent
 | agent 可远程调用 tool node | `corepack pnpm demo:tool-node` + `corepack pnpm demo:run` |
 | trace 写入存储 | `demo:run` 输出 `files.trace` |
 | report 引用 trace | `sample-report.json` 与运行时 report 都包含 `traceId` |
-| dashboard 字段一致 | `apps/dashboard/lib/demo-run.ts` 优先读取 `.opentoolmesh/storage`，无运行产物时回退 fixture |
+| dashboard 字段一致 | `apps/dashboard/lib/demo-run.ts` 直接映射与 runbook 对齐的 fixture 字段 |
 
 ## 9. 当前结论
 
@@ -256,4 +246,4 @@ corepack pnpm demo:audit-agent
 
 - “仓库里已经有可直接复用的 `.opentoolmesh` 状态目录”
 - “CLI、tool-node、audit-agent 的 `dist` 一定已存在”
-- “dashboard 读取的是运行时 trace 文件”
+- “dashboard 会自动展示你本地刚重跑出来的任意 trace/report”
