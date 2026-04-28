@@ -120,7 +120,6 @@ const severityCounts = severityOrder.map((label) => ({
   value: typedReport.findings.filter((finding) => finding.severity === label).length,
   tone: label as 'high' | 'medium' | 'low',
 }));
-const topFinding = typedReport.findings[0];
 const toolOutputArtifact = typedExecutionTrace.artifacts.find((item) => item.kind === 'tool-output');
 const reportArtifact = typedExecutionTrace.artifacts.find((item) => item.kind === 'audit-report');
 const verificationOutcome = getVerificationOutcome();

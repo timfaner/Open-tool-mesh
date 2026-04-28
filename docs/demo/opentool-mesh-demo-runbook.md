@@ -83,9 +83,33 @@ corepack pnpm demo:run
 
 如果现场需要分步骤演示，可按下面顺序执行。
 
-### 5.1 启动 remote tool node
+### 5.1 启动 dashboard
 
 ```bash
+cd /workspace/project/apps/dashboard
+npm run dev -- --hostname 127.0.0.1 --port 3000
+```
+
+成功标志：
+
+```text
+✓ Ready in ...
+```
+
+访问入口：
+
+- 页面：`http://127.0.0.1:3000/`
+- 健康检查：`http://127.0.0.1:3000/api/health`
+
+说明：
+
+- `next dev` 首次启动会先编译页面；在终端出现 `Ready` 之前，健康检查可能短暂超时。
+- `docs/demo/demo-health-check.sh` 已内置重试，适合在 dashboard 与 tool-node 都启动后执行。
+
+### 5.2 启动 remote tool node
+
+```bash
+cd /workspace/project
 corepack pnpm demo:tool-node
 ```
 
@@ -95,9 +119,15 @@ corepack pnpm demo:tool-node
 OpenTool Mesh tool node listening on http://127.0.0.1:4318
 ```
 
-### 5.2 Publish
+访问入口：
+
+- tool-node 调用入口：`http://127.0.0.1:4318/invokeTool`
+- 健康检查口径：对 `GET /invokeTool` 返回 `404` 或 `400` 视为进程存活
+
+### 5.3 Publish
 
 ```bash
+cd /workspace/project
 corepack pnpm demo:publish
 ```
 
@@ -110,15 +140,30 @@ corepack pnpm demo:publish
 - `capabilities`
 - `peerId`
 
-### 5.3 Discover / Resolve / Verify / Call / Trace / Report
+### 5.4 Discover / Resolve / Verify / Call / Trace / Report
 
 当前最可靠的方式仍然是直接执行：
 
 ```bash
+cd /workspace/project
 corepack pnpm demo:run
 ```
 
 原因是这个脚本把 publish、discover、verify、call、trace、report 串成了一次完整回放，并保证产物路径与输出字段一致。
+
+### 5.5 服务健康检查
+
+在 dashboard 与 tool-node 都启动后执行：
+
+```bash
+cd /workspace/project
+bash docs/demo/demo-health-check.sh
+```
+
+预期结果：
+
+- dashboard：`GET http://127.0.0.1:3000/api/health` 返回 `200`
+- tool-node：`GET http://127.0.0.1:4318/invokeTool` 返回 `404` 或 `400`
 
 ## 6. Dashboard 对齐口径
 
