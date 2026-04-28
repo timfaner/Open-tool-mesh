@@ -78,8 +78,10 @@ export function DashboardPage() {
                 <div className={styles.discoveryList}>
                   <InfoRow label="Resolved tool identity" value={demoRun.discovery.resolvedIdentity} mono />
                   <InfoRow label="Primary tool" value={demoRun.discovery.tool} />
-                  <InfoRow label="Optional node" value={demoRun.discovery.optionalNode} />
+                  <InfoRow label="Capability index" value={demoRun.discovery.capabilityIndex} mono />
                   <InfoRow label="Capability matches" value={demoRun.discovery.capabilityMatches} />
+                  <InfoRow label="Selected reason" value={demoRun.discovery.selectedReason} />
+                  <InfoRow label="Resolved at" value={demoRun.discovery.resolvedAt} mono />
                   <InfoRow label="Invocation mode" value={demoRun.discovery.invocationMode} />
                 </div>
               </SectionCard>
@@ -94,17 +96,12 @@ export function DashboardPage() {
                   <InfoRow label="Manifest URI" value={demoRun.manifest.uri} mono />
                   <InfoRow label="Version" value={demoRun.manifest.version} mono />
                   <InfoRow label="Owner" value={demoRun.manifest.owner} mono />
+                  <InfoRow label="Verification" value={demoRun.manifest.verificationOutcome} status="success" />
+                  <InfoRow label="Manifest hash check" value={demoRun.manifest.hashStatus} status="success" />
                   <InfoRow label="Schema" value={demoRun.manifest.schemaStatus} status="success" />
-                  <InfoRow
-                    label="Owner signature"
-                    value={demoRun.manifest.ownerSignature}
-                    status="success"
-                  />
-                  <InfoRow
-                    label="Compatibility"
-                    value={demoRun.manifest.compatibility}
-                    status="success"
-                  />
+                  <InfoRow label="Version range" value={demoRun.manifest.compatibility} status="success" />
+                  <InfoRow label="SDK compatibility" value={demoRun.manifest.versionStatus} status="success" />
+                  <InfoRow label="Verified at" value={demoRun.manifest.verifiedAt} mono />
                   <div className={styles.hashBlock}>
                     <span className={styles.hashLabel}>Manifest hash</span>
                     <HashPill>{demoRun.manifest.hash}</HashPill>
@@ -132,6 +129,8 @@ export function DashboardPage() {
                 <div className={styles.cardStack}>
                   <InfoRow label="AXL peer" value={demoRun.invocation.peer} mono />
                   <InfoRow label="Tool call" value={demoRun.invocation.status} status="success" />
+                  <InfoRow label="Started at" value={demoRun.invocation.startedAt} mono />
+                  <InfoRow label="Finished at" value={demoRun.invocation.finishedAt} mono />
                   <InfoRow label="Request payload" value={demoRun.invocation.requestSummary} />
                   <InfoRow label="Response summary" value={demoRun.invocation.responseSummary} />
                   <div className={styles.findingsBadge}>{demoRun.invocation.findingsBadge}</div>
@@ -155,7 +154,10 @@ export function DashboardPage() {
                   <InfoRow label="Input hash" value={demoRun.memory.inputHash} mono />
                   <InfoRow label="Output hash" value={demoRun.memory.outputHash} mono />
                   <InfoRow label="Artifact ref" value={demoRun.memory.artifactReference} mono />
+                  <InfoRow label="Artifact hash" value={demoRun.memory.artifactHash} mono />
                   <InfoRow label="Report ref" value={demoRun.memory.reportReference} mono />
+                  <InfoRow label="Report hash" value={demoRun.memory.reportHash} mono />
+                  <InfoRow label="Persisted at" value={demoRun.memory.persistedAt} mono />
                   <InfoRow label="Trace status" value={demoRun.memory.traceStatus} status="success" />
                 </div>
               </SectionCard>
@@ -191,12 +193,16 @@ export function DashboardPage() {
                     <span className={styles.reportCalloutLabel}>Top issue</span>
                     <strong>{demoRun.report.title}</strong>
                   </div>
+                  <p>{demoRun.report.summaryText}</p>
                   {demoRun.report.summary.map((item) => (
                     <p key={item}>{item}</p>
                   ))}
                 </div>
                 <div className={styles.reportMeta}>
-                  <InfoRow label="Trace URI" value={demoRun.report.traceReference} mono />
+                  <InfoRow label="Report ID" value={demoRun.report.reportId} mono />
+                  <InfoRow label="Report URI" value={demoRun.report.reportUri} mono />
+                  <InfoRow label="Trace ID" value={demoRun.report.traceReference} mono />
+                  <InfoRow label="Generated at" value={demoRun.report.generatedAt} mono />
                   <InfoRow label="Manifest version" value={demoRun.report.manifestVersion} mono />
                   <InfoRow label="Requested capability" value={demoRun.discovery.requestedCapability} />
                   <InfoRow label="Resolved tool identity" value={demoRun.discovery.resolvedIdentity} mono />
