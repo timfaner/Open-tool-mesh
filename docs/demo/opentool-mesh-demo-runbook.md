@@ -215,7 +215,10 @@ dashboard 页面现在遵循唯一一套 authoritative 规则，供 devops 文�
 - report ID：`report_1777391207893`
 - report URI：`0g://reports/report_1777391207893.json`
 - manifest URI：`0g://manifests/otm_ens_solidity-scanner.auditagent.eth-0.1.0.json`
+- requested capability：`solidity-static-analysis`
+- tool identity：`otm:ens:solidity-scanner.auditagent.eth`
 - tool name：`solidity-pattern-scanner`
+- peer ID：`axl-peer-solidity-01`
 - AXL method：`invokeTool`
 
 对应的页面映射文件：
