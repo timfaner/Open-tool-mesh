@@ -27,13 +27,13 @@
 
 优先使用 audit agent 跑出的这一条成功 run：
 
-- trace id：`18a821cd-57ec-4cf4-8bd1-2c72f5ef64b9`
-- trace URI：`0g://traces/18a821cd-57ec-4cf4-8bd1-2c72f5ef64b9.json`
-- trace 文件：`/workspace/project/.opentoolmesh/storage/traces/18a821cd-57ec-4cf4-8bd1-2c72f5ef64b9.json`
-- report id：`report_1777388349430`
-- report URI：`0g://reports/report_1777388349430.json`
-- report 文件：`/workspace/project/.opentoolmesh/storage/reports/report_1777388349430.json`
-- tool output artifact：`/workspace/project/.opentoolmesh/storage/artifacts/18a821cd-57ec-4cf4-8bd1-2c72f5ef64b9.json`
+- trace id：`5ba66c85-a4fe-40dd-9b5f-fe94b42846fe`
+- trace URI：`0g://traces/5ba66c85-a4fe-40dd-9b5f-fe94b42846fe.json`
+- trace 文件：`/workspace/project/.opentoolmesh/storage/traces/5ba66c85-a4fe-40dd-9b5f-fe94b42846fe.json`
+- report id：`report_1777388216943`
+- report URI：`0g://reports/report_1777388216943.json`
+- report 文件：`/workspace/project/.opentoolmesh/storage/reports/report_1777388216943.json`
+- tool output artifact：`/workspace/project/.opentoolmesh/storage/artifacts/5ba66c85-a4fe-40dd-9b5f-fe94b42846fe.json`
 
 这条 run 的关键字段已经一致：
 
@@ -133,6 +133,7 @@ OpenTool Mesh tool node listening on http://127.0.0.1:4318
 - remote node 独立进程
 - AXL peer base URL 为 `http://127.0.0.1:4318`
 - 调用方法为 `invokeTool`
+- `4318` 是当前仓库已写入 `.opentoolmesh/axl-peers.json` 的复用端口；如果现场该端口已被别的本地进程占用，可以改成例如 `PORT=4320 ...`，但必须同时把 `.opentoolmesh/axl-peers.json` 里的 `axl-peer-solidity-01` 映射改成同一个新端口，否则 CLI / audit agent 会继续请求旧地址。
 
 ### 5.3 终端 A：准备 publish / discover / resolve / call
 
@@ -228,10 +229,10 @@ node dist/examples/audit-agent/src/run-audit.js
   "requestedCapability": "solidity-static-analysis",
   "toolId": "otm:ens:solidity-scanner.auditagent.eth",
   "manifestUri": "0g://manifests/otm_ens_solidity-scanner.auditagent.eth-0.1.0.json",
-  "traceId": "18a821cd-57ec-4cf4-8bd1-2c72f5ef64b9",
-  "traceUri": "0g://traces/18a821cd-57ec-4cf4-8bd1-2c72f5ef64b9.json",
+  "traceId": "5ba66c85-a4fe-40dd-9b5f-fe94b42846fe",
+  "traceUri": "0g://traces/5ba66c85-a4fe-40dd-9b5f-fe94b42846fe.json",
   "report": {
-    "reportId": "report_1777388349430"
+    "reportId": "report_1777388216943"
   }
 }
 ```
@@ -257,9 +258,9 @@ node packages/cli/dist/cli/src/index.js trace --trace 2280458b-aefa-4a50-95f2-3a
 
 ```bash
 cd /workspace/project
-cat .opentoolmesh/storage/traces/18a821cd-57ec-4cf4-8bd1-2c72f5ef64b9.json
-cat .opentoolmesh/storage/reports/report_1777388349430.json
-cat .opentoolmesh/storage/artifacts/18a821cd-57ec-4cf4-8bd1-2c72f5ef64b9.json
+cat .opentoolmesh/storage/traces/5ba66c85-a4fe-40dd-9b5f-fe94b42846fe.json
+cat .opentoolmesh/storage/reports/report_1777388216943.json
+cat .opentoolmesh/storage/artifacts/5ba66c85-a4fe-40dd-9b5f-fe94b42846fe.json
 ```
 
 ## 7. 双终端演示脚本
@@ -312,7 +313,7 @@ cat .opentoolmesh/storage/artifacts/18a821cd-57ec-4cf4-8bd1-2c72f5ef64b9.json
 
 ### 7.6 Trace
 
-打开 `/workspace/project/.opentoolmesh/storage/traces/18a821cd-57ec-4cf4-8bd1-2c72f5ef64b9.json`。
+打开 `/workspace/project/.opentoolmesh/storage/traces/5ba66c85-a4fe-40dd-9b5f-fe94b42846fe.json`。
 
 重点指给评委看：
 
@@ -329,7 +330,7 @@ cat .opentoolmesh/storage/artifacts/18a821cd-57ec-4cf4-8bd1-2c72f5ef64b9.json
 
 ### 7.7 Report
 
-打开 `/workspace/project/.opentoolmesh/storage/reports/report_1777388349430.json`。
+打开 `/workspace/project/.opentoolmesh/storage/reports/report_1777388216943.json`。
 
 重点指给评委看：
 
@@ -361,9 +362,9 @@ dashboard 必须只承担“把抽象 infra 讲清楚”的职责。
 - manifest hash：`sha256:ddd20540138a8fb9711cb3d751f940964390d3a9fb54e147c0284e6205f64524`
 - owner：`0x1234567890abcdef1234567890abcdef12345678`
 - AXL peer：`axl-peer-solidity-01`
-- trace URI：`0g://traces/18a821cd-57ec-4cf4-8bd1-2c72f5ef64b9.json`
-- artifact ref：`0g://artifacts/18a821cd-57ec-4cf4-8bd1-2c72f5ef64b9.json`
-- report ref：`0g://reports/report_1777388349430.json`
+- trace URI：`0g://traces/5ba66c85-a4fe-40dd-9b5f-fe94b42846fe.json`
+- artifact ref：`0g://artifacts/5ba66c85-a4fe-40dd-9b5f-fe94b42846fe.json`
+- report ref：`0g://reports/report_1777388216943.json`
 - findings：`3`
 - severity：`high=1, medium=1, low=1`
 
@@ -391,9 +392,9 @@ dashboard 必须只承担“把抽象 infra 讲清楚”的职责。
 
 立即切到成功回放：
 
-- trace：`/workspace/project/.opentoolmesh/storage/traces/18a821cd-57ec-4cf4-8bd1-2c72f5ef64b9.json`
-- report：`/workspace/project/.opentoolmesh/storage/reports/report_1777388349430.json`
-- artifact：`/workspace/project/.opentoolmesh/storage/artifacts/18a821cd-57ec-4cf4-8bd1-2c72f5ef64b9.json`
+- trace：`/workspace/project/.opentoolmesh/storage/traces/5ba66c85-a4fe-40dd-9b5f-fe94b42846fe.json`
+- report：`/workspace/project/.opentoolmesh/storage/reports/report_1777388216943.json`
+- artifact：`/workspace/project/.opentoolmesh/storage/artifacts/5ba66c85-a4fe-40dd-9b5f-fe94b42846fe.json`
 
 口径：
 
@@ -435,8 +436,8 @@ dashboard 当前本身就是静态 demo 数据驱动，不要假装它是实时�
 | agent 可发现工具 | `discover --capability solidity-static-analysis` 返回 ENS identity 与 manifest 指针 |
 | manifest 可验证 | `resolve` 输出与 trace 中的 `verification` 字段、manifest hash、owner、version 对齐 |
 | agent 可远程调用 tool node | 终端 A 运行 `call` / `run-audit`，终端 B 独立运行 `server.js` |
-| trace 写入 0G | `.opentoolmesh/storage/traces/18a821cd-57ec-4cf4-8bd1-2c72f5ef64b9.json` |
-| report 引用 trace | `.opentoolmesh/storage/reports/report_1777388349430.json` 内每条 finding 的 `traceId` |
+| trace 写入 0G | `.opentoolmesh/storage/traces/5ba66c85-a4fe-40dd-9b5f-fe94b42846fe.json` |
+| report 引用 trace | `.opentoolmesh/storage/reports/report_1777388216943.json` 内每条 finding 的 `traceId` |
 | dashboard 讲清完整链路 | 浏览器展示 Discovery / Manifest / Invocation / Memory，并口头说明其字段映射自真实 run |
 
 ## 12. 本次核验结论
@@ -446,7 +447,7 @@ dashboard 当前本身就是静态 demo 数据驱动，不要假装它是实时�
 - tool node 实际启动命令可用
 - CLI `publish / discover / resolve / call / trace` 实际入口可用
 - audit agent 完整 `publish -> discover -> verify -> call -> trace -> report` 跑通过
-- 成功 run 可固定引用 `18a821cd-57ec-4cf4-8bd1-2c72f5ef64b9`
+- 成功 run 固定引用 `5ba66c85-a4fe-40dd-9b5f-fe94b42846fe`
 
 当前唯一需要现场保持诚实说明的点：
 
