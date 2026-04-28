@@ -85,12 +85,9 @@ type DashboardToolOutputArtifact = {
   };
 };
 
-const typedFixtureExecutionTrace = executionTrace as DashboardExecutionTrace;
-const typedFixtureReport = report as DashboardReport;
-const typedFixtureArtifact = artifact as DashboardToolOutputArtifact;
-const typedExecutionTrace = typedFixtureExecutionTrace;
-const typedReport = typedFixtureReport;
-const typedArtifact = typedFixtureArtifact;
+const typedExecutionTrace = executionTrace as DashboardExecutionTrace;
+const typedReport = report as DashboardReport;
+const typedArtifact = artifact as DashboardToolOutputArtifact;
 
 function toDisplayTime(value: string | undefined) {
   if (!value) {
