@@ -19,7 +19,7 @@ export function DashboardPage({ demoRun }: { demoRun: DashboardRun }) {
             <div className={styles.headerTitles}>
               <h1>OpenTool Mesh</h1>
             </div>
-            <p className={styles.headerSummary}>One verifiable Solidity audit run, explained from publish through final report.</p>
+            <p className={styles.headerSummary}>One verifiable Solidity audit run, explained from publish through Final Report.</p>
           </div>
 
           <div className={styles.headerCenter}>
@@ -62,7 +62,10 @@ export function DashboardPage({ demoRun }: { demoRun: DashboardRun }) {
             </ol>
 
             <div className={styles.discoveryList}>
-              <InfoRow label="Data source" value={demoRun.source === 'runtime' ? 'latest successful demo:run' : 'fixture fallback baseline'} />
+              <InfoRow
+                label="data source"
+                value={demoRun.source === 'runtime' ? 'latest successful demo:run' : 'fixture fallback baseline'}
+              />
             </div>
           </aside>
 
@@ -79,7 +82,7 @@ export function DashboardPage({ demoRun }: { demoRun: DashboardRun }) {
                     <span className={styles.discoveryLabel}>requested capability</span>
                     <strong>{demoRun.discovery.requestedCapability}</strong>
                   </div>
-                  <TraceLine label="0G capability index + ENS resolution" />
+                  <TraceLine label="capability index + ENS resolution" />
                   <div className={styles.discoveryNode}>
                     <span className={styles.discoveryLabel}>resolved identity</span>
                     <strong>{demoRun.discovery.resolvedIdentity}</strong>
@@ -140,7 +143,7 @@ export function DashboardPage({ demoRun }: { demoRun: DashboardRun }) {
                   <InfoRow label="AXL peer" value={demoRun.invocation.peer} mono />
                   <InfoRow label="method" value={demoRun.invocation.method} mono />
                   <InfoRow label="tool call status" value={demoRun.invocation.status} status="success" />
-                  <InfoRow label="request uri" value={demoRun.invocation.requestUri} mono />
+                  <InfoRow label="request summary" value={demoRun.invocation.requestSummary} />
                   <InfoRow label="response summary" value={demoRun.invocation.responseSummary} />
                   <InfoRow label="started at" value={demoRun.invocation.startedAt} mono />
                   <InfoRow label="finished at" value={demoRun.invocation.finishedAt} mono />
@@ -176,11 +179,11 @@ export function DashboardPage({ demoRun }: { demoRun: DashboardRun }) {
               <div className={styles.reportHeader}>
                 <div>
                   <span className={styles.reportEyebrow}>Outcome</span>
-                  <h2>Final Audit Report</h2>
+                  <h2>Final Report</h2>
                 </div>
                 <div className={styles.reportMetrics}>
                   <div className={styles.metricBox}>
-                    <span>Findings</span>
+                    <span>findings</span>
                     <strong>{demoRun.report.findings}</strong>
                   </div>
                   <div className={styles.severityRow}>
@@ -208,7 +211,7 @@ export function DashboardPage({ demoRun }: { demoRun: DashboardRun }) {
                   ))}
                 </div>
                 <div className={styles.reportMeta}>
-                  <InfoRow label="report id" value={demoRun.report.reportId} mono />
+                  <InfoRow label="report ID" value={demoRun.report.reportId} mono />
                   <InfoRow label="report URI" value={demoRun.report.reportUri} mono />
                   <InfoRow label="trace id" value={demoRun.report.traceReference} mono />
                   <InfoRow label="generated at" value={demoRun.report.generatedAt} mono />

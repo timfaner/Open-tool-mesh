@@ -1,4 +1,5 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 type SeverityTone = 'high' | 'medium' | 'low';
@@ -118,7 +119,7 @@ export interface DashboardRun {
     method: string;
     transport: string;
     status: string;
-    requestUri: string;
+    requestSummary: string;
     responseSummary: string;
     startedAt: string;
     finishedAt: string;
@@ -156,8 +157,8 @@ const fixtureDemoRun: DashboardRun = {
   contractReference: 'Vault.sol',
   headerStatus: [
     { label: 'Verified', tone: 'success' as ChipTone },
-    { label: 'AXL Live', tone: 'info' as ChipTone },
-    { label: 'Trace Stored', tone: 'success' as ChipTone },
+    { label: 'AXL', tone: 'info' as ChipTone },
+    { label: 'Fixture Baseline', tone: 'info' as ChipTone },
   ],
   lifecycleState: {
     Publish: 'done',
@@ -202,7 +203,7 @@ const fixtureDemoRun: DashboardRun = {
     method: 'invokeTool',
     transport: 'axl',
     status: 'ok',
-    requestUri: 'n/a',
+    requestSummary: 'solidity-static-analysis against Vault.sol',
     responseSummary: '3 findings returned',
     startedAt: '2026-04-28T14:56:11.891Z',
     finishedAt: '2026-04-28T14:56:11.921Z',
@@ -258,7 +259,8 @@ const fixtureDemoRun: DashboardRun = {
   },
 };
 
-const repoRoot = path.resolve(process.cwd(), '..', '..');
+const moduleDir = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(moduleDir, '..', '..', '..');
 const storageRoot = path.join(repoRoot, '.opentoolmesh', 'storage');
 
 function readJsonFile<T>(filePath: string): T {
@@ -277,8 +279,16 @@ function getMostRecentTraceFile(): string | null {
       entry,
       filePath: path.join(tracesDir, entry),
       mtimeMs: statSync(path.join(tracesDir, entry)).mtimeMs,
+      persistedAt: (() => {
+        try {
+          const trace = readJsonFile<TraceRecord>(path.join(tracesDir, entry));
+          return Date.parse(trace.storage?.persistedAt ?? '') || 0;
+        } catch {
+          return 0;
+        }
+      })(),
     }))
-    .sort((left, right) => right.mtimeMs - left.mtimeMs);
+    .sort((left, right) => right.persistedAt - left.persistedAt || right.mtimeMs - left.mtimeMs);
 
   return entries[0]?.filePath ?? null;
 }
@@ -339,6 +349,7 @@ function buildRuntimeDemoRun(): DashboardRun | null {
   const findings = report.findings ?? [];
   const topFinding = findings.find((finding) => finding.severity === 'high') ?? findings[0];
   const transportLabel = (trace.invocation?.transport ?? 'axl').toUpperCase();
+  const resolvedIdentity = trace.tool?.toolId ?? (trace.tool?.ensName ? `otm:ens:${trace.tool.ensName}` : fixtureDemoRun.discovery.resolvedIdentity);
 
   return {
     source: 'runtime' as const,
@@ -347,8 +358,8 @@ function buildRuntimeDemoRun(): DashboardRun | null {
     contractReference: report.contractName ?? fixtureDemoRun.contractReference,
     headerStatus: [
       { label: 'Verified', tone: 'success' as ChipTone },
-      { label: 'AXL Live', tone: 'info' as ChipTone },
-      { label: 'Trace Stored', tone: 'success' as ChipTone },
+      { label: transportLabel, tone: 'info' as ChipTone },
+      { label: 'Runtime Trace', tone: 'success' as ChipTone },
     ],
     lifecycleState: {
       Publish: 'done',
@@ -369,7 +380,7 @@ function buildRuntimeDemoRun(): DashboardRun | null {
     discovery: {
       requestedCapability: trace.requestedCapability ?? fixtureDemoRun.discovery.requestedCapability,
       candidateCount: `${trace.discovery?.candidateCount ?? 1} candidate${(trace.discovery?.candidateCount ?? 1) === 1 ? '' : 's'}`,
-      resolvedIdentity: trace.tool?.toolId ?? fixtureDemoRun.discovery.resolvedIdentity,
+      resolvedIdentity,
       ensName: trace.tool?.ensName ?? fixtureDemoRun.discovery.ensName,
       capabilityIndex: trace.discovery?.capabilityIndexUri ?? fixtureDemoRun.discovery.capabilityIndex,
       selectedReason: trace.discovery?.selectedReason ?? fixtureDemoRun.discovery.selectedReason,
@@ -393,7 +404,7 @@ function buildRuntimeDemoRun(): DashboardRun | null {
       method: trace.invocation?.method ?? fixtureDemoRun.invocation.method,
       transport: (trace.invocation?.transport ?? fixtureDemoRun.invocation.transport).toLowerCase(),
       status: trace.invocation?.status ?? fixtureDemoRun.invocation.status,
-      requestUri: 'n/a',
+      requestSummary: `${trace.requestedCapability ?? fixtureDemoRun.discovery.requestedCapability} against ${report.contractName ?? fixtureDemoRun.contractReference}`,
       responseSummary: `${summary?.totalFindings ?? findings.length} findings returned`,
       startedAt: trace.invocation?.startedAt ?? fixtureDemoRun.invocation.startedAt,
       finishedAt: trace.invocation?.finishedAt ?? fixtureDemoRun.invocation.finishedAt,
