@@ -1,0 +1,5 @@
+{
+  "$schema": "../docs/architecture/manifest-schema.md",
+  "source": "../services/tool-node/manifests/solidity-pattern-scanner.manifest.json"
+}
+

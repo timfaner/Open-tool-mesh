@@ -1,0 +1,25 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 124px;
+}
+
+.line {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(45, 212, 191, 0.1), rgba(96, 165, 250, 0.9), rgba(45, 212, 191, 0.1));
+}
+
+.label,
+.arrow {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.arrow {
+  color: var(--accent-cyan);
+  font-size: 1rem;
+}

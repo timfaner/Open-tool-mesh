@@ -1,0 +1,17 @@
+{
+  "name": "@opentoolmesh/tool-node",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "node dist/server.js",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@opentoolmesh/shared": "workspace:*"
+  }
+}
+

@@ -1,0 +1,28 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.success {
+  color: var(--success);
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.info {
+  color: var(--accent-cyan);
+  background: rgba(96, 165, 250, 0.12);
+  border: 1px solid rgba(96, 165, 250, 0.2);
+}
+
+.outline {
+  color: var(--text-muted);
+  background: rgba(11, 16, 32, 0.72);
+  border: 1px solid var(--border);
+}

@@ -1,0 +1,14 @@
+.pill {
+  display: inline-flex;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 11px 14px;
+  border-radius: 16px;
+  background: rgba(11, 16, 32, 0.8);
+  border: 1px solid rgba(96, 165, 250, 0.14);
+  color: var(--accent-cyan);
+  font-size: 0.83rem;
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace;
+}

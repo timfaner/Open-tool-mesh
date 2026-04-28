@@ -1,0 +1,10 @@
+{
+  "name": "opentool-mesh",
+  "private": true,
+  "packageManager": "pnpm@10.0.0",
+  "scripts": {
+    "dev": "pnpm --filter dashboard dev",
+    "build": "pnpm --filter dashboard build",
+    "lint": "pnpm --filter dashboard lint"
+  }
+}
