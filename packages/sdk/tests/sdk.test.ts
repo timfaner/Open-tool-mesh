@@ -16,8 +16,8 @@ describe("sdk skeleton", () => {
         async putJson() {
           return { uri: "0g://artifact.json", hash: "sha256:test" };
         },
-        async getJson() {
-          return {};
+        async getJson<T>() {
+          return {} as T;
         }
       },
       kv: {
@@ -27,8 +27,8 @@ describe("sdk skeleton", () => {
         }
       },
       transport: {
-        async invoke() {
-          return {};
+        async invoke<TReq, TRes>(_peerId: string, _method: string, _payload: TReq, _timeoutMs: number) {
+          return {} as TRes;
         }
       }
     });
@@ -41,4 +41,3 @@ describe("sdk skeleton", () => {
     expect(report.summary).toBe("Example report");
   });
 });
-

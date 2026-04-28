@@ -323,6 +323,28 @@
   gap: 12px;
 }
 
+.reportCallout {
+  display: grid;
+  gap: 8px;
+  padding: 18px 20px;
+  border-radius: 20px;
+  border: 1px solid rgba(249, 115, 22, 0.35);
+  background: linear-gradient(180deg, rgba(249, 115, 22, 0.12), rgba(11, 16, 32, 0.72));
+}
+
+.reportCallout strong {
+  font-family: var(--font-display), sans-serif;
+  font-size: 1.3rem;
+  color: #ffb278;
+}
+
+.reportCalloutLabel {
+  color: #ffb278;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
 .reportSummary p {
   margin: 0;
   padding: 14px 16px;

@@ -28,6 +28,7 @@ export const demoRun = {
     tool: 'solidity-pattern-scanner',
     optionalNode: 'test-case-suggester',
     capabilityMatches: '2 candidate tools, 1 preferred by version policy',
+    invocationMode: 'Discovered via capability index and ENS resolution, not a hardcoded endpoint.',
   },
   manifest: {
     uri: '0g://manifests/scanner/v1.2.0',
@@ -56,13 +57,14 @@ export const demoRun = {
     traceStatus: 'stored with provenance',
   },
   report: {
+    title: 'Reentrancy risk in withdraw()',
     findings: 3,
     severity: [
       { label: 'High', value: 1, tone: 'high' as const },
       { label: 'Medium', value: 1, tone: 'medium' as const },
       { label: 'Low', value: 1, tone: 'low' as const },
     ],
-    traceReference: 'trace:run-2048',
+    traceReference: '0g://traces/run-2048',
     manifestVersion: 'scanner@1.2.0',
     summary: [
       'Unchecked external call path exposes a reentrancy window before state finalization.',

@@ -76,9 +76,11 @@ export function DashboardPage() {
                   </div>
                 </div>
                 <div className={styles.discoveryList}>
+                  <InfoRow label="Resolved tool identity" value={demoRun.discovery.resolvedIdentity} mono />
                   <InfoRow label="Primary tool" value={demoRun.discovery.tool} />
                   <InfoRow label="Optional node" value={demoRun.discovery.optionalNode} />
                   <InfoRow label="Capability matches" value={demoRun.discovery.capabilityMatches} />
+                  <InfoRow label="Invocation mode" value={demoRun.discovery.invocationMode} />
                 </div>
               </SectionCard>
 
@@ -185,14 +187,20 @@ export function DashboardPage() {
 
               <div className={styles.reportBody}>
                 <div className={styles.reportSummary}>
+                  <div className={styles.reportCallout}>
+                    <span className={styles.reportCalloutLabel}>Top issue</span>
+                    <strong>{demoRun.report.title}</strong>
+                  </div>
                   {demoRun.report.summary.map((item) => (
                     <p key={item}>{item}</p>
                   ))}
                 </div>
                 <div className={styles.reportMeta}>
-                  <InfoRow label="Trace reference" value={demoRun.report.traceReference} mono />
+                  <InfoRow label="Trace URI" value={demoRun.report.traceReference} mono />
                   <InfoRow label="Manifest version" value={demoRun.report.manifestVersion} mono />
                   <InfoRow label="Requested capability" value={demoRun.discovery.requestedCapability} />
+                  <InfoRow label="Resolved tool identity" value={demoRun.discovery.resolvedIdentity} mono />
+                  <InfoRow label="AXL peer" value={demoRun.invocation.peer} mono />
                 </div>
               </div>
             </section>

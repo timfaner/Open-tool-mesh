@@ -11,7 +11,11 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noUncheckedIndexedAccess": true,
+    "baseUrl": ".",
+    "paths": {
+      "@opentoolmesh/shared": ["packages/shared/src/index.ts"],
+      "@opentoolmesh/sdk": ["packages/sdk/src/index.ts"]
+    },
     "outDir": "dist"
   }
 }
-
