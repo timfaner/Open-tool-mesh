@@ -12,8 +12,9 @@
     "ownerAddress": "0x1234567890abcdef1234567890abcdef12345678"
   },
   "discovery": {
+    "capabilityIndexUri": "0g://indexes/capabilities/solidity-static-analysis.json",
     "candidateCount": 1,
-    "selectedReason": "resolved from CLI tool argument",
+    "selectedReason": "selected from capability discovery candidates for solidity-static-analysis",
     "resolvedAt": "2026-04-28T14:56:11.921Z"
   },
   "verification": {
@@ -27,8 +28,8 @@
     "transport": "axl",
     "peerId": "axl-peer-solidity-01",
     "method": "invokeTool",
-    "startedAt": "2026-04-28T14:56:11.921Z",
-    "finishedAt": "2026-04-28T14:56:11.891Z",
+    "startedAt": "2026-04-28T14:56:11.891Z",
+    "finishedAt": "2026-04-28T14:56:11.921Z",
     "status": "ok"
   },
   "io": {

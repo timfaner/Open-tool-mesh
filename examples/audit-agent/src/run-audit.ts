@@ -17,7 +17,7 @@ interface ScannerFinding {
   message: string;
 }
 
-function buildTrace(
+export function buildTrace(
   tool: Awaited<ReturnType<ReturnType<typeof createOpenToolMeshClient>["resolveIdentity"]>>,
   manifestUri: string,
   manifestHash: string,
@@ -33,7 +33,8 @@ function buildTrace(
   outputHash: string | undefined,
   reportArtifact: { uri: string; hash: string } | null,
   outputArtifact: { uri: string; hash: string } | null,
-  traceId: string
+  traceId: string,
+  invocationStartedAt: string
 ): ExecutionTrace {
   return {
     traceId,
@@ -50,7 +51,8 @@ function buildTrace(
     },
     discovery: {
       candidateCount: 1,
-      selectedReason: "best capability match",
+      capabilityIndexUri: "0g://indexes/capabilities/solidity-static-analysis.json",
+      selectedReason: "selected from capability discovery candidates for solidity-static-analysis",
       resolvedAt: new Date().toISOString()
     },
     verification: {
@@ -61,7 +63,7 @@ function buildTrace(
       transport: "axl",
       peerId: "axl-peer-solidity-01",
       method: "invokeTool",
-      startedAt: new Date().toISOString(),
+      startedAt: invocationStartedAt,
       finishedAt: response.finishedAt,
       status: response.status === "ok" ? "ok" : "error"
     },
@@ -122,6 +124,7 @@ export async function runAuditDemo() {
 
   const source = await readFile(resolve(rootDir, "examples/audit-agent/fixtures/sample-contract.sol"), "utf8");
   const traceId = randomUUID();
+  const invocationStartedAt = new Date().toISOString();
   const response = await client.invokeTool<{ source: string }, { findings: ScannerFinding[]; summary: Record<string, number> }>({
     capability: "solidity-static-analysis",
     tool: selectedTool,
@@ -133,7 +136,10 @@ export async function runAuditDemo() {
 
   const report = await client.buildAuditReport({
     contractName: "Vault",
-    summary: response.status === "ok" ? "Remote Solidity scanner completed over AXL devnet transport." : "Invocation failed.",
+    summary:
+      response.status === "ok"
+        ? "Capability discovery resolved solidity-static-analysis to a remote Solidity scanner, then completed the AXL invocation and trace persistence."
+        : "Capability discovery resolved a remote Solidity scanner, but the AXL invocation failed.",
     findings:
       response.status === "ok"
         ? response.output?.findings.map((finding) => ({
@@ -175,7 +181,8 @@ export async function runAuditDemo() {
     response.output ? hashJson(response.output) : undefined,
     reportArtifact,
     outputArtifact,
-    traceId
+    traceId,
+    invocationStartedAt
   );
   const firstPersist = await client.recordTrace({ trace });
   trace.storage.traceUri = firstPersist.traceUri;
@@ -183,6 +190,11 @@ export async function runAuditDemo() {
 
   return {
     requestedCapability: "solidity-static-analysis",
+    discovery: {
+      mode: "capability-discovery",
+      selectedReason: trace.discovery.selectedReason,
+      candidateCount: trace.discovery.candidateCount
+    },
     toolId: selectedTool.id,
     manifestUri: manifest.storage.manifestUri,
     traceId,
