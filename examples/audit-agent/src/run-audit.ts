@@ -30,6 +30,8 @@ export function buildTrace(
   outputHash: string | undefined,
   reportArtifact: { uri: string; hash: string } | null,
   outputArtifact: { uri: string; hash: string } | null,
+  requestArtifact: { uri: string; hash: string },
+  responseArtifact: { uri: string; hash: string },
   traceId: string,
   invocationStartedAt: string
 ): ExecutionTrace {
@@ -69,6 +71,8 @@ export function buildTrace(
       transport: "axl",
       peerId: "axl-peer-solidity-01",
       method: "invokeTool",
+      requestUri: requestArtifact.uri,
+      responseUri: responseArtifact.uri,
       startedAt: invocationStartedAt,
       finishedAt: response.finishedAt,
       status: response.status === "ok" ? "ok" : "error"
@@ -78,6 +82,18 @@ export function buildTrace(
       outputHash
     },
     artifacts: [
+      {
+        kind: "invocation-request" as const,
+        uri: requestArtifact.uri,
+        hash: requestArtifact.hash,
+        mediaType: "application/json"
+      },
+      {
+        kind: "invocation-response" as const,
+        uri: responseArtifact.uri,
+        hash: responseArtifact.hash,
+        mediaType: "application/json"
+      },
       ...(outputArtifact
         ? [
             {
@@ -132,6 +148,17 @@ export async function runAuditDemo() {
   const source = await readFile(resolve(rootDir, "examples/audit-agent/fixtures/sample-contract.sol"), "utf8");
   const traceId = randomUUID();
   const invocationStartedAt = new Date().toISOString();
+  const requestArtifact = await client.saveArtifact({
+    namespace: "artifacts",
+    artifact: {
+      traceId,
+      type: "invocation-request",
+      capability: "solidity-static-analysis",
+      toolId: resolvedTool.id,
+      manifestUri: resolvedTool.latestManifestUri,
+      input: { source }
+    }
+  });
   const response = await client.invokeTool<{ source: string }, { findings: ScannerFinding[]; summary: Record<string, number> }>({
     capability: "solidity-static-analysis",
     tool: resolvedTool,
@@ -172,9 +199,66 @@ export async function runAuditDemo() {
           }
         })
       : null;
+  const responseArtifact = await client.saveArtifact({
+    namespace: "artifacts",
+    artifact: {
+      traceId,
+      type: "invocation-response",
+      toolId: resolvedTool.id,
+      response
+    }
+  });
+  const traceUri = `0g://traces/${traceId}.json`;
   const reportArtifact = await client.saveArtifact({
     namespace: "reports",
-    artifact: report
+    artifact: await client.buildAuditReport({
+      contractName: "Vault",
+      traceId,
+      traceUri,
+      toolId: resolvedTool.id,
+      manifestUri: resolvedTool.latestManifestUri,
+      manifestVersion: resolvedTool.latestVersion,
+      summary:
+        response.status === "ok"
+          ? "Capability discovery resolved solidity-static-analysis to a remote Solidity scanner, then completed the AXL invocation and trace persistence."
+          : "Capability discovery resolved a remote Solidity scanner, but the AXL invocation failed.",
+      findings:
+        response.status === "ok"
+          ? response.output?.findings.map((finding) => ({
+              id: finding.ruleId,
+              severity: finding.severity,
+              title: finding.title,
+              description: finding.message,
+              evidence: finding.message,
+              traceId,
+              toolId: resolvedTool.id
+            })) ?? []
+          : []
+    })
+  });
+  const report = await client.buildAuditReport({
+    contractName: "Vault",
+    traceId,
+    traceUri,
+    toolId: resolvedTool.id,
+    manifestUri: resolvedTool.latestManifestUri,
+    manifestVersion: resolvedTool.latestVersion,
+    summary:
+      response.status === "ok"
+        ? "Capability discovery resolved solidity-static-analysis to a remote Solidity scanner, then completed the AXL invocation and trace persistence."
+        : "Capability discovery resolved a remote Solidity scanner, but the AXL invocation failed.",
+    findings:
+      response.status === "ok"
+        ? response.output?.findings.map((finding) => ({
+            id: finding.ruleId,
+            severity: finding.severity,
+            title: finding.title,
+            description: finding.message,
+            evidence: finding.message,
+            traceId,
+            toolId: resolvedTool.id
+          })) ?? []
+        : []
   });
 
   const trace = buildTrace(
@@ -185,11 +269,12 @@ export async function runAuditDemo() {
     response.output ? hashJson(response.output) : undefined,
     reportArtifact,
     outputArtifact,
+    requestArtifact,
+    responseArtifact,
     traceId,
     invocationStartedAt
   );
-  const firstPersist = await client.recordTrace({ trace });
-  trace.storage.traceUri = firstPersist.traceUri;
+  trace.storage.traceUri = traceUri;
   const persistedTrace = await client.recordTrace({ trace });
 
   return {

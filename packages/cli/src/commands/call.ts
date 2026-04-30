@@ -24,10 +24,23 @@ const defaultDeps: CallCommandDeps = {
 };
 
 export async function runCallCommand(args: string[], context: CliCommandContext, deps: CallCommandDeps = defaultDeps) {
-  const tool = getFlag(args, "--tool");
+  const tool = args.includes("--tool") ? getFlag(args, "--tool") : undefined;
+  const capability = args.includes("--capability")
+    ? getFlag(args, "--capability")
+    : "solidity-static-analysis";
   const inputPath = getFlag(args, "--input");
   const { client } = await deps.createCliClient(context.cwd);
-  const identity = await client.resolveIdentity({ ensName: tool });
+  const discoveredTools = tool
+    ? []
+    : await client.discoverTools({
+        capability,
+        limit: 1
+      });
+  const selectedTool = tool ? undefined : discoveredTools[0];
+  if (!tool && !selectedTool) {
+    throw new Error(`No discovered tool for capability ${capability}`);
+  }
+  const identity = await client.resolveIdentity({ ensName: tool ?? selectedTool?.ensName ?? "" });
   const manifest = await client.loadManifest({ manifestUri: identity.latestManifestUri });
   const traceId = deps.randomUUID();
   const rawInput = await deps.readJsonFromFile<{ sourceFile?: string; source?: string }>(context.cwd, inputPath);
@@ -41,6 +54,14 @@ export async function runCallCommand(args: string[], context: CliCommandContext,
     throw new Error("call input must contain source or sourceFile");
   }
 
+  const selectedCapability = manifest.capabilities[0]?.id ?? capability;
+  const selectedReason = tool
+    ? "resolved from CLI tool argument"
+    : `selected first discovered candidate for capability ${capability}`;
+  const resolveEvidence = tool
+    ? `resolveIdentity(${identity.ensName}) -> loadManifest(${identity.latestManifestUri}) -> verifyManifest -> invokeTool`
+    : `discover(${capability}) -> resolveIdentity(${identity.ensName}) -> loadManifest(${identity.latestManifestUri}) -> verifyManifest -> invokeTool`;
+
   const verification = await client.verifyManifest({
     identity,
     manifest,
@@ -52,7 +73,7 @@ export async function runCallCommand(args: string[], context: CliCommandContext,
       traceId,
       runId: traceId,
       agentId: "opentool-cli",
-      requestedCapability: manifest.capabilities[0]?.id ?? "solidity-static-analysis",
+      requestedCapability: selectedCapability,
       tool: {
         toolId: identity.id,
         ensName: identity.ensName,
@@ -62,9 +83,19 @@ export async function runCallCommand(args: string[], context: CliCommandContext,
         ownerAddress: identity.ownerAddress
       },
       discovery: {
-        candidateCount: 1,
-        selectedReason: "resolved from CLI tool argument",
-        resolvedAt: deps.now()
+        candidateCount: tool ? 1 : discoveredTools.length,
+        capabilityIndexUri: tool ? undefined : `0g://indexes/capabilities/${capability}.json`,
+        selectedReason,
+        resolvedAt: deps.now(),
+        resolve: {
+          ensName: identity.ensName,
+          identityId: identity.id,
+          manifestUri: identity.latestManifestUri,
+          manifestHash: identity.latestManifestHash,
+          version: identity.latestVersion,
+          ownerAddress: identity.ownerAddress,
+          evidence: resolveEvidence
+        }
       },
       verification: {
         ...verification.checks,
@@ -88,8 +119,6 @@ export async function runCallCommand(args: string[], context: CliCommandContext,
         backend: "0g-storage"
       }
     };
-    const firstPersist = await client.recordTrace({ trace });
-    trace.storage.traceUri = firstPersist.traceUri;
     const persistedTrace = await client.recordTrace({ trace });
     context.stdout.log(
       JSON.stringify(
@@ -107,8 +136,19 @@ export async function runCallCommand(args: string[], context: CliCommandContext,
   }
 
   const invocationStartedAt = deps.now();
+  const requestArtifact = await client.saveArtifact({
+    namespace: "artifacts",
+    artifact: {
+      traceId,
+      type: "invocation-request",
+      capability: selectedCapability,
+      toolId: identity.id,
+      manifestUri: identity.latestManifestUri,
+      input: { source }
+    }
+  });
   const response = await client.invokeTool<{ source: string }, unknown>({
-    capability: manifest.capabilities[0]?.id ?? "solidity-static-analysis",
+    capability: selectedCapability,
     tool: identity,
     manifest,
     agentId: "opentool-cli",
@@ -120,7 +160,7 @@ export async function runCallCommand(args: string[], context: CliCommandContext,
     traceId,
     runId: traceId,
     agentId: "opentool-cli",
-    requestedCapability: manifest.capabilities[0]?.id ?? "solidity-static-analysis",
+    requestedCapability: selectedCapability,
     tool: {
       toolId: identity.id,
       ensName: identity.ensName,
@@ -130,9 +170,19 @@ export async function runCallCommand(args: string[], context: CliCommandContext,
       ownerAddress: identity.ownerAddress
     },
     discovery: {
-      candidateCount: 1,
-      selectedReason: "resolved from CLI tool argument",
-      resolvedAt: deps.now()
+      candidateCount: tool ? 1 : discoveredTools.length,
+      capabilityIndexUri: tool ? undefined : `0g://indexes/capabilities/${capability}.json`,
+      selectedReason,
+      resolvedAt: deps.now(),
+      resolve: {
+        ensName: identity.ensName,
+        identityId: identity.id,
+        manifestUri: identity.latestManifestUri,
+        manifestHash: identity.latestManifestHash,
+        version: identity.latestVersion,
+        ownerAddress: identity.ownerAddress,
+        evidence: resolveEvidence
+      }
     },
     verification: {
       ...verification.checks,
@@ -142,6 +192,7 @@ export async function runCallCommand(args: string[], context: CliCommandContext,
       transport: "axl",
       peerId: manifest.invocation.axlPeerId,
       method: manifest.invocation.axlMethod,
+      requestUri: requestArtifact.uri,
       startedAt: invocationStartedAt,
       finishedAt: response.finishedAt,
       status: response.status === "ok" ? "ok" : "error"
@@ -158,11 +209,37 @@ export async function runCallCommand(args: string[], context: CliCommandContext,
     }
   };
 
+  trace.artifacts.push({
+    kind: "invocation-request",
+    uri: requestArtifact.uri,
+    hash: requestArtifact.hash,
+    mediaType: "application/json"
+  });
+
+  const responseArtifact = await client.saveArtifact({
+    namespace: "artifacts",
+    artifact: {
+      traceId,
+      type: "invocation-response",
+      toolId: identity.id,
+      response
+    }
+  });
+  trace.invocation.responseUri = responseArtifact.uri;
+  trace.artifacts.push({
+    kind: "invocation-response",
+    uri: responseArtifact.uri,
+    hash: responseArtifact.hash,
+    mediaType: "application/json"
+  });
+
   const artifact = response.output
     ? await client.saveArtifact({
         namespace: "artifacts",
         artifact: {
           traceId,
+          type: "tool-output",
+          toolId: identity.id,
           output: response.output
         }
       })
@@ -177,8 +254,6 @@ export async function runCallCommand(args: string[], context: CliCommandContext,
     });
   }
 
-  const firstPersist = await client.recordTrace({ trace });
-  trace.storage.traceUri = firstPersist.traceUri;
   const persistedTrace = await client.recordTrace({ trace });
   context.stdout.log(
     JSON.stringify(
