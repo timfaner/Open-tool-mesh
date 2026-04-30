@@ -13,7 +13,8 @@
 2. 再看[开始使用 / Getting Started](./getting-started/README.md)，按顺序完成环境准备、依赖安装、测试验证与 dashboard 启动。
 3. 然后进入[演示文档 / Demo Docs](./demo/README.md)，跑通 `publish -> discover -> verify -> call -> trace -> report` 的最小闭环。
 4. 接着看[架构文档 / Architecture Docs](./architecture/)，理解 CLI、SDK、tool node、example agent 与 dashboard 的真实职责边界。
-5. 最后看[产品说明 / Product Docs](./product/opentool-mesh-产品说明与验收边界.md)，确认项目范围、对外叙事与验收边界。
+5. 遇到术语或命令不确定时，回查[参考资料 / Reference Docs](./reference/README.md)，快速统一词汇与命令口径。
+6. 最后看[产品说明 / Product Docs](./product/opentool-mesh-产品说明与验收边界.md)，确认项目范围、对外叙事与验收边界。
 
 ## 按读者入口阅读 / Entry Points by Reader Type
 
@@ -61,6 +62,7 @@
 | [`docs/getting-started/`](./getting-started/README.md) | 面向首次上手用户的正式入口，包含索引、快速开始与常见错误排查，帮助新读者先完成环境准备、依赖安装、测试验证与 dashboard 启动。 |
 | [`docs/demo/`](./demo/README.md) | 解释如何实际运行 demo、如何做前置检查、如何确认 dashboard 与 tool node 的健康状态。 |
 | [`docs/architecture/`](./architecture/) | 解释系统边界、模块职责、关键 schema 和真实调用链，服务贡献者理解当前实现。 |
+| [`docs/reference/`](./reference/README.md) | 提供术语表、命令速查与最短运行口径，适合查概念和查命令时快速回看。 |
 | [`docs/product/`](./product/opentool-mesh-产品说明与验收边界.md) | 解释项目定位、目标用户、叙事边界与 MVP 验收范围，避免产品定义漂移。 |
 
 ## 核心文档入口 / Core Document Links
@@ -71,6 +73,8 @@
 - [贡献指南 / Contributing Guide](../CONTRIBUTING.md)
 - [Demo 文档索引 / Demo Docs](./demo/README.md)
 - [完整 Demo Runbook / Demo Runbook](./demo/opentool-mesh-demo-runbook.md)
+- [参考资料 / Reference Docs](./reference/README.md)
+- [术语表与命令速查 / Glossary and Command Quick Reference](./reference/glossary-and-command-quick-reference.md)
 - [架构目录 / Architecture Directory](./architecture/)
 - [架构文档导航 / Architecture Docs](./architecture/README.md)
 - [产品说明与验收边界 / Product Scope](./product/opentool-mesh-产品说明与验收边界.md)

@@ -105,6 +105,7 @@ bash docs/demo/demo-health-check.sh
 - [常见错误与排查 / Troubleshooting](./docs/getting-started/troubleshooting.md)
 - [贡献指南 / Contributing Guide](./CONTRIBUTING.md)
 - [Demo 文档索引 / Demo Docs](./docs/demo/README.md)
+- [术语表与命令速查 / Glossary and Command Quick Reference](./docs/reference/glossary-and-command-quick-reference.md)
 - [完整 Demo Runbook](./docs/demo/opentool-mesh-demo-runbook.md)
 - [审计示例说明 / Audit Agent Example](./examples/audit-agent/README.md)
 - [产品说明与验收边界](./docs/product/opentool-mesh-产品说明与验收边界.md)
@@ -113,6 +114,7 @@ bash docs/demo/demo-health-check.sh
 - [模块接口说明](./docs/architecture/module-interfaces.md)
 - [Manifest Schema](./docs/architecture/manifest-schema.md)
 - [Trace Schema](./docs/architecture/trace-schema.md)
+- [参考资料 / Reference Docs](./docs/reference/README.md)
 
 ## 架构导航 / Architecture Navigation
 
