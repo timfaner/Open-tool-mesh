@@ -127,10 +127,12 @@ bash docs/demo/demo-health-check.sh
 如果你只想验证仓库健康，到这里已经足够。接下来通常有两条路径：
 
 - 想跑完整闭环：阅读[Demo Runbook](../demo/opentool-mesh-demo-runbook.md)，执行 `corepack pnpm demo:run`
-- 想理解代码结构：阅读[Demo 文档索引](../demo/README.md) 与[架构总览](../architecture/opentool-mesh-mvp-architecture.md)
+- 想理解代码结构：先读[架构文档导航](../architecture/README.md) 与[系统总览](../architecture/system-overview.md)，再按导航继续进入 Demo 或契约文档
 
 ## 下一步阅读 / Next Steps
 
 - 继续查看[常见错误与排查 / Troubleshooting](./troubleshooting.md)
+- 继续查看[架构文档导航 / Architecture Docs](../architecture/README.md)
+- 继续查看[系统总览 / System Overview](../architecture/system-overview.md)
 - 继续查看[Demo 文档索引 / Demo Docs](../demo/README.md)
 - 返回[开始使用索引 / Getting Started Index](./README.md)
