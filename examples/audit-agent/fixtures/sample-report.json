@@ -1,5 +1,10 @@
 {
   "reportId": "report_1777390727691",
+  "traceId": "c1f7441a-42fe-4a2d-b000-ea1bf1e673b4",
+  "traceUri": "0g://traces/c1f7441a-42fe-4a2d-b000-ea1bf1e673b4.json",
+  "toolId": "otm:ens:solidity-scanner.auditagent.eth",
+  "manifestUri": "0g://manifests/otm_ens_solidity-scanner.auditagent.eth-0.1.0.json",
+  "manifestVersion": "0.1.0",
   "contractName": "Vault",
   "summary": "Capability discovery resolved solidity-static-analysis to a remote Solidity scanner, then completed the AXL invocation and trace persistence.",
   "findings": [

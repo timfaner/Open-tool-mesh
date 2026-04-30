@@ -8,6 +8,12 @@ import { TraceLine } from './trace-line';
 import styles from './dashboard-page.module.css';
 
 const lifecycleSteps = ['Publish', 'Discover', 'Verify', 'Call', 'Trace', 'Report'] as const;
+const narrativeSteps = [
+  ['Discovery', 'Find the right tool by capability, not a hardcoded endpoint.'],
+  ['Manifest', 'Verify owner, hash, version, and schema before execution.'],
+  ['Invocation', 'Call an external tool node over the AXL transport boundary.'],
+  ['Memory', 'Persist request, response, trace, and final report into 0G-backed storage.'],
+] as const;
 
 export function DashboardPage({ demoRun }: { demoRun: DashboardRun }) {
   return (
@@ -19,7 +25,7 @@ export function DashboardPage({ demoRun }: { demoRun: DashboardRun }) {
             <div className={styles.headerTitles}>
               <h1>OpenTool Mesh</h1>
             </div>
-            <p className={styles.headerSummary}>One verifiable Solidity audit run, explained from publish through Final Report.</p>
+            <p className={styles.headerSummary}>One verifiable Solidity audit run, compressed into the four acceptance layers: Discovery, Manifest, Invocation, and Memory.</p>
           </div>
 
           <div className={styles.headerCenter}>
@@ -37,6 +43,15 @@ export function DashboardPage({ demoRun }: { demoRun: DashboardRun }) {
             <div className={styles.environmentPill}>{demoRun.environment}</div>
           </div>
         </header>
+
+        <section className={styles.narrativeStrip}>
+          {narrativeSteps.map(([label, copy]) => (
+            <div key={label} className={styles.narrativeCard}>
+              <span className={styles.narrativeLabel}>{label}</span>
+              <p>{copy}</p>
+            </div>
+          ))}
+        </section>
 
         <div className={styles.contentLayout}>
           <aside className={styles.rail}>
@@ -79,16 +94,21 @@ export function DashboardPage({ demoRun }: { demoRun: DashboardRun }) {
               >
                 <div className={styles.discoveryFlow}>
                   <div className={styles.discoveryNode}>
-                    <span className={styles.discoveryLabel}>requested capability</span>
-                    <strong>{demoRun.discovery.requestedCapability}</strong>
+                    <span className={styles.discoveryLabel}>publish proof</span>
+                    <strong>{demoRun.publish.ensName}</strong>
                   </div>
-                  <TraceLine label="capability index + ENS resolution" />
+                  <TraceLine label="ENS + capability index" />
                   <div className={styles.discoveryNode}>
                     <span className={styles.discoveryLabel}>resolved identity</span>
                     <strong>{demoRun.discovery.resolvedIdentity}</strong>
                   </div>
                 </div>
                 <div className={styles.discoveryList}>
+                  <InfoRow label="ENS name" value={demoRun.publish.ensName} mono />
+                  <InfoRow label="manifest URI" value={demoRun.publish.manifestUri} mono />
+                  <InfoRow label="manifest hash" value={demoRun.publish.manifestHash} mono />
+                  <InfoRow label="capability index" value={demoRun.publish.capabilityIndex} mono />
+                  <InfoRow label="owner" value={demoRun.publish.owner} mono />
                   <InfoRow label="requested capability" value={demoRun.discovery.requestedCapability} mono />
                   <InfoRow label="candidate count" value={demoRun.discovery.candidateCount} />
                   <InfoRow label="resolved identity" value={demoRun.discovery.resolvedIdentity} mono />
@@ -143,6 +163,8 @@ export function DashboardPage({ demoRun }: { demoRun: DashboardRun }) {
                   <InfoRow label="AXL peer" value={demoRun.invocation.peer} mono />
                   <InfoRow label="method" value={demoRun.invocation.method} mono />
                   <InfoRow label="tool call status" value={demoRun.invocation.status} status="success" />
+                  <InfoRow label="request URI" value={demoRun.invocation.requestUri} mono />
+                  <InfoRow label="response URI" value={demoRun.invocation.responseUri} mono />
                   <InfoRow label="request summary" value={demoRun.invocation.requestSummary} />
                   <InfoRow label="response summary" value={demoRun.invocation.responseSummary} />
                   <InfoRow label="started at" value={demoRun.invocation.startedAt} mono />
@@ -167,8 +189,11 @@ export function DashboardPage({ demoRun }: { demoRun: DashboardRun }) {
                   <InfoRow label="trace id" value={demoRun.memory.traceId} mono />
                   <InfoRow label="input hash" value={demoRun.memory.inputHash} mono />
                   <InfoRow label="output hash" value={demoRun.memory.outputHash} mono />
+                  <InfoRow label="request URI" value={demoRun.memory.requestUri} mono />
+                  <InfoRow label="response URI" value={demoRun.memory.responseUri} mono />
                   <InfoRow label="trace URI" value={demoRun.memory.traceUri} mono />
                   <InfoRow label="artifact" value={demoRun.memory.artifact} mono />
+                  <InfoRow label="report URI" value={demoRun.memory.reportUri} mono />
                   <InfoRow label="persisted at" value={demoRun.memory.persistedAt} mono />
                   <InfoRow label="backend" value={demoRun.memory.backend} status="success" />
                 </div>

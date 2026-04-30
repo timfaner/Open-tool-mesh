@@ -65,6 +65,11 @@ type TraceRecord = {
 
 type ReportRecord = {
   reportId: string;
+  traceId?: string;
+  traceUri?: string;
+  toolId?: string;
+  manifestUri?: string;
+  manifestVersion?: string;
   contractName?: string;
   summary?: string;
   findings?: Array<{
@@ -101,6 +106,13 @@ export interface DashboardRun {
   headerStatus: Array<{ label: string; tone: ChipTone }>;
   lifecycleState: Record<'Publish' | 'Discover' | 'Verify' | 'Call' | 'Trace' | 'Report', string>;
   stepDetails: Record<'Publish' | 'Discover' | 'Verify' | 'Call' | 'Trace' | 'Report', string>;
+  publish: {
+    ensName: string;
+    manifestUri: string;
+    manifestHash: string;
+    capabilityIndex: string;
+    owner: string;
+  };
   discovery: {
     requestedCapability: string;
     candidateCount: string;
@@ -128,6 +140,8 @@ export interface DashboardRun {
     method: string;
     transport: string;
     status: string;
+    requestUri: string;
+    responseUri: string;
     requestSummary: string;
     responseSummary: string;
     startedAt: string;
@@ -139,6 +153,8 @@ export interface DashboardRun {
     inputHash: string;
     outputHash: string;
     artifact: string;
+    requestUri: string;
+    responseUri: string;
     backend: string;
     reportUri: string;
     reportHash: string;
@@ -185,6 +201,13 @@ const fixtureDemoRun: DashboardRun = {
     Trace: 'Persisted to 0g://traces/c1f7441a-42fe-4a2d-b000-ea1bf1e673b4.json at 2026-04-28T14:56:11.921Z.',
     Report: 'Report report_1777390727691 generated at 2026-04-28T14:56:11.950Z.',
   },
+  publish: {
+    ensName: 'solidity-scanner.auditagent.eth',
+    manifestUri: '0g://manifests/otm_ens_solidity-scanner.auditagent.eth-0.1.0.json',
+    manifestHash: 'sha256:ddd20540138a8fb9711cb3d751f940964390d3a9fb54e147c0284e6205f64524',
+    capabilityIndex: '0g://indexes/capabilities/solidity-static-analysis.json',
+    owner: '0x1234567890abcdef1234567890abcdef12345678',
+  },
   discovery: {
     requestedCapability: 'solidity-static-analysis',
     candidateCount: '1 candidate',
@@ -212,6 +235,8 @@ const fixtureDemoRun: DashboardRun = {
     method: 'invokeTool',
     transport: 'axl',
     status: 'ok',
+    requestUri: '0g://artifacts/c1f7441a-42fe-4a2d-b000-ea1bf1e673b4-invocation-request.json',
+    responseUri: '0g://artifacts/c1f7441a-42fe-4a2d-b000-ea1bf1e673b4-invocation-response.json',
     requestSummary: 'solidity-static-analysis against Vault.sol',
     responseSummary: '3 findings returned',
     startedAt: '2026-04-28T14:56:11.891Z',
@@ -223,6 +248,8 @@ const fixtureDemoRun: DashboardRun = {
     inputHash: 'sha256:e86c47ebdbb303887f746b75a3877f806a6ffed429ad208f8249a751d9c290b4',
     outputHash: 'sha256:69bb4650459cd22722f676912cb5315d073d40ced1f79c5ac88602072eb47b00',
     artifact: '0g://artifacts/c1f7441a-42fe-4a2d-b000-ea1bf1e673b4.json',
+    requestUri: '0g://artifacts/c1f7441a-42fe-4a2d-b000-ea1bf1e673b4-invocation-request.json',
+    responseUri: '0g://artifacts/c1f7441a-42fe-4a2d-b000-ea1bf1e673b4-invocation-response.json',
     backend: '0g-storage',
     reportUri: '0g://reports/report_1777390727691.json',
     reportHash: 'sha256:8b5ac39ae14e83e9d889ae2251dafebba2c7565edc9f92a19cc86ccb1a2f21cb',
@@ -335,6 +362,8 @@ function buildRuntimeDemoRunFromTrace(trace: TraceRecord): DashboardRun | null {
 
   const reportArtifact = getArtifactByKind(trace, 'audit-report');
   const toolOutputArtifact = getArtifactByKind(trace, 'tool-output');
+  const requestArtifact = getArtifactByKind(trace, 'invocation-request');
+  const responseArtifact = getArtifactByKind(trace, 'invocation-response');
   const manifestPath = getStorageFilePath(trace.tool?.manifestUri);
   const reportPath = getStorageFilePath(reportArtifact?.uri);
   const toolOutputPath = getStorageFilePath(toolOutputArtifact?.uri);
@@ -387,12 +416,19 @@ function buildRuntimeDemoRunFromTrace(trace: TraceRecord): DashboardRun | null {
       Report: 'done',
     },
     stepDetails: {
-      Publish: `Manifest published at ${trace.tool?.manifestUri ?? fixtureDemoRun.manifest.uri}.`,
+      Publish: `ENS ${resolvedEnsName} points to ${trace.tool?.manifestUri ?? fixtureDemoRun.publish.manifestUri} and capability index ${trace.discovery?.capabilityIndexUri ?? fixtureDemoRun.publish.capabilityIndex}.`,
       Discover: `Resolved ${resolvedEnsName} at ${resolvedAt}. ${resolveEvidence}.`,
       Verify: `verified at ${trace.verification?.verifiedAt ?? 'unknown time'}.`,
       Call: `${trace.invocation?.status ?? 'unknown'} over ${transportLabel} from ${trace.invocation?.startedAt ?? 'unknown start'} to ${trace.invocation?.finishedAt ?? 'unknown end'}.`,
       Trace: `Persisted to ${trace.storage?.traceUri ?? fixtureDemoRun.memory.traceUri} at ${trace.storage?.persistedAt ?? 'unknown time'}.`,
       Report: `Report ${report.reportId} generated at ${report.generatedAt ?? 'unknown time'}.`,
+    },
+    publish: {
+      ensName: resolvedEnsName,
+      manifestUri: trace.tool?.manifestUri ?? fixtureDemoRun.publish.manifestUri,
+      manifestHash: trace.tool?.manifestHash ?? fixtureDemoRun.publish.manifestHash,
+      capabilityIndex: trace.discovery?.capabilityIndexUri ?? fixtureDemoRun.publish.capabilityIndex,
+      owner: trace.tool?.ownerAddress ?? trace.discovery?.resolve?.ownerAddress ?? fixtureDemoRun.publish.owner,
     },
     discovery: {
       requestedCapability: trace.requestedCapability ?? fixtureDemoRun.discovery.requestedCapability,
@@ -421,6 +457,8 @@ function buildRuntimeDemoRunFromTrace(trace: TraceRecord): DashboardRun | null {
       method: trace.invocation?.method ?? fixtureDemoRun.invocation.method,
       transport: (trace.invocation?.transport ?? fixtureDemoRun.invocation.transport).toLowerCase(),
       status: trace.invocation?.status ?? fixtureDemoRun.invocation.status,
+      requestUri: requestArtifact?.uri ?? trace.invocation?.requestUri ?? fixtureDemoRun.invocation.requestUri,
+      responseUri: responseArtifact?.uri ?? trace.invocation?.responseUri ?? fixtureDemoRun.invocation.responseUri,
       requestSummary: `${trace.requestedCapability ?? fixtureDemoRun.discovery.requestedCapability} against ${report.contractName ?? fixtureDemoRun.contractReference}`,
       responseSummary: `${summary?.totalFindings ?? findings.length} findings returned`,
       startedAt: trace.invocation?.startedAt ?? fixtureDemoRun.invocation.startedAt,
@@ -432,6 +470,8 @@ function buildRuntimeDemoRunFromTrace(trace: TraceRecord): DashboardRun | null {
       inputHash: trace.io?.inputHash ?? fixtureDemoRun.memory.inputHash,
       outputHash: trace.io?.outputHash ?? fixtureDemoRun.memory.outputHash,
       artifact: toolOutputArtifact?.uri ?? fixtureDemoRun.memory.artifact,
+      requestUri: requestArtifact?.uri ?? trace.invocation?.requestUri ?? fixtureDemoRun.memory.requestUri,
+      responseUri: responseArtifact?.uri ?? trace.invocation?.responseUri ?? fixtureDemoRun.memory.responseUri,
       backend: trace.storage?.backend ?? fixtureDemoRun.memory.backend,
       reportUri: reportArtifact?.uri ?? fixtureDemoRun.memory.reportUri,
       reportHash: reportArtifact?.hash ?? fixtureDemoRun.memory.reportHash,

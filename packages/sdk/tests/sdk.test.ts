@@ -34,11 +34,17 @@ describe("sdk skeleton", () => {
     });
 
     const report = await client.buildAuditReport({
+      traceId: "trace-1",
+      traceUri: "0g://traces/trace-1.json",
+      toolId: "otm:ens:tool.eth",
+      manifestUri: "0g://manifests/tool.json",
+      manifestVersion: "0.1.0",
       summary: "Example report",
       findings: []
     });
 
     expect(report.summary).toBe("Example report");
+    expect(report.traceUri).toBe("0g://traces/trace-1.json");
   });
 
   it("hashes json deterministically", () => {

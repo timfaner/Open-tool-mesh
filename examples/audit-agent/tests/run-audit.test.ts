@@ -27,6 +27,8 @@ describe("runAudit trace semantics", () => {
       "sha256:output",
       { uri: "0g://reports/report.json", hash: "sha256:report" },
       { uri: "0g://artifacts/output.json", hash: "sha256:artifact" },
+      { uri: "0g://artifacts/request.json", hash: "sha256:request" },
+      { uri: "0g://artifacts/response.json", hash: "sha256:response" },
       "trace-3",
       "2026-04-28T15:30:00.000Z"
     );
@@ -39,5 +41,7 @@ describe("runAudit trace semantics", () => {
     expect(trace.discovery.resolve?.evidence).toContain("resolveIdentity");
     expect(trace.discovery.resolve?.evidence).toContain("loadManifest(0g://manifests/tool.json)");
     expect(trace.discovery.resolve?.evidence).toContain("-> verifyManifest -> invokeTool");
+    expect(trace.invocation.requestUri).toBe("0g://artifacts/request.json");
+    expect(trace.invocation.responseUri).toBe("0g://artifacts/response.json");
   });
 });

@@ -151,11 +151,14 @@ function selectBlobId(value: unknown): string {
     if (typeof record.toolId === "string" && typeof record.version === "string") {
       return `${sanitizeKey(record.toolId)}-${sanitizeKey(record.version)}.json`;
     }
-    if (typeof record.traceId === "string") {
-      return `${sanitizeKey(record.traceId)}.json`;
-    }
     if (typeof record.reportId === "string") {
       return `${sanitizeKey(record.reportId)}.json`;
+    }
+    if (typeof record.traceId === "string" && typeof record.type === "string") {
+      return `${sanitizeKey(record.traceId)}-${sanitizeKey(record.type)}.json`;
+    }
+    if (typeof record.traceId === "string") {
+      return `${sanitizeKey(record.traceId)}.json`;
     }
   }
 

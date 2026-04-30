@@ -126,6 +126,34 @@
   margin-top: 24px;
 }
 
+.narrativeStrip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.narrativeCard {
+  padding: 18px 20px;
+  border-radius: 22px;
+  border: 1px solid rgba(34, 50, 77, 0.92);
+  background: linear-gradient(180deg, rgba(15, 27, 45, 0.96), rgba(12, 24, 48, 0.82));
+  box-shadow: var(--shadow-soft);
+}
+
+.narrativeCard p {
+  margin: 10px 0 0;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.narrativeLabel {
+  color: var(--accent-teal);
+  font-size: 0.76rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
 .rail {
   padding: 24px 20px;
   border-radius: 28px;
@@ -424,6 +452,10 @@
     grid-template-columns: 1fr;
   }
 
+  .narrativeStrip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .rail {
     order: -1;
     position: static;
@@ -455,6 +487,7 @@
   }
 
   .cardGrid,
+  .narrativeStrip,
   .reportBody {
     grid-template-columns: 1fr;
   }
