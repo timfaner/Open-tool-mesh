@@ -10,9 +10,10 @@
 如果你是第一次接触这个项目，建议按下面顺序阅读：
 
 1. 先回到[仓库根 README](../README.md)，完成项目定位、环境要求与最短启动命令的确认。
-2. 再看[演示文档 / Demo Docs](./demo/README.md)，先跑通 `publish -> discover -> verify -> call -> trace -> report` 的最小闭环。
-3. 接着看[架构文档 / Architecture Docs](./architecture/)，理解 CLI、SDK、tool node、example agent 与 dashboard 的真实职责边界。
-4. 最后看[产品说明 / Product Docs](./product/opentool-mesh-产品说明与验收边界.md)，确认项目范围、对外叙事与验收边界。
+2. 再看[开始使用 / Getting Started](./getting-started/README.md)，按顺序完成环境准备、依赖安装、测试验证与 dashboard 启动。
+3. 然后进入[演示文档 / Demo Docs](./demo/README.md)，跑通 `publish -> discover -> verify -> call -> trace -> report` 的最小闭环。
+4. 接着看[架构文档 / Architecture Docs](./architecture/)，理解 CLI、SDK、tool node、example agent 与 dashboard 的真实职责边界。
+5. 最后看[产品说明 / Product Docs](./product/opentool-mesh-产品说明与验收边界.md)，确认项目范围、对外叙事与验收边界。
 
 ## 按读者入口阅读 / Entry Points by Reader Type
 
@@ -57,25 +58,27 @@
 
 | 路径 | 作用 |
 | --- | --- |
-| [`docs/getting-started/`](./getting-started/) | 面向首次上手用户的入口目录，按双语规范预留给快速开始、环境准备、常见问题等内容。当前目录已创建，但尚未补充正式文档。 |
+| [`docs/getting-started/`](./getting-started/README.md) | 面向首次上手用户的正式入口，包含索引、快速开始与常见错误排查，帮助新读者先完成环境准备、依赖安装、测试验证与 dashboard 启动。 |
 | [`docs/demo/`](./demo/README.md) | 解释如何实际运行 demo、如何做前置检查、如何确认 dashboard 与 tool node 的健康状态。 |
 | [`docs/architecture/`](./architecture/) | 解释系统边界、模块职责、关键 schema 和真实调用链，服务贡献者理解当前实现。 |
 | [`docs/product/`](./product/opentool-mesh-产品说明与验收边界.md) | 解释项目定位、目标用户、叙事边界与 MVP 验收范围，避免产品定义漂移。 |
 
 ## 核心文档入口 / Core Document Links
 
+- [开始使用 / Getting Started](./getting-started/README.md)
+- [快速开始 / Quick Start](./getting-started/quickstart.md)
+- [常见错误与排查 / Troubleshooting](./getting-started/troubleshooting.md)
 - [Demo 文档索引 / Demo Docs](./demo/README.md)
 - [完整 Demo Runbook / Demo Runbook](./demo/opentool-mesh-demo-runbook.md)
 - [架构目录 / Architecture Directory](./architecture/)
 - [MVP 架构说明 / MVP Architecture](./architecture/opentool-mesh-mvp-architecture.md)
 - [产品说明与验收边界 / Product Scope](./product/opentool-mesh-产品说明与验收边界.md)
 - [审计示例说明 / Audit Agent Example](../examples/audit-agent/README.md)
-- [Getting Started 目录 / Getting Started Directory](./getting-started/)
 
 ## 从这里继续 / Where to Go Next
 
-如果你还没有跑过项目，下一步直接进入[Demo 文档索引](./demo/README.md)。
+如果你还没有跑过项目，下一步先进入[开始使用 / Getting Started](./getting-started/README.md)。
 
-如果你已经跑通 demo，下一步进入[架构目录](./architecture/) 看系统边界与调用链。
+如果你已经完成快速开始并跑通 demo，下一步进入[架构目录](./architecture/) 看系统边界与调用链。
 
 如果你正在判断项目是否符合预期，下一步进入[产品说明与验收边界](./product/opentool-mesh-产品说明与验收边界.md)。
