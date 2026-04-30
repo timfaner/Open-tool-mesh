@@ -1,5 +1,7 @@
 # OpenTool Mesh Demo Runbook
 
+> 返回索引 / Back to index: [docs/demo/README.md](./README.md)
+
 ## 1. 目标
 
 本 runbook 只服务一条可复现的 demo 主线：
@@ -80,6 +82,13 @@ corepack pnpm demo:run
 - `files.trace`
 - `files.artifact`
 - `files.report`
+
+这些输出分别代表：
+
+- 输入：示例合约源码来自 `examples/audit-agent/fixtures/sample-contract.sol`
+- 中间产物：请求、响应、tool output 会写入 `.opentoolmesh/storage/artifacts`
+- 结果产物：trace 写入 `.opentoolmesh/storage/traces`，report 写入 `.opentoolmesh/storage/reports`
+- 使用场景：适合验证整个仓库是否能完成一次最小远程工具调用闭环
 
 ## 5. 拆步演示命令
 
