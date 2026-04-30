@@ -19,7 +19,9 @@
    适合先做环境前置检查，确认关键文件、Node 版本与构建产物状态。
 3. `demo-health-check.sh`
    适合在 dashboard 与 tool node 已启动后确认服务存活。
-4. [examples/audit-agent/README.md](../../examples/audit-agent/README.md)
+4. [运行时产品清单与健康检查口径](./opentool-mesh-demo-runbook.md#56-运行时产品清单与健康检查口径)
+   适合排查 `/opt/wanman/products.json` 缺失、明确当前仓库的产品来源链路与降级策略。
+5. [examples/audit-agent/README.md](../../examples/audit-agent/README.md)
    适合想继续看“示例 agent 到底做了什么”的读者。
 
 ## 最短运行方式

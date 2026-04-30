@@ -36,9 +36,8 @@
 - [架构目录 / Architecture Directory](./architecture/)
 - [架构文档导航 / Architecture Docs](./architecture/README.md)
 - [系统总览 / System Overview](./architecture/system-overview.md)
-- [模块接口说明](./architecture/module-interfaces.md)
-- [Manifest Schema](./architecture/manifest-schema.md)
-- [Trace Schema](./architecture/trace-schema.md)
+- [模块边界 / Module Boundaries](./architecture/module-boundaries.md)
+- [运行时生命周期 / Runtime Lifecycle](./architecture/runtime-lifecycle.md)
 
 这条路径适合贡献者、维护者和需要快速建立代码地图的开发者。
 

@@ -189,6 +189,64 @@ bash docs/demo/demo-health-check.sh
 - 健康检查只证明 dashboard 进程与 tool-node 进程存活，不证明页面已经展示最新运行态数据。
 - 页面展示的数据口径仍以第 6 节为准：先找最新成功 trace，再定位其绑定的 artifact / report / manifest。
 
+### 5.6 运行时产品清单与健康检查口径
+
+`/opt/wanman/products.json` 是 agent 运维侧用来汇总“有哪些产品、它们的生产地址和健康检查地址”的外部运行时清单，不是当前 OpenTool Mesh 仓库自动生成的构建产物。
+
+当前仓库里已经存在、且能被源码直接证明的服务只有两类：
+
+- dashboard：`http://127.0.0.1:3000/`，健康检查为 `http://127.0.0.1:3000/api/health`
+- tool-node：`http://127.0.0.1:4318/health`，调用入口为 `http://127.0.0.1:4318/invokeTool`
+
+事实来源：
+
+- dashboard health route：`apps/dashboard/app/api/health/route.ts`
+- tool-node health route：`services/tool-node/src/server.ts`
+- 健康检查脚本默认地址：`docs/demo/demo-health-check.sh`
+
+这意味着：
+
+- 如果你的运维脚本期待 `/opt/wanman/products.json`，需要由部署层或主机 bootstrap 过程额外生成它。
+- 仅执行 `corepack pnpm build`、`corepack pnpm demo:run` 或启动 dashboard/tool-node，不会自动写出 `/opt/wanman/products.json`。
+- 当这个文件缺失时，不能声称“所有产品都健康”；应把系统状态标记为 `unknown:no_product_inventory`，并停止做全量产品覆盖声明。
+
+如需在当前环境临时恢复这份清单，可按仓库已知服务手工生成最小版本：
+
+```bash
+sudo mkdir -p /opt/wanman
+sudo tee /opt/wanman/products.json >/dev/null <<'EOF'
+{
+  "generatedAt": "MANUAL_OR_BOOTSTRAP",
+  "source": "repo_docs:docs/demo/opentool-mesh-demo-runbook.md#56-运行时产品清单与健康检查口径",
+  "products": [
+    {
+      "name": "opentool-mesh-dashboard",
+      "hosting": "local-next-dev",
+      "urls": {
+        "production": "http://127.0.0.1:3000/",
+        "health": "http://127.0.0.1:3000/api/health"
+      }
+    },
+    {
+      "name": "opentool-mesh-tool-node",
+      "hosting": "local-node-http",
+      "urls": {
+        "production": "http://127.0.0.1:4318/invokeTool",
+        "health": "http://127.0.0.1:4318/health"
+      }
+    }
+  ]
+}
+EOF
+```
+
+更稳妥的自动恢复方式应放在仓库外层部署脚本或 systemd/cron bootstrap 中，规则至少包括：
+
+1. 先探测 dashboard 与 tool-node 的实际监听地址。
+2. 只把源码中真实存在的健康端点写入 `products.json`。
+3. 每次写入时附带 `generatedAt` 与 `source`，避免后续误以为它来自仓库构建步骤。
+4. 若探测失败，则保留旧文件并上报 `unknown:no_product_inventory` 或 `degraded:<service>`，不要写空数组覆盖。
+
 ## 6. Dashboard 对齐口径
 
 dashboard 页面现在遵循唯一一套 authoritative 规则，供 devops 文档同步与 api-tester 闭环比对复用：
