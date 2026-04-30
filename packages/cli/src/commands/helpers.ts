@@ -16,9 +16,9 @@ export async function createCliClient(startDir: string) {
   return { client, rootDir };
 }
 
-export function getFlag(args: string[], name: string): string {
+export function getFlag(args: string[], name: string, fallback?: string): string {
   const index = args.indexOf(name);
-  const value = index === -1 ? undefined : args[index + 1];
+  const value = index === -1 ? fallback : args[index + 1];
   if (!value) {
     throw new Error(`Missing required flag ${name}`);
   }

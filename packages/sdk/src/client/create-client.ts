@@ -173,8 +173,13 @@ export function createOpenToolMeshClient(_deps: OpenToolMeshClientDeps): OpenToo
       return result.response;
     },
     async recordTrace(input: RecordTraceInput): Promise<RecordTraceResult> {
-      const stored = await _deps.blob.putJson("traces", input.trace);
-      const summary = buildTraceSummary(input.trace, stored.uri);
+      const traceToPersist = structuredClone(input.trace);
+      if (!traceToPersist.storage.traceUri) {
+        traceToPersist.storage.traceUri = `0g://traces/${traceToPersist.traceId}.json`;
+      }
+
+      const stored = await _deps.blob.putJson("traces", traceToPersist);
+      const summary = buildTraceSummary(traceToPersist, stored.uri);
       await _deps.kv.put(`trace:${input.trace.traceId}`, summary);
       return {
         traceId: input.trace.traceId,
@@ -207,6 +212,11 @@ export function createOpenToolMeshClient(_deps: OpenToolMeshClientDeps): OpenToo
     async buildAuditReport(input: BuildAuditReportInput): Promise<AuditReport> {
       return {
         reportId: `report_${Date.now()}`,
+        traceId: input.traceId,
+        traceUri: input.traceUri,
+        toolId: input.toolId,
+        manifestUri: input.manifestUri,
+        manifestVersion: input.manifestVersion,
         contractName: input.contractName,
         summary: input.summary,
         findings: input.findings,
@@ -231,11 +241,15 @@ function buildTraceSummary(trace: ExecutionTrace, traceUri: string) {
     verification: trace.verification,
     invocation: {
       peerId: trace.invocation.peerId,
+      method: trace.invocation.method,
+      requestUri: trace.invocation.requestUri,
+      responseUri: trace.invocation.responseUri,
       status: trace.invocation.status
     },
     io: trace.io,
     storage: {
-      traceUri
+      traceUri,
+      persistedAt: trace.storage.persistedAt
     }
   };
 }

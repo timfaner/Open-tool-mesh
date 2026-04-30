@@ -4,10 +4,11 @@ import { discoverCommand } from "./commands/discover.js";
 import { publishCommand } from "./commands/publish.js";
 import { resolveCommand } from "./commands/resolve.js";
 import { traceCommand } from "./commands/trace.js";
+import { verifyCommand } from "./commands/verify.js";
 import type { CliCommand } from "./commands/types.js";
 
 const commands = new Map<string, CliCommand>(
-  [publishCommand, resolveCommand, discoverCommand, callCommand, traceCommand].map((command) => [
+  [publishCommand, resolveCommand, discoverCommand, verifyCommand, callCommand, traceCommand].map((command) => [
     command.name,
     command
   ])
@@ -17,7 +18,7 @@ async function main() {
   const [, , commandName, ...args] = process.argv;
 
   if (!commandName || commandName === "--help") {
-    console.log("Usage: opentool <publish|resolve|discover|call|trace> [...args]");
+    console.log("Usage: opentool <publish|resolve|discover|verify|call|trace> [...args]");
     return;
   }
 
@@ -37,4 +38,3 @@ main().catch((error: unknown) => {
   console.error(error);
   process.exitCode = 1;
 });
-

@@ -51,7 +51,7 @@ export interface ExecutionTrace {
     outputSchemaRef?: string;
   };
   artifacts: Array<{
-    kind: "tool-output" | "audit-report" | "log" | "finding";
+    kind: "tool-output" | "audit-report" | "log" | "finding" | "invocation-request" | "invocation-response";
     uri: string;
     hash: string;
     mediaType: string;
@@ -65,6 +65,11 @@ export interface ExecutionTrace {
 
 export interface AuditReport {
   reportId: string;
+  traceId: string;
+  traceUri: string;
+  toolId: string;
+  manifestUri: string;
+  manifestVersion: string;
   contractName?: string;
   summary: string;
   findings: Array<{

@@ -86,6 +86,11 @@ export interface BuildAuditReportInput {
   suggestedTests?: AuditReport["suggestedTests"];
   summary: string;
   contractName?: string;
+  traceId: string;
+  traceUri: string;
+  toolId: string;
+  manifestUri: string;
+  manifestVersion: string;
 }
 
 export interface OpenToolMeshClient {
@@ -99,4 +104,3 @@ export interface OpenToolMeshClient {
   publishManifest(input: PublishManifestInput): Promise<PublishManifestResult>;
   buildAuditReport(input: BuildAuditReportInput): Promise<AuditReport>;
 }
-
