@@ -1,11 +1,11 @@
 # Manifest 契约参考
 > Manifest Contract Reference
 
-本文基于当前仓库真实实现，说明 `ToolManifest`、`ToolIdentity`、`CapabilityIndexEntry` 这三类 manifest 相关契约，以及它们在 CLI、SDK、tool node、audit-agent、dashboard 之间如何发布、解析、校验与消费。
+本文基于仓库当前真实实现，说明 `ToolManifest`、`ToolIdentity`、`CapabilityIndexEntry` 三类 manifest 相关契约，以及它们在 CLI、SDK、tool node、audit-agent、dashboard 之间如何发布、解析、校验与消费。
 
 > This document describes the manifest-related contracts that exist in the repository today, and how they are published, resolved, verified, and consumed across the CLI, SDK, tool node, audit-agent, and dashboard.
 
-## 文档定位 / Position In The Doc Set
+## 阅读前提 / Read This After
 
 建议先阅读：
 
@@ -13,31 +13,32 @@
 2. [模块边界 / Module Boundaries](./module-boundaries.md)
 3. [运行时生命周期 / Runtime Lifecycle](./runtime-lifecycle.md)
 
-再回到本文，把 manifest 当作 `publish -> discover -> verify -> call -> trace -> report` 闭环里的“工具事实来源”，而不是一份孤立 JSON 模板。
+再回到本文，把 manifest 当作 `publish -> discover -> verify -> call -> trace -> report` 闭环里的“工具事实来源”，而不是孤立 JSON 模板。
 
 > Read the overview, module boundaries, and runtime lifecycle first. Then come back here and treat the manifest as the concrete tool contract used by the runtime loop, not as a standalone JSON template.
 
 ## 事实来源 / Source Of Truth
 
-manifest 相关的单一类型事实主要集中在以下位置：
+manifest 相关的单一类型事实主要集中在：
 
-- manifest / identity / capability index 类型定义： [packages/shared/src/manifest.ts](/workspace/project/packages/shared/src/manifest.ts:1)
-- SDK 解析、校验、发布实现： [packages/sdk/src/client/create-client.ts](/workspace/project/packages/sdk/src/client/create-client.ts:49)
-- manifest hash 与本地 devnet 持久化： [packages/sdk/src/client/local-devnet.ts](/workspace/project/packages/sdk/src/client/local-devnet.ts:1)
+- 契约定义： [packages/shared/src/manifest.ts](/workspace/project/packages/shared/src/manifest.ts:1)
+- SDK 对外接口： [packages/sdk/src/types/contracts.ts](/workspace/project/packages/sdk/src/types/contracts.ts:1)
+- SDK 解析、校验、发布： [packages/sdk/src/client/create-client.ts](/workspace/project/packages/sdk/src/client/create-client.ts:49)
+- manifest hash、本地 devnet、capability index： [packages/sdk/src/client/local-devnet.ts](/workspace/project/packages/sdk/src/client/local-devnet.ts:1)
 - CLI 读取与发布 helper： [packages/cli/src/commands/helpers.ts](/workspace/project/packages/cli/src/commands/helpers.ts:1)
 - CLI 发布入口： [packages/cli/src/commands/publish.ts](/workspace/project/packages/cli/src/commands/publish.ts:1)
 - CLI 校验入口： [packages/cli/src/commands/verify.ts](/workspace/project/packages/cli/src/commands/verify.ts:1)
 - 示例 manifest： [services/tool-node/manifests/solidity-pattern-scanner.manifest.json](/workspace/project/services/tool-node/manifests/solidity-pattern-scanner.manifest.json:1)
-- agent 示例加载 manifest： [examples/audit-agent/src/run-audit.ts](/workspace/project/examples/audit-agent/src/run-audit.ts:137)
+- agent 侧参考消费： [examples/audit-agent/src/run-audit.ts](/workspace/project/examples/audit-agent/src/run-audit.ts:131)
 
 ## Manifest 在系统里的角色 / What The Manifest Is For
 
-当前仓库里，manifest 不是单纯给 tool node 自述能力的静态元数据，它同时承担四个角色：
+当前仓库里，manifest 同时承担四个角色：
 
-- 作为工具能力的发布载体，描述 `toolId`、capability、MCP schema、invocation 参数和存储命名空间。
-- 作为 CLI、SDK、audit-agent 调用前的校验对象，决定输入输出 schema 和 transport 参数。
+- 作为工具能力的发布载体，描述 `toolId`、capability、MCP schema、调用 transport 与存储命名空间。
+- 作为 CLI、SDK、audit-agent 调用前的校验对象，决定输入输出 schema 和 invocation 参数。
 - 作为 ENS text records 与 capability index 背后的事实源，把“工具是谁”和“这个能力能找到谁”串起来。
-- 作为 dashboard 和 trace 的回溯入口，让一次运行可以反查当时实际使用的是哪份 manifest。
+- 作为 trace 与 dashboard 的回溯入口，让一次运行可以反查当时实际使用的是哪份 manifest。
 
 > In this repository, the manifest is the runtime contract for publication, verification, invocation setup, and evidence backtracking.
 
@@ -45,13 +46,13 @@ manifest 相关的单一类型事实主要集中在以下位置：
 
 ### `ToolManifest`
 
-`ToolManifest` 是发布到 `0g://manifests/...` 的主文档。它定义工具自身、能力集合、MCP schema、调用配置、兼容性和完整性信息。
+`ToolManifest` 是发布到 `0g://manifests/...` 的主文档。它定义工具本身、能力集合、MCP schema、调用配置、兼容性和完整性信息。
 
 ### `ToolIdentity`
 
 `ToolIdentity` 不是 manifest 文件本身，而是 `resolveIdentity()` 从 ENS text records 与 ENS owner 解析出来的运行时身份对象。
 
-它把以下信息收敛成调用前需要的最小事实：
+它收敛了调用前需要的最小事实：
 
 - `id`
 - `ensName`
@@ -63,16 +64,17 @@ manifest 相关的单一类型事实主要集中在以下位置：
 
 ### `CapabilityIndexEntry`
 
-`CapabilityIndexEntry` 是 capability 到工具候选列表的索引对象。它不重复携带完整 manifest，而是保留发现阶段最需要的指针：
+`CapabilityIndexEntry` 是 capability 到工具候选列表的索引对象。它不重复携带完整 manifest，而是只保留发现阶段最需要的指针：
 
-- `toolId`
-- `ensName`
-- `manifestUri`
-- `manifestHash`
-- `version`
-- `ownerAddress`
-- `updatedAt`
-- `priority?`
+- `capability`
+- `tools[].toolId`
+- `tools[].ensName`
+- `tools[].manifestUri`
+- `tools[].manifestHash`
+- `tools[].version`
+- `tools[].ownerAddress`
+- `tools[].updatedAt`
+- `tools[].priority?`
 
 这也是为什么当前 discovery 不是单一数据源，而是：
 
@@ -89,7 +91,7 @@ manifest 相关的单一类型事实主要集中在以下位置：
 | `schemaVersion` | `"otm.manifest.v1"` | 当前 manifest 契约版本。 |
 | `toolId` | `string` | 工具稳定标识，当前采用 `otm:ens:<ens-name>` 形式。 |
 | `name` | `string` | 人类可读工具名。 |
-| `version` | `string` | 工具版本，当前与发布到本地 devnet 的 blob 文件名绑定。 |
+| `version` | `string` | 工具版本，当前与 blob 文件名绑定。 |
 | `description` | `string` | 工具用途说明。 |
 | `owner` | object | 工具所有者信息，至少包含 `address`。 |
 | `capabilities` | array | 工具声明的 capability 列表。 |
@@ -105,7 +107,7 @@ manifest 相关的单一类型事实主要集中在以下位置：
 
 ### `schemaVersion`
 
-当前 SDK 校验只接受 `otm.manifest.v1`，见 [packages/sdk/src/client/create-client.ts](/workspace/project/packages/sdk/src/client/create-client.ts:105)。
+当前 SDK 校验只接受 `otm.manifest.v1`，见 [packages/sdk/src/client/create-client.ts](/workspace/project/packages/sdk/src/client/create-client.ts:92)。
 
 这意味着：
 
@@ -127,18 +129,18 @@ manifest 相关的单一类型事实主要集中在以下位置：
 `owner.address` 是当前最关键的校验字段。SDK `verifyManifest()` 会把它和 ENS owner 对比：
 
 - 一致则 `ownerValid = true`
-- 不一致则直接进入错误列表
+- 不一致则进入错误列表
 
-`owner.ensName` 当前主要用于补充可读性；`signature` 与 `publicKey` 虽然在类型上预留，但当前代码没有做签名校验。
+`owner.ensName` 当前主要用于补充可读性。`signature` 与 `publicKey` 虽然在类型上预留，但当前代码没有做签名校验。
 
-这点必须明确写出：仓库目前只有 owner 地址一致性检查，没有生产级签名验证。
+这点必须明确：仓库目前只有 owner 地址一致性检查，没有生产级签名验证。
 
 ### `capabilities`
 
 `capabilities[]` 决定两个真实行为：
 
-- CLI 发布后，`seedCapabilityIndex()` 会按 capability 写入 KV 候选列表，见 [packages/sdk/src/client/local-devnet.ts](/workspace/project/packages/sdk/src/client/local-devnet.ts:237)
-- 调用方通过 `discoverTools({ capability })` 找到候选工具，见 [packages/sdk/src/client/create-client.ts](/workspace/project/packages/sdk/src/client/create-client.ts:79)
+- CLI 发布后，`seedCapabilityIndex()` 会按 capability 写入 KV 候选列表，见 [packages/sdk/src/client/local-devnet.ts](/workspace/project/packages/sdk/src/client/local-devnet.ts:219)
+- 调用方通过 `discoverTools({ capability })` 找到候选工具，见 [packages/sdk/src/client/create-client.ts](/workspace/project/packages/sdk/src/client/create-client.ts:66)
 
 当前示例只声明一个能力：`solidity-static-analysis`。
 
@@ -183,82 +185,73 @@ SDK 当前会直接消费 `inputSchema` 和 `outputSchema`：
 - `artifactBaseUri?`
 - `traceNamespace`
 
-当前要注意一个实现细节：
+这里有一个关键实现细节：
 
 - manifest 文件初始可以写一个预期 URI
-- CLI 发布后，`publishManifest()` 会重新写入真实的 `manifestUri`
+- `publishManifest()` 发布后会回填真实的 `manifestUri`
 
-也就是说，`storage.manifestUri` 不是纯静态字段，而是发布过程会回填的运行结果。
+也就是说，`storage.manifestUri` 不是纯静态字段，而是发布过程会写回的运行结果，见 [packages/sdk/src/client/create-client.ts](/workspace/project/packages/sdk/src/client/create-client.ts:178)。
 
 ### `compatibility`
 
 当前 SDK 只做最小版本前缀检查：
 
 - `sdkVersionRange.startsWith("^0.1")`
-- `manifestApiVersion === "v1"` 作为 manifest 数据的一部分存在，但没有单独复杂协商逻辑
+- `manifestApiVersion === "v1"` 作为 manifest 数据的一部分存在
 
-这意味着版本兼容仍是 MVP 级实现，重点在于让调用方知道 manifest 是否面向当前 SDK 主线，而不是完整 semver 解析器。
+这意味着版本兼容仍是 MVP 级实现，重点在于让调用方知道 manifest 是否面向当前 SDK 主线，而不是完整 semver 协商。
 
 ### `integrity`
 
 `integrity.manifestHash` 是 manifest 最关键的完整性指针：
 
-- CLI 读取本地 manifest 时先用 `hashManifest()` 重算一遍，见 [packages/cli/src/commands/helpers.ts](/workspace/project/packages/cli/src/commands/helpers.ts:32)
+- CLI 读取本地 manifest 时先用 `hashManifest()` 重算一遍，见 [packages/cli/src/commands/helpers.ts](/workspace/project/packages/cli/src/commands/helpers.ts:24)
 - 发布后 SDK 会再次基于回填 URI 的 manifest 生成最终 hash
 - 后续 `verifyManifest()` 会把它和 `ToolIdentity.latestManifestHash` 对比
 
 这里的实现事实很重要：
 
 - hash 是对 `manifestHash` 字段清空后的完整 JSON 做 canonical hash
-- 因此 hash 包含了 `storage.manifestUri` 等其他字段
+- 因此 hash 包含 `storage.manifestUri` 等其他字段
 - 一旦 manifest 内容或发布后回填值变化，最终 hash 就会变化
 
-## 发布链路 / Publish Flow
+## 生成链路 / Publish And Generation Flow
 
-当前 manifest 发布链路的最完整入口是 [packages/cli/src/commands/publish.ts](/workspace/project/packages/cli/src/commands/publish.ts:1) 和 [packages/cli/src/commands/helpers.ts](/workspace/project/packages/cli/src/commands/helpers.ts:39)。
+当前 manifest 发布链路的完整入口是 [packages/cli/src/commands/publish.ts](/workspace/project/packages/cli/src/commands/publish.ts:1) 与 [packages/cli/src/commands/helpers.ts](/workspace/project/packages/cli/src/commands/helpers.ts:28)。
 
 真实顺序如下：
 
-1. CLI 从本地 JSON 读取 manifest。
-2. `readManifestFromFile()` 先计算一次本地 hash。
-3. `publishManifest()` 把 manifest 写入 blob storage。
-4. SDK 回填 `storage.manifestUri` 并重算最终 `integrity.manifestHash`。
-5. SDK 更新 ENS text records：
-   - `opentoolmesh.manifest_uri`
-   - `opentoolmesh.manifest_hash`
-   - `opentoolmesh.owner`
-   - `opentoolmesh.latest_version`
-   - `opentoolmesh.capabilities`
-6. CLI helper 再调用 `seedCapabilityIndex()` 更新 capability index。
+1. CLI 从本地文件读取 manifest。
+2. `readManifestFromFile()` 先重算 `integrity.manifestHash`。
+3. `client.publishManifest()` 先把 manifest 存到 `0g://manifests/...`。
+4. SDK 将真实 `manifestUri` 回填到 `storage.manifestUri`。
+5. SDK 基于回填后的 manifest 重新计算最终 hash。
+6. SDK 更新 ENS text records：
+   `opentoolmesh.manifest_uri`、`opentoolmesh.manifest_hash`、`opentoolmesh.owner`、`opentoolmesh.latest_version`、`opentoolmesh.capabilities`。
+7. CLI 再调用 `seedCapabilityIndex()`，把 capability 到工具的候选映射写入 KV。
 
-这条边界要特别注意：
+这条链路说明了一件很重要的事：
 
-- `publishManifest()` 只负责 blob + ENS
-- capability index 不在 SDK `publishManifest()` 内部更新
-- capability index 的补写发生在 CLI helper，而不是共享 schema 或 tool node
+- `publishManifest()` 负责发布与 ENS 回填
+- `seedCapabilityIndex()` 负责 discovery 可见性
+- 两者一起才构成“manifest 已可被其他模块发现和消费”
 
-## 发现与解析链路 / Discovery And Resolution Flow
+## 消费链路 / Consumption Flow
 
-manifest 在调用前不会直接按 `toolId` 读取，而是经过三段解析：
+manifest 的典型消费链路出现在 CLI `call` 和 audit-agent 示例中：
 
-1. `discoverTools({ capability })`
-   从 KV 读取 `CapabilityIndexEntry`
-2. `resolveIdentity({ ensName })`
-   从 ENS text records 读取最新 manifest 指针与 owner
-3. `loadManifest({ manifestUri })`
-   从 blob storage 拉取完整 `ToolManifest`
+1. `discoverTools({ capability })` 从 capability index 找候选工具。
+2. `resolveIdentity({ ensName })` 读取 ENS owner 与最新 manifest 指针。
+3. `loadManifest({ manifestUri })` 从 blob storage 读取完整 manifest。
+4. `verifyManifest({ identity, manifest, sdkVersion })` 做最小运行时校验。
+5. `invokeTool({ tool, manifest, input, traceId, agentId })` 按 manifest 中的 schema 和 transport 参数发起调用。
+6. 后续 trace、report、dashboard 再通过 `manifestUri` 与 `manifestHash` 回溯这次运行用的是哪份契约。
 
-示例 agent 的真实用法见 [examples/audit-agent/src/run-audit.ts](/workspace/project/examples/audit-agent/src/run-audit.ts:131)。
+这条链路说明 manifest 的核心职责不是“描述一个工具”，而是“支撑一次可验证调用”。
 
-这也解释了三个对象的分工：
+## 校验链路 / Verification Flow
 
-- `CapabilityIndexEntry` 负责“找谁”
-- `ToolIdentity` 负责“这个 ENS 现在指向什么”
-- `ToolManifest` 负责“调用时具体按什么契约执行”
-
-## 校验边界 / Verification Boundary
-
-manifest 校验入口在 [packages/sdk/src/client/create-client.ts](/workspace/project/packages/sdk/src/client/create-client.ts:99) 与 [packages/cli/src/commands/verify.ts](/workspace/project/packages/cli/src/commands/verify.ts:1)。
+manifest 校验入口在 [packages/sdk/src/client/create-client.ts](/workspace/project/packages/sdk/src/client/create-client.ts:88) 与 [packages/cli/src/commands/verify.ts](/workspace/project/packages/cli/src/commands/verify.ts:1)。
 
 当前真实会检查四件事：
 
@@ -455,12 +448,12 @@ const response = await client.invokeTool({
 - 链上真实 ENS / 0G / AXL 后端
 - marketplace、payment、reputation
 
-## 代码入口速查 / Code Entry Points
+## 源码入口 / Code Entry Points
 
 - [packages/shared/src/manifest.ts](/workspace/project/packages/shared/src/manifest.ts:1)
+- [packages/sdk/src/types/contracts.ts](/workspace/project/packages/sdk/src/types/contracts.ts:1)
 - [packages/sdk/src/client/create-client.ts](/workspace/project/packages/sdk/src/client/create-client.ts:49)
 - [packages/sdk/src/client/local-devnet.ts](/workspace/project/packages/sdk/src/client/local-devnet.ts:1)
-- [packages/sdk/src/types/contracts.ts](/workspace/project/packages/sdk/src/types/contracts.ts:1)
 - [packages/cli/src/commands/helpers.ts](/workspace/project/packages/cli/src/commands/helpers.ts:1)
 - [packages/cli/src/commands/publish.ts](/workspace/project/packages/cli/src/commands/publish.ts:1)
 - [packages/cli/src/commands/verify.ts](/workspace/project/packages/cli/src/commands/verify.ts:1)

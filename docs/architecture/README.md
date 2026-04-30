@@ -10,8 +10,10 @@
 1. [系统总览 / System Overview](./system-overview.md)：先理解 `publish -> discover -> verify -> call -> trace -> report` 闭环，以及 ENS / 0G / AXL / MCP 的职责分工。
 2. [模块边界 / Module Boundaries](./module-boundaries.md)：再看 `packages/shared`、`packages/sdk`、`packages/cli`、`services/tool-node`、`examples/audit-agent`、`apps/dashboard` 各自负责什么。
 3. [运行时生命周期 / Runtime Lifecycle](./runtime-lifecycle.md)：最后顺着真实调用链阅读 CLI、agent、tool node、storage、dashboard 如何串起来。
-4. [MVP 架构草案 / MVP Architecture Draft](./opentool-mesh-mvp-architecture.md)：作为历史背景参考，不再是优先入口。
-5. [契约参考占位页 / Contract Reference Placeholders](./manifest-schema.md)：`manifest-schema.md`、`trace-schema.md`、`module-interfaces.md` 当前仍是占位文档，后续由单独任务补全，不应作为本目录的主要入口。
+4. [模块接口参考 / Module Interface Reference](./module-interfaces.md)：在理解模块职责后，再看跨模块输入输出契约与依赖方向。
+5. [Trace 契约参考 / Trace Contract Reference](./trace-schema.md)：继续把 runtime trace 当作证据对象来阅读，理解 CLI、SDK、tool node、agent、dashboard 如何共享运行态事实。
+6. [Manifest Schema](./manifest-schema.md)：作为 manifest 字段契约入口；当前仓库 README 仍保留该目标路径，但文件尚未补齐，阅读时请先以 `packages/shared/src/manifest.ts` 与历史草案为准。
+7. [MVP 架构草案 / MVP Architecture Draft](./opentool-mesh-mvp-architecture.md)：作为历史背景参考，不再是优先入口。
 
 ## 按读者入口阅读 / Entry Points by Reader Type
 
@@ -33,7 +35,7 @@
 - [运行时生命周期](./runtime-lifecycle.md)
 - [系统总览](./system-overview.md)
 
-这条路径聚焦 SDK 作为编排核心、CLI 作为壳层入口的边界。接口级契约文档仍待后续补齐。
+这条路径聚焦 SDK 作为编排核心、CLI 作为壳层入口的边界；建议继续阅读已补齐的模块接口与 trace 契约文档，并暂时以源码与历史草案补足 manifest 契约细节。
 
 ### Demo 与 Dashboard 维护者 / Demo and Dashboard Maintainers
 
@@ -52,13 +54,13 @@
 - 真实调用链：以 `packages/cli/src/commands/call.ts` 与 `examples/audit-agent/src/run-audit.ts` 为主入口
 - 本地 devnet：以 `.opentoolmesh/` 模拟 ENS、0G Storage、0G KV 与 AXL peer registry
 
-## 当前待补文档 / Pending Docs
+## 契约文档状态 / Contract Doc Status
 
-以下三篇文件已经预留路径，但当前仍是占位文本，应视为后续契约参考任务的交付范围，而不是本轮架构总览任务的完成内容：
+当前三篇契约参考文档的状态如下：
 
-- [Manifest Schema](./manifest-schema.md)
-- [Trace Schema](./trace-schema.md)
-- [模块接口 / Module Interfaces](./module-interfaces.md)
+- [模块接口 / Module Interfaces](./module-interfaces.md)：已完成，可作为 `shared -> sdk -> cli/tool-node/example/dashboard` 输入输出边界的正式入口。
+- [Trace Schema](./trace-schema.md)：已完成，可作为 runtime trace 字段、artifact 关系与 dashboard 消费口径的正式入口。
+- [Manifest Schema](./manifest-schema.md)：目标入口已在多处导航中预留，但当前仓库内尚无对应文件；在该文档补齐前，请先参考 `packages/shared/src/manifest.ts` 与 [MVP 架构草案](./opentool-mesh-mvp-architecture.md) 中的 manifest 段落。
 
 ## 当前非目标 / Current Non-Goals
 

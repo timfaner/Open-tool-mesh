@@ -18,7 +18,7 @@
 1. 先读[快速开始 / Quick Start](./quickstart.md)，按顺序完成第一次上手。
 2. 遇到环境或命令问题时，跳转到[常见错误与排查 / Troubleshooting](./troubleshooting.md)。
 3. 想继续跑完整演示链路时，阅读[Demo 文档索引 / Demo Docs](../demo/README.md)。
-4. 想理解系统为什么这样组织时，继续阅读[架构文档 / Architecture Docs](../architecture/opentool-mesh-mvp-architecture.md)。
+4. 想理解系统为什么这样组织时，继续阅读[架构文档导航 / Architecture Docs](../architecture/README.md)，再进入[系统总览 / System Overview](../architecture/system-overview.md)。
 
 ## 文档分工 / Document Roles
 
@@ -34,4 +34,4 @@
 
 - 想先跑通完整闭环：阅读[Demo Runbook](../demo/opentool-mesh-demo-runbook.md)
 - 想理解示例 agent 如何消费这套能力：阅读[Audit Agent 示例说明](../../examples/audit-agent/README.md)
-- 想理解 CLI、SDK、tool node、dashboard 的关系：阅读[架构总览 / MVP Architecture](../architecture/opentool-mesh-mvp-architecture.md)
+- 想理解 CLI、SDK、tool node、dashboard 的关系：先读[架构文档导航 / Architecture Docs](../architecture/README.md)，再读[系统总览 / System Overview](../architecture/system-overview.md)
