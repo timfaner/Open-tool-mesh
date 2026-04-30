@@ -21,7 +21,7 @@ OpenTool Mesh 是一个面向 Agent 工具调用场景的开源 MVP：它把远�
 5. 把请求、响应、tool output、trace、report 落盘为可审计证据
 6. 在 dashboard 中复盘一次真实运行
 
-## 快速开始（Quick Start）
+## 快速开始 / Quick Start
 
 所有命令默认在仓库根目录执行：
 
@@ -49,7 +49,9 @@ corepack pnpm demo:run
 bash docs/demo/demo-prereflight.sh
 ```
 
-## 常用命令（Common Commands）
+详细版安装、测试、dashboard 启动与错误排查，请直接阅读[开始使用 / Getting Started](./docs/getting-started/README.md)。
+
+## 常用命令 / Common Commands
 
 ```bash
 corepack pnpm install
@@ -75,7 +77,7 @@ npm run dev -- --hostname 127.0.0.1 --port 3000
 bash docs/demo/demo-health-check.sh
 ```
 
-## 仓库结构（Repository Map）
+## 仓库结构 / Repository Map
 
 | 路径 | 作用 |
 | --- | --- |
@@ -88,15 +90,19 @@ bash docs/demo/demo-health-check.sh
 | `docs/demo` | 演示说明、前置检查与健康检查脚本 |
 | `docs/architecture` | 架构总览、接口与 schema 说明 |
 
-## 推荐阅读路径（Reading Path）
+## 推荐阅读路径 / Reading Path
 
 1. 先读本文，了解项目目标与最快上手命令
-2. 再读 [Demo 文档索引](./docs/demo/README.md)，选择一键运行或分步演示
-3. 如需理解系统边界，读 [架构总览方案来源](./docs/architecture/opentool-mesh-mvp-architecture.md)
-4. 如需理解真实调用链，读 [审计示例说明](./examples/audit-agent/README.md) 与 `examples/audit-agent/src/run-audit.ts`
+2. 再读 [开始使用 / Getting Started](./docs/getting-started/README.md)，按顺序完成环境准备、tests 与 dashboard 启动
+3. 想跑完整演示时，读 [Demo 文档索引 / Demo Docs](./docs/demo/README.md)，选择一键运行或分步演示
+4. 如需理解系统边界，读 [架构总览方案来源](./docs/architecture/opentool-mesh-mvp-architecture.md)
+5. 如需理解真实调用链，读 [审计示例说明](./examples/audit-agent/README.md) 与 `examples/audit-agent/src/run-audit.ts`
 
-## 文档入口（Documentation Index）
+## 文档入口 / Documentation Index
 
+- [开始使用 / Getting Started](./docs/getting-started/README.md)
+- [快速开始 / Quick Start](./docs/getting-started/quickstart.md)
+- [常见错误与排查 / Troubleshooting](./docs/getting-started/troubleshooting.md)
 - [Demo 文档索引 / Demo Docs](./docs/demo/README.md)
 - [完整 Demo Runbook](./docs/demo/opentool-mesh-demo-runbook.md)
 - [审计示例说明 / Audit Agent Example](./examples/audit-agent/README.md)
@@ -106,7 +112,7 @@ bash docs/demo/demo-health-check.sh
 - [Manifest Schema](./docs/architecture/manifest-schema.md)
 - [Trace Schema](./docs/architecture/trace-schema.md)
 
-## 架构导航（Architecture Navigation）
+## 架构导航 / Architecture Navigation
 
 按当前代码现状，最值得优先理解的是这几条真实路径：
 
@@ -121,7 +127,7 @@ bash docs/demo/demo-health-check.sh
 - Tool node 入口：`services/tool-node/src/server.ts`
 - Dashboard 读路径入口：`apps/dashboard/lib/demo-run.ts`
 
-## 贡献方式（Contributing）
+## 贡献方式 / Contributing
 
 当前最适合的贡献方向：
 
@@ -143,7 +149,7 @@ corepack pnpm demo:run
 - 命令在仓库根路径可执行
 - 若修改运行链路，相关测试或最小 demo 验证已完成
 
-## 常见问题（Troubleshooting）
+## 常见问题 / Troubleshooting
 
 `vitest: not found`
 
@@ -154,3 +160,5 @@ corepack pnpm demo:run
 
 - 原因：通常是还没安装 workspace 依赖就直接运行构建或 demo
 - 处理：先执行 `corepack pnpm install`，再运行 `corepack pnpm build` 或 `corepack pnpm demo:run`
+
+更多启动排障场景见[常见错误与排查 / Troubleshooting](./docs/getting-started/troubleshooting.md)。
