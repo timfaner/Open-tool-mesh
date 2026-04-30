@@ -83,8 +83,16 @@ type ReportRecord = {
   generatedAt?: string;
 };
 
+type ManifestRecord = {
+  version?: string;
+  owner?: { address?: string };
+  compatibility?: { sdkVersionRange?: string };
+  mcp?: { toolName?: string };
+};
+
 type ArtifactRecord = {
   traceId: string;
+  toolId?: string;
   output?: {
     findings?: Array<{
       severity?: SeverityTone;
@@ -343,6 +351,10 @@ function getStorageFilePath(uri: string | undefined): string | null {
   return path.join(storageRoot, uri.slice('0g://'.length));
 }
 
+function getToolDisplayName(trace: TraceRecord, manifest: ManifestRecord | null) {
+  return manifest?.mcp?.toolName ?? fixtureDemoRun.invocation.remoteNode;
+}
+
 function buildRuntimeDemoRunFromTrace(trace: TraceRecord): DashboardRun | null {
   if (trace.invocation?.status !== 'ok') {
     return null;
@@ -378,19 +390,23 @@ function buildRuntimeDemoRunFromTrace(trace: TraceRecord): DashboardRun | null {
     return null;
   }
 
-  const manifest = readJsonFile<{
-    version?: string;
-    owner?: { address?: string };
-    compatibility?: { sdkVersionRange?: string };
-  }>(manifestPath);
+  const manifest = readJsonFile<ManifestRecord>(manifestPath);
   const report = readJsonFile<ReportRecord>(reportPath);
   const artifact = readJsonFile<ArtifactRecord>(toolOutputPath);
+
+  if (
+    report.traceId !== trace.traceId ||
+    report.traceUri !== trace.storage?.traceUri ||
+    report.manifestUri !== trace.tool?.manifestUri
+  ) {
+    return null;
+  }
 
   if (report.findings?.some((finding) => finding.traceId && finding.traceId !== trace.traceId)) {
     return null;
   }
 
-  if (artifact.traceId !== trace.traceId) {
+  if (artifact.traceId !== trace.traceId || (artifact.toolId && artifact.toolId !== trace.tool?.toolId)) {
     return null;
   }
 
@@ -398,6 +414,7 @@ function buildRuntimeDemoRunFromTrace(trace: TraceRecord): DashboardRun | null {
   const findings = report.findings ?? [];
   const topFinding = findings.find((finding) => finding.severity === 'high') ?? findings[0];
   const transportLabel = (trace.invocation?.transport ?? 'axl').toUpperCase();
+  const toolDisplayName = getToolDisplayName(trace, manifest);
 
   return {
     source: 'runtime' as const,
@@ -406,8 +423,8 @@ function buildRuntimeDemoRunFromTrace(trace: TraceRecord): DashboardRun | null {
     contractReference: report.contractName ?? fixtureDemoRun.contractReference,
     headerStatus: [
       { label: 'Verified', tone: 'success' as ChipTone },
-      { label: transportLabel, tone: 'info' as ChipTone },
-      { label: 'Runtime Trace', tone: 'success' as ChipTone },
+      { label: `${transportLabel} Live`, tone: 'info' as ChipTone },
+      { label: 'Trace Stored', tone: 'success' as ChipTone },
     ],
     lifecycleState: {
       Publish: 'done',
@@ -454,7 +471,7 @@ function buildRuntimeDemoRunFromTrace(trace: TraceRecord): DashboardRun | null {
     },
     invocation: {
       agent: report.contractName ? `${report.contractName} Audit Agent` : fixtureDemoRun.invocation.agent,
-      remoteNode: trace.tool?.ensName?.split('.').shift() ?? fixtureDemoRun.invocation.remoteNode,
+      remoteNode: toolDisplayName,
       peer: trace.invocation?.peerId ?? fixtureDemoRun.invocation.peer,
       method: trace.invocation?.method ?? fixtureDemoRun.invocation.method,
       transport: (trace.invocation?.transport ?? fixtureDemoRun.invocation.transport).toLowerCase(),
@@ -492,7 +509,7 @@ function buildRuntimeDemoRunFromTrace(trace: TraceRecord): DashboardRun | null {
       summaryText: report.summary ?? fixtureDemoRun.report.summaryText,
       generatedAt: report.generatedAt ?? fixtureDemoRun.report.generatedAt,
       traceReference: trace.traceId,
-      toolReference: trace.tool?.ensName?.split('.').shift() ?? fixtureDemoRun.report.toolReference,
+      toolReference: toolDisplayName,
       summary: findings.map(
         (finding) =>
           `${(finding.severity ?? 'low').toUpperCase()} · ${finding.title ?? 'Untitled finding'} — ${finding.description ?? 'No description provided.'}`,

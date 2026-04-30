@@ -164,9 +164,13 @@ function writeRuntimeBundle(id: string, options: { persistedAt: string; status?:
     version: '0.1.0',
     owner: { address: '0x1234567890abcdef1234567890abcdef12345678' },
     compatibility: { sdkVersionRange: '^0.1.0' },
+    mcp: { toolName: 'solidity-pattern-scanner' },
   });
   writeJson(path.join(reportsDir, `${id}.json`), {
     reportId: `report-${id}`,
+    traceId: id,
+    traceUri,
+    manifestUri,
     contractName: 'Vault',
     summary: 'Runtime summary',
     findings: [{ severity: 'high', title: 'Finding', description: 'Description', traceId: id }],
@@ -174,6 +178,7 @@ function writeRuntimeBundle(id: string, options: { persistedAt: string; status?:
   });
   writeJson(path.join(artifactsDir, `${id}.json`), {
     traceId: id,
+    toolId: 'otm:ens:solidity-scanner.auditagent.eth',
     output: {
       findings: [{ severity: 'high', message: 'Description' }],
       summary: { totalFindings: 1, high: 1, medium: 0, low: 0 },
@@ -221,4 +226,36 @@ test('requires explicit resolve evidence before treating runtime data as authori
   assert.equal(demoRun.runId, 'success-with-evidence');
   assert.match(demoRun.stepDetails.Discover, /resolveIdentity/);
   assert.match(demoRun.stepDetails.Discover, /loadManifest/);
+});
+
+test('rejects runtime bundles when report trace linkage does not match the selected trace', async () => {
+  writeRuntimeBundle('valid-runtime', { persistedAt: '2026-04-28T21:00:00.000Z' });
+  writeRuntimeBundle('mismatched-report', { persistedAt: '2026-04-28T22:00:00.000Z' });
+
+  writeJson(path.join(reportsDir, 'mismatched-report.json'), {
+    reportId: 'report-mismatched-report',
+    traceId: 'another-trace',
+    traceUri: '0g://traces/another-trace.json',
+    manifestUri: '0g://manifests/another-trace.json',
+    contractName: 'Vault',
+    summary: 'Mismatched summary',
+    findings: [{ severity: 'high', title: 'Finding', description: 'Description', traceId: 'another-trace' }],
+    generatedAt: '2026-04-28T22:00:00.000Z',
+  });
+
+  const demoRun = await getDashboardRun();
+
+  assert.equal(demoRun.source, 'runtime');
+  assert.equal(demoRun.runId, 'valid-runtime');
+  assert.equal(demoRun.memory.traceId, 'valid-runtime');
+});
+
+test('uses manifest mcp toolName instead of guessing from the ENS prefix', async () => {
+  writeRuntimeBundle('tool-name-runtime', { persistedAt: '2026-04-28T23:00:00.000Z' });
+
+  const demoRun = await getDashboardRun();
+
+  assert.equal(demoRun.source, 'runtime');
+  assert.equal(demoRun.invocation.remoteNode, 'solidity-pattern-scanner');
+  assert.equal(demoRun.report.toolReference, 'solidity-pattern-scanner');
 });
