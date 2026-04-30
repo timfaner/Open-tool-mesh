@@ -34,7 +34,8 @@
 优先阅读：
 
 - [架构目录 / Architecture Directory](./architecture/)
-- [MVP 架构说明](./architecture/opentool-mesh-mvp-architecture.md)
+- [架构文档导航 / Architecture Docs](./architecture/README.md)
+- [系统总览 / System Overview](./architecture/system-overview.md)
 - [模块接口说明](./architecture/module-interfaces.md)
 - [Manifest Schema](./architecture/manifest-schema.md)
 - [Trace Schema](./architecture/trace-schema.md)
@@ -71,7 +72,7 @@
 - [Demo 文档索引 / Demo Docs](./demo/README.md)
 - [完整 Demo Runbook / Demo Runbook](./demo/opentool-mesh-demo-runbook.md)
 - [架构目录 / Architecture Directory](./architecture/)
-- [MVP 架构说明 / MVP Architecture](./architecture/opentool-mesh-mvp-architecture.md)
+- [架构文档导航 / Architecture Docs](./architecture/README.md)
 - [产品说明与验收边界 / Product Scope](./product/opentool-mesh-产品说明与验收边界.md)
 - [审计示例说明 / Audit Agent Example](../examples/audit-agent/README.md)
 

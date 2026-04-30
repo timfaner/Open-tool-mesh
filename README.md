@@ -95,7 +95,7 @@ bash docs/demo/demo-health-check.sh
 1. 先读本文，了解项目目标与最快上手命令
 2. 再读 [开始使用 / Getting Started](./docs/getting-started/README.md)，按顺序完成环境准备、tests 与 dashboard 启动
 3. 想跑完整演示时，读 [Demo 文档索引 / Demo Docs](./docs/demo/README.md)，选择一键运行或分步演示
-4. 如需理解系统边界，读 [架构总览方案来源](./docs/architecture/opentool-mesh-mvp-architecture.md)
+4. 如需理解系统边界，读 [架构文档导航](./docs/architecture/README.md)
 5. 如需理解真实调用链，读 [审计示例说明](./examples/audit-agent/README.md) 与 `examples/audit-agent/src/run-audit.ts`
 
 ## 文档入口 / Documentation Index
@@ -107,7 +107,8 @@ bash docs/demo/demo-health-check.sh
 - [完整 Demo Runbook](./docs/demo/opentool-mesh-demo-runbook.md)
 - [审计示例说明 / Audit Agent Example](./examples/audit-agent/README.md)
 - [产品说明与验收边界](./docs/product/opentool-mesh-产品说明与验收边界.md)
-- [MVP 架构说明](./docs/architecture/opentool-mesh-mvp-architecture.md)
+- [架构文档导航](./docs/architecture/README.md)
+- [系统总览 / System Overview](./docs/architecture/system-overview.md)
 - [模块接口说明](./docs/architecture/module-interfaces.md)
 - [Manifest Schema](./docs/architecture/manifest-schema.md)
 - [Trace Schema](./docs/architecture/trace-schema.md)
