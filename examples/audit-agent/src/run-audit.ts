@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import type { AuditReport, ExecutionTrace } from "@opentoolmesh/shared";
+import type { ExecutionTrace } from "@opentoolmesh/shared";
 import {
   createLocalDevnetClientDeps,
   createOpenToolMeshClient,
@@ -168,26 +168,6 @@ export async function runAuditDemo() {
     traceId
   });
 
-  const report = await client.buildAuditReport({
-    contractName: "Vault",
-    summary:
-      response.status === "ok"
-        ? "Capability discovery resolved solidity-static-analysis to a remote Solidity scanner, then completed the AXL invocation and trace persistence."
-        : "Capability discovery resolved a remote Solidity scanner, but the AXL invocation failed.",
-    findings:
-      response.status === "ok"
-        ? response.output?.findings.map((finding) => ({
-            id: finding.ruleId,
-            severity: finding.severity,
-            title: finding.title,
-            description: finding.message,
-            evidence: finding.message,
-            traceId,
-            toolId: resolvedTool.id
-          })) ?? []
-        : []
-  });
-
   const outputArtifact =
     response.status === "ok"
       ? await client.saveArtifact({
@@ -209,33 +189,6 @@ export async function runAuditDemo() {
     }
   });
   const traceUri = `0g://traces/${traceId}.json`;
-  const reportArtifact = await client.saveArtifact({
-    namespace: "reports",
-    artifact: await client.buildAuditReport({
-      contractName: "Vault",
-      traceId,
-      traceUri,
-      toolId: resolvedTool.id,
-      manifestUri: resolvedTool.latestManifestUri,
-      manifestVersion: resolvedTool.latestVersion,
-      summary:
-        response.status === "ok"
-          ? "Capability discovery resolved solidity-static-analysis to a remote Solidity scanner, then completed the AXL invocation and trace persistence."
-          : "Capability discovery resolved a remote Solidity scanner, but the AXL invocation failed.",
-      findings:
-        response.status === "ok"
-          ? response.output?.findings.map((finding) => ({
-              id: finding.ruleId,
-              severity: finding.severity,
-              title: finding.title,
-              description: finding.message,
-              evidence: finding.message,
-              traceId,
-              toolId: resolvedTool.id
-            })) ?? []
-          : []
-    })
-  });
   const report = await client.buildAuditReport({
     contractName: "Vault",
     traceId,
@@ -259,6 +212,10 @@ export async function runAuditDemo() {
             toolId: resolvedTool.id
           })) ?? []
         : []
+  });
+  const reportArtifact = await client.saveArtifact({
+    namespace: "reports",
+    artifact: report
   });
 
   const trace = buildTrace(

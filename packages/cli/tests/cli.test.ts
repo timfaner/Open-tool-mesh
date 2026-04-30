@@ -62,6 +62,7 @@ describe("cli skeleton", () => {
   it("registers the trace command in the entrypoint", () => {
     const source = readFileSync(new URL("../src/index.ts", import.meta.url), "utf8");
     expect(source).toContain("trace");
+    expect(source).toContain("verify");
   });
 
   it("verifies manifest before remote invocation", async () => {
@@ -103,11 +104,12 @@ describe("cli skeleton", () => {
           finishedAt: "2026-04-28T15:10:01.000Z"
         };
       }),
-      saveArtifact: vi.fn(async () => ({ uri: "0g://artifacts/1.json", hash: "sha256:out" })),
-      recordTrace: vi
+      saveArtifact: vi
         .fn()
-        .mockResolvedValueOnce({ traceId: traceId1, traceUri: "0g://traces/1.json" })
-        .mockResolvedValueOnce({ traceId: traceId1, traceUri: "0g://traces/1.json" }),
+        .mockResolvedValueOnce({ uri: "0g://artifacts/request.json", hash: "sha256:req" })
+        .mockResolvedValueOnce({ uri: "0g://artifacts/response.json", hash: "sha256:res" })
+        .mockResolvedValueOnce({ uri: "0g://artifacts/1.json", hash: "sha256:out" }),
+      recordTrace: vi.fn().mockResolvedValueOnce({ traceId: traceId1, traceUri: "0g://traces/1.json" }),
       discoverTools: vi.fn(),
       publishManifest: vi.fn(),
       buildAuditReport: vi.fn()
@@ -127,8 +129,11 @@ describe("cli skeleton", () => {
     const firstCall = client.recordTrace.mock.calls[0];
     expect(firstCall).toBeDefined();
     const trace = firstCall![0].trace;
+    expect(trace.requestedCapability).toBe("solidity-static-analysis");
     expect(trace.invocation.startedAt).toBe("2026-04-28T15:10:00.000Z");
     expect(trace.invocation.finishedAt).toBe("2026-04-28T15:10:01.000Z");
+    expect(trace.invocation.requestUri).toBe("0g://artifacts/request.json");
+    expect(trace.invocation.responseUri).toBe("0g://artifacts/response.json");
   });
 
   it("rejects remote invocation when verification fails", async () => {
@@ -150,10 +155,7 @@ describe("cli skeleton", () => {
       })),
       invokeTool: vi.fn(),
       saveArtifact: vi.fn(),
-      recordTrace: vi
-        .fn()
-        .mockResolvedValueOnce({ traceId: traceId2, traceUri: "0g://traces/2.json" })
-        .mockResolvedValueOnce({ traceId: traceId2, traceUri: "0g://traces/2.json" }),
+      recordTrace: vi.fn().mockResolvedValueOnce({ traceId: traceId2, traceUri: "0g://traces/2.json" }),
       discoverTools: vi.fn(),
       publishManifest: vi.fn(),
       buildAuditReport: vi.fn()
@@ -174,5 +176,78 @@ describe("cli skeleton", () => {
     const trace = firstCall![0].trace;
     expect(trace.invocation.status).toBe("rejected");
     expect(trace.verification.rejectedReason).toBe("manifest hash mismatch");
+  });
+
+  it("discovers a tool by capability before resolve and call", async () => {
+    const events: string[] = [];
+    const identity = createIdentity();
+    const manifest = createManifest(identity);
+    const client = {
+      discoverTools: vi.fn(async () => {
+        events.push("discover");
+        return [
+          {
+            ...identity,
+            manifestUri: identity.latestManifestUri,
+            manifestHash: identity.latestManifestHash
+          }
+        ];
+      }),
+      resolveIdentity: vi.fn(async () => {
+        events.push("resolve");
+        return identity;
+      }),
+      loadManifest: vi.fn(async () => {
+        events.push("load");
+        return manifest;
+      }),
+      verifyManifest: vi.fn(async () => {
+        events.push("verify");
+        return {
+          ok: true,
+          toolId: identity.id,
+          checks: {
+            manifestHashValid: true,
+            ownerValid: true,
+            schemaValid: true,
+            versionCompatible: true
+          },
+          errors: []
+        };
+      }),
+      invokeTool: vi.fn(async () => {
+        events.push("invoke");
+        return {
+          requestId: "req-2",
+          traceId: traceId1,
+          toolId: identity.id,
+          status: "ok" as const,
+          output: { ok: true },
+          finishedAt: "2026-04-28T15:10:01.000Z"
+        };
+      }),
+      saveArtifact: vi
+        .fn()
+        .mockResolvedValueOnce({ uri: "0g://artifacts/request.json", hash: "sha256:req" })
+        .mockResolvedValueOnce({ uri: "0g://artifacts/response.json", hash: "sha256:res" })
+        .mockResolvedValueOnce({ uri: "0g://artifacts/output.json", hash: "sha256:out" }),
+      recordTrace: vi.fn().mockResolvedValueOnce({ traceId: traceId1, traceUri: "0g://traces/1.json" }),
+      publishManifest: vi.fn(),
+      buildAuditReport: vi.fn()
+    };
+    const stdout = { log: vi.fn(), error: vi.fn() };
+
+    await runCallCommand(["--capability", "solidity-static-analysis", "--input", "input.json"], { cwd: "/tmp", stdout }, {
+      createCliClient: async () => ({ client: client as unknown as OpenToolMeshClient, rootDir: "/tmp" }),
+      readJsonFromFile: async <T>() => ({ source: "contract Vault {}" } as T),
+      readFile: readFileSync as never,
+      randomUUID: () => traceId1,
+      now: () => "2026-04-28T15:10:00.000Z"
+    });
+
+    expect(events).toEqual(["discover", "resolve", "load", "verify", "invoke"]);
+    const trace = client.recordTrace.mock.calls[0]?.[0].trace;
+    expect(trace.discovery.candidateCount).toBe(1);
+    expect(trace.discovery.resolve?.evidence).toContain("discover(solidity-static-analysis)");
   });
 });
