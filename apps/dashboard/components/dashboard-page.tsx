@@ -16,6 +16,8 @@ const lifecycleLegend = [
 ] as const;
 
 export function DashboardPage({ demoRun }: { demoRun: DashboardRun }) {
+  const secondaryIssue = demoRun.report.summary.find((item) => item !== demoRun.report.title);
+
   return (
     <main className={styles.pageShell}>
       <div className={styles.pageFrame}>
@@ -205,11 +207,7 @@ export function DashboardPage({ demoRun }: { demoRun: DashboardRun }) {
                     <span className={styles.reportCalloutLabel}>Top Finding</span>
                     <strong>{demoRun.report.title}</strong>
                   </div>
-                  {demoRun.report.summary.slice(0, 2).map((item) => (
-                    <p key={item} className={styles.issueLine}>
-                      {item}
-                    </p>
-                  ))}
+                  {secondaryIssue ? <p className={styles.issueLine}>{secondaryIssue}</p> : null}
                 </div>
                 <div className={styles.reportMeta}>
                   <InfoRow label="trace id" value={demoRun.report.traceReference} mono />

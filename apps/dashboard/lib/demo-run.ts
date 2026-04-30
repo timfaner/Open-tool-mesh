@@ -108,6 +108,14 @@ type ArtifactRecord = {
   };
 };
 
+function formatContractReference(contractName?: string): string {
+  if (!contractName) {
+    return fixtureDemoRun.contractReference;
+  }
+
+  return contractName.endsWith('.sol') ? contractName : `${contractName}.sol`;
+}
+
 export interface DashboardRun {
   source: 'fixture' | 'runtime';
   runId: string;
@@ -180,7 +188,7 @@ export interface DashboardRun {
     generatedAt: string;
     traceReference: string;
     toolReference: string;
-    summary: string[];
+    secondaryFinding?: string;
   };
   artifact: ArtifactRecord;
 }
@@ -280,11 +288,8 @@ const fixtureDemoRun: DashboardRun = {
     generatedAt: '2026-04-28T14:56:11.950Z',
     traceReference: 'c1f7441a-42fe-4a2d-b000-ea1bf1e673b4',
     toolReference: 'solidity-pattern-scanner',
-    summary: [
-      'HIGH · Reentrancy risk in withdraw() — Unchecked external call before state update can enable reentrancy in withdraw().',
+    secondaryFinding:
       'LOW · Administrative path lacks event emission — Owner-controlled actions should emit events for auditability.',
-      'MEDIUM · Pause flow lacks obvious negative-path assertion — Consider adding paused-state transfer checks or follow-up tests.',
-    ],
   },
   artifact: {
     traceId: 'c1f7441a-42fe-4a2d-b000-ea1bf1e673b4',
@@ -355,6 +360,14 @@ function getToolDisplayName(trace: TraceRecord, manifest: ManifestRecord | null)
   return manifest?.mcp?.toolName ?? fixtureDemoRun.invocation.remoteNode;
 }
 
+function formatContractReference(contractName?: string) {
+  if (!contractName) {
+    return fixtureDemoRun.contractReference;
+  }
+
+  return contractName.endsWith('.sol') ? contractName : `${contractName}.sol`;
+}
+
 function buildRuntimeDemoRunFromTrace(trace: TraceRecord): DashboardRun | null {
   if (trace.invocation?.status !== 'ok') {
     return null;
@@ -420,7 +433,7 @@ function buildRuntimeDemoRunFromTrace(trace: TraceRecord): DashboardRun | null {
     source: 'runtime' as const,
     runId: trace.runId ?? trace.traceId,
     environment: 'Hackathon MVP',
-    contractReference: report.contractName ?? fixtureDemoRun.contractReference,
+    contractReference: formatContractReference(report.contractName),
     headerStatus: [
       { label: 'Verified', tone: 'success' as ChipTone },
       { label: `${transportLabel} Live`, tone: 'info' as ChipTone },
@@ -478,7 +491,7 @@ function buildRuntimeDemoRunFromTrace(trace: TraceRecord): DashboardRun | null {
       status: trace.invocation?.status ?? fixtureDemoRun.invocation.status,
       requestUri: requestArtifact?.uri ?? trace.invocation?.requestUri ?? fixtureDemoRun.invocation.requestUri,
       responseUri: responseArtifact?.uri ?? trace.invocation?.responseUri ?? fixtureDemoRun.invocation.responseUri,
-      requestSummary: `${trace.requestedCapability ?? fixtureDemoRun.discovery.requestedCapability} against ${report.contractName ?? fixtureDemoRun.contractReference}`,
+      requestSummary: `${trace.requestedCapability ?? fixtureDemoRun.discovery.requestedCapability} against ${formatContractReference(report.contractName)}`,
       responseSummary: `${summary?.totalFindings ?? findings.length} findings returned`,
       startedAt: trace.invocation?.startedAt ?? fixtureDemoRun.invocation.startedAt,
       finishedAt: trace.invocation?.finishedAt ?? fixtureDemoRun.invocation.finishedAt,
