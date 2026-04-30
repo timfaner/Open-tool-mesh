@@ -19,38 +19,38 @@ status_fail() {
 require_file() {
   local path="$1"
   if [[ -f "$path" ]]; then
-    status_ok "存在文件: ${path#$ROOT_DIR/}"
+    status_ok "Found file: ${path#$ROOT_DIR/}"
   else
-    status_fail "缺少文件: ${path#$ROOT_DIR/}"
+    status_fail "Missing file: ${path#$ROOT_DIR/}"
     return 1
   fi
 }
 
-echo "== OpenTool Mesh demo 前置检查 =="
+echo "== OpenTool Mesh demo preflight =="
 echo "root: $ROOT_DIR"
 
 if command -v node >/dev/null 2>&1; then
   NODE_VERSION="$(node -p 'process.versions.node')"
   NODE_MAJOR="${NODE_VERSION%%.*}"
   if (( NODE_MAJOR >= 22 )); then
-    status_ok "node 版本满足要求: $NODE_VERSION"
+    status_ok "Node version meets the requirement: $NODE_VERSION"
   else
-    status_warn "node 版本偏低: $NODE_VERSION，建议 >= 22"
+    status_warn "Node version is older than recommended: $NODE_VERSION, recommended >= 22"
   fi
 else
-  status_fail "未找到 node"
+  status_fail "node was not found"
 fi
 
 if command -v npm >/dev/null 2>&1; then
-  status_ok "检测到 npm: $(npm --version)"
+  status_ok "Found npm: $(npm --version)"
 else
-  status_warn "未找到 npm"
+  status_warn "npm was not found"
 fi
 
 if command -v corepack >/dev/null 2>&1; then
-  status_ok "检测到 corepack"
+  status_ok "Found corepack"
 else
-  status_warn "未找到 corepack"
+  status_warn "corepack was not found"
 fi
 
 require_file "$ROOT_DIR/manifests/solidity-pattern-scanner.manifest.json"
@@ -61,9 +61,9 @@ require_file "$ROOT_DIR/examples/audit-agent/src/run-audit.ts"
 require_file "$ROOT_DIR/apps/dashboard/app/api/health/route.ts"
 
 if [[ -d "$ROOT_DIR/apps/dashboard/node_modules" ]]; then
-  status_ok "dashboard 依赖已安装"
+  status_ok "Dashboard dependencies are installed"
 else
-  status_warn "dashboard 依赖未安装: apps/dashboard/node_modules 不存在"
+  status_warn "Dashboard dependencies are not installed: apps/dashboard/node_modules does not exist"
 fi
 
 for dist_path in \
@@ -72,21 +72,21 @@ for dist_path in \
   "$ROOT_DIR/examples/audit-agent/dist/examples/audit-agent/src/run-audit.js"
 do
   if [[ -f "$dist_path" ]]; then
-    status_ok "存在构建产物: ${dist_path#$ROOT_DIR/}"
+    status_ok "Found build output: ${dist_path#$ROOT_DIR/}"
   else
-    status_warn "缺少构建产物: ${dist_path#$ROOT_DIR/}"
+    status_warn "Missing build output: ${dist_path#$ROOT_DIR/}"
   fi
 done
 
 if [[ -d "$ROOT_DIR/.opentoolmesh" ]]; then
-  status_ok "检测到运行时目录 .opentoolmesh"
+  status_ok "Found runtime directory .opentoolmesh"
 else
-  status_warn "尚未生成 .opentoolmesh；这表示主链路可能尚未执行"
+  status_warn ".opentoolmesh has not been generated yet; the main loop may not have run"
 fi
 
 echo
-echo "建议下一步:"
-echo "1. 如需校验服务存活，执行: bash docs/demo/demo-health-check.sh"
-echo "2. 如需启动 dashboard，进入 apps/dashboard 后运行: npm run dev -- --hostname 127.0.0.1 --port 3000"
-echo "3. dashboard 首次 Ready 前健康检查可能需等待几秒；脚本已内置重试"
-echo "4. 如需分步骤演示，优先使用: corepack pnpm demo:tool-node / demo:publish / demo:audit-agent"
+echo "Suggested next steps:"
+echo "1. To check service health, run: bash docs/demo/demo-health-check.sh"
+echo "2. To start the dashboard, run from apps/dashboard: npm run dev -- --hostname 127.0.0.1 --port 3000"
+echo "3. Health checks may need a few seconds before the dashboard is ready; this script has retries built in"
+echo "4. For a step-by-step demo, prefer: corepack pnpm demo:tool-node / demo:publish / demo:audit-agent"

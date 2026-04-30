@@ -1,138 +1,98 @@
-# OpenTool Mesh 快速开始
-> Quick Start for OpenTool Mesh
+# OpenTool Mesh Quick Start
 
-这篇文档只覆盖第一次上手所需的最短成功路径：准备环境、安装依赖、运行 tests、启动 dashboard，并确认你已经具备继续阅读 demo 与 architecture 文档的基础。
+This page covers the shortest path for a first run from a clean checkout.
 
-> Follow the shortest path to prepare the environment, install dependencies, run tests, and start the dashboard.
+## Who This Is For
 
-## 适用对象 / Who This Is For
+Use this guide if you want to install dependencies, run tests, start the dashboard, and confirm service health before reading deeper architecture docs.
 
-- 第一次克隆仓库、想确认项目能否在本地跑通的开发者
-- 想先验证测试与 dashboard，而不是立刻拆读源码的贡献者
+## Prerequisites
 
-## 前置条件 / Prerequisites
+Required:
 
-需要满足以下条件：
+- Node.js 20 or newer
+- `corepack`
+- A checkout of this repository
 
-- Node.js `>= 22`
-- `corepack` 可用
-- 已经进入仓库根目录 `/workspace/project`
-
-你可以先做一次前置检查。
-
-> Run a quick prereflight check before installing dependencies.
+Check versions:
 
 ```bash
-cd /workspace/project
-bash docs/demo/demo-prereflight.sh
+node --version
+corepack --version
 ```
 
-成功标志 / Success Signal：
+All commands below assume the repository root as the current directory.
 
-- 输出中出现 `node 版本满足要求`
-- 输出中没有 `缺少文件` 这类失败项
-
-失败时检查 / If It Fails：
-
-- Node 版本低于 `22` 时，先升级 Node.js 再继续
-- `corepack` 不可用时，先确认当前 Node 安装是否包含 `corepack`
-
-## 步骤 1：安装依赖 / Step 1: Install Dependencies
-
-先在仓库根目录安装整个 workspace 的依赖。
-
-> Install workspace dependencies from the repository root.
+## Step 1: Install Dependencies
 
 ```bash
-cd /workspace/project
+corepack enable
 corepack pnpm install
 ```
 
-成功标志 / Success Signal：
+Success signal:
 
-- 安装完成且没有 `ERR_PNPM_*` 报错
-- 根目录与各 package/app 下生成依赖所需的 `node_modules`
+- `node_modules/` exists.
+- Workspace packages can resolve `vitest` and `tsc`.
 
-失败时检查 / If It Fails：
+If installation fails, see [Troubleshooting](./troubleshooting.md).
 
-- 如果 `corepack pnpm` 不可用，先执行前面的前置检查
-- 如果网络或包管理器异常，重新执行安装并保留原始错误信息
-
-## 步骤 2：运行测试 / Step 2: Run Tests
-
-安装依赖后，先运行 workspace tests，确认仓库当前状态可用。
-
-> Run workspace tests before starting individual services.
+## Step 2: Run Tests
 
 ```bash
-cd /workspace/project
 corepack pnpm test
 ```
 
-成功标志 / Success Signal：
+Success signal:
 
-- 所有 workspace 测试通过
-- 终端中不再出现 `vitest: not found`
+- The workspace test command finishes without failures.
 
-失败时检查 / If It Fails：
+This verifies the shared packages, CLI behavior, SDK behavior, tool-node behavior, dashboard demo utilities, and audit-agent example tests covered by the current workspace.
 
-- 如果报 `vitest: not found`，说明依赖没有正确安装；见[常见错误与排查](./troubleshooting.md#错误-1vitest-not-found--error-1-vitest-not-found)
-- 如果是某个包测试失败，优先确认你是否在干净依赖状态下运行
-
-## 步骤 3：启动 dashboard / Step 3: Start the Dashboard
-
-dashboard 是一个独立的 Next.js app，用于复盘最近一次成功的 demo 运行；如果本地没有成功运行态，它会回退到仓库内置 fixture。
-
-> Start the dashboard to inspect the latest successful demo run or the bundled fallback fixtures.
+## Step 3: Start the Dashboard
 
 ```bash
-cd /workspace/project/apps/dashboard
-npm run dev -- --hostname 127.0.0.1 --port 3000
+corepack pnpm dashboard:dev
 ```
 
-成功标志 / Success Signal：
+The dashboard defaults to:
 
-- 终端出现 `Ready` 或 `✓ Ready in ...`
-- 打开 `http://127.0.0.1:3000/` 可以看到 dashboard 页面
-- `http://127.0.0.1:3000/api/health` 返回 `200`
+```text
+http://127.0.0.1:3000/
+```
 
-失败时检查 / If It Fails：
+If port `3000` is already in use, stop the existing process or run the dashboard on a different port according to the package script behavior.
 
-- 如果端口 `3000` 已被占用，见[dashboard 端口占用](./troubleshooting.md#错误-4dashboard-端口-3000-被占用--error-4-dashboard-port-3000-is-already-in-use)
-- 如果 dashboard 没有展示最新运行态数据，见[dashboard 回退到 fixture](./troubleshooting.md#错误-5dashboard-没有读取到最新运行态数据--error-5-dashboard-did-not-load-the-latest-runtime-data)
+## Step 4: Check Service Health
 
-## 步骤 4：确认健康状态 / Step 4: Check Service Health
-
-如果 dashboard 已经启动，可以额外执行健康检查确认进程存活。
-
-> Verify the dashboard health endpoint after the dev server is ready.
+With the dashboard running, check:
 
 ```bash
-cd /workspace/project
-bash docs/demo/demo-health-check.sh
+curl -s http://127.0.0.1:3000/api/health
 ```
 
-成功标志 / Success Signal：
+Expected result:
 
-- dashboard 健康检查返回 `200`
-- 如果 tool node 也已启动，脚本会同时检查 `http://127.0.0.1:4318/health`
+```json
+{"ok":true}
+```
 
-失败时检查 / If It Fails：
+For the complete demo health check, run:
 
-- 仅启动了 dashboard、未启动 tool node 时，tool node 检查失败是预期现象
-- 如果 dashboard 检查失败，先回到上一步确认 dev server 是否真正 ready
+```bash
+corepack pnpm demo:health
+```
 
-## 接下来可以做什么 / What To Do Next
+## What To Do Next
 
-如果你只想验证仓库健康，到这里已经足够。接下来通常有两条路径：
+- To run the full loop, use `corepack pnpm demo:run`.
+- To present the demo step by step, read [Demo Runbook](../demo/opentool-mesh-demo-runbook.md).
+- To understand the system, read [Architecture Docs](../architecture/README.md).
 
-- 想跑完整闭环：阅读[Demo Runbook](../demo/opentool-mesh-demo-runbook.md)，执行 `corepack pnpm demo:run`
-- 想理解代码结构：先读[架构文档导航](../architecture/README.md) 与[系统总览](../architecture/system-overview.md)，再按导航继续进入 Demo 或契约文档
+## Next Steps
 
-## 下一步阅读 / Next Steps
+Recommended next documents:
 
-- 继续查看[常见错误与排查 / Troubleshooting](./troubleshooting.md)
-- 继续查看[架构文档导航 / Architecture Docs](../architecture/README.md)
-- 继续查看[系统总览 / System Overview](../architecture/system-overview.md)
-- 继续查看[Demo 文档索引 / Demo Docs](../demo/README.md)
-- 返回[开始使用索引 / Getting Started Index](./README.md)
+- [Troubleshooting](./troubleshooting.md)
+- [Demo Docs](../demo/README.md)
+- [System Overview](../architecture/system-overview.md)

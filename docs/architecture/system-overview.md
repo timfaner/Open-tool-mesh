@@ -1,100 +1,96 @@
-# 系统总览
-> System Overview
+# System Overview
 
-OpenTool Mesh 当前仓库实现的是一条面向 Agent 远程工具调用的 MVP 闭环：用 manifest 描述工具，用 capability index + ENS 风格身份解析发现工具，在调用前校验 manifest 与 owner 绑定关系，通过远程 tool node 执行调用，再把 trace 和 report 落盘给 dashboard 读取。
+OpenTool Mesh currently implements an MVP loop for remote agent tool invocation. A manifest describes a tool, a capability index and ENS-style identity records help an agent discover it, the SDK verifies the manifest before invocation, a remote tool node executes the request, and trace/report evidence is written for dashboard review.
 
-> The current repository implements a working MVP loop for remote tool usage by agents.
+## Core Lifecycle
 
-## 核心闭环 / Core Lifecycle
+The system follows this order:
 
-系统围绕一条固定顺序的运行链组织：
+```text
+publish -> discover -> resolve -> verify -> call -> trace -> report
+```
 
-`publish -> discover -> verify -> call -> trace -> report`
+- `publish`: the CLI reads a manifest and writes it through the SDK into local 0G-style storage, ENS-style records, and a capability index.
+- `discover`: an agent or CLI command finds candidate tools by capability.
+- `resolve`: the SDK resolves the selected tool identity to a manifest pointer and owner metadata.
+- `verify`: the SDK checks manifest hash, owner, schema version, and SDK compatibility.
+- `call`: the SDK wraps the request in an AXL-style envelope and calls the local HTTP tool-node transport.
+- `trace`: request, response, tool output, and summary metadata are persisted under `.opentoolmesh/`.
+- `report`: an audit report is generated and persisted; the dashboard reads the latest successful runtime data first.
 
-- `publish`：CLI 读取 manifest，并通过 SDK 写入本地 0G-like storage、ENS text records 与 capability index。
-- `discover`：agent 或 CLI 按 capability 从索引中找候选工具，再解析 ENS 身份拿到最新 manifest 指针。
-- `verify`：SDK 校验 manifest hash、owner、schema 版本与 SDK 兼容性。
-- `call`：SDK 将请求包装成 AXL 风格 envelope，并通过本地 HTTP transport 调用远端 tool node。
-- `trace`：请求、响应、tool output、trace summary 被写入 `.opentoolmesh/`。
-- `report`：audit report 被生成并持久化，dashboard 优先读取最新成功 runtime。
-
-## 主模块 / Main Modules
+## Main Modules
 
 ### `packages/shared`
 
-共享契约层，是跨模块类型事实来源。当前定义：
-
-- `manifest.ts`：`ToolIdentity`、`ToolManifest`、`CapabilityIndexEntry`
-- `invocation.ts`：`ToolInvocationRequest`、`ToolInvocationResponse`、AXL envelopes
-- `trace.ts`：`ExecutionTrace`、`AuditReport`
+Shared contract layer and cross-module source of truth for manifest, trace, invocation, and report types.
 
 ### `packages/sdk`
 
-运行时编排层，把身份解析、发现、校验、调用、留痕与发布组合成统一 client API。当前核心实现位于 `packages/sdk/src/client/create-client.ts`。
+Runtime orchestration layer. It combines identity resolution, discovery, verification, invocation, tracing, artifact persistence, publishing, and report construction into a client API. The core implementation is `packages/sdk/src/client/create-client.ts`.
 
 ### `packages/cli`
 
-命令入口层，是 SDK 的薄壳。`publish` 负责发布 manifest 并补 capability index，`call` 负责跑通最完整的 CLI 调用链。
+Thin command layer over the SDK. `publish` writes manifests and indexes; `call` exercises the full CLI invocation path.
 
 ### `services/tool-node`
 
-被调用方执行层。当前通过 `services/tool-node/src/server.ts` 暴露：
+Remote execution layer. It exposes:
 
 - `GET /health`
 - `POST /invokeTool`
 
 ### `examples/audit-agent`
 
-参考接入方示例。`examples/audit-agent/src/run-audit.ts` 演示 agent 如何执行 discovery、verification、remote invocation、trace persistence 与 report generation。
+Reference consumer. `examples/audit-agent/src/run-audit.ts` demonstrates discovery, verification, remote invocation, trace persistence, and report generation from an agent point of view.
 
 ### `apps/dashboard`
 
-只读解释层。`apps/dashboard/lib/demo-run.ts` 负责优先读取最新成功 runtime trace；数据不完整时才回退到 fixtures。
+Read-only explanation layer. `apps/dashboard/lib/demo-run.ts` prefers the latest successful runtime trace and falls back to fixtures only when runtime data is unavailable.
 
-## 组件边界 / Component Boundaries
+## Component Boundaries
 
-| 组件 | 当前负责什么 | 当前不负责什么 |
+| Component | Owns | Does Not Own |
 | --- | --- | --- |
-| ENS 风格记录 | 身份入口、manifest pointer、owner root | 完整 manifest 存储、能力搜索、远程调用 |
-| 0G-like storage | manifest、trace、report、tool output 等 JSON blob | 身份解析、P2P transport |
-| 0G-like KV | capability index、trace summary | 不可变 blob 存储、owner 信任根 |
-| AXL 语义层 | agent 与 tool node 的请求/响应 envelope | discovery、schema 管理、trace persistence |
-| MCP-compatible manifest | 输入输出 schema、工具名、调用元数据 | 分布式发现、执行历史 |
+| ENS-style records | Identity entrypoint, manifest pointer, owner root | Manifest storage, capability search, remote invocation |
+| 0G-style storage | Manifest, trace, report, tool-output JSON blobs | Identity resolution, P2P transport |
+| 0G-style KV | Capability index, trace summary | Immutable blob storage, owner trust root |
+| AXL semantics | Agent/tool-node request and response envelope | Discovery, schema management, trace persistence |
+| MCP-compatible manifest | Input/output schema, tool name, invocation metadata | Distributed discovery, execution history |
 
-## 本地 devnet 映射 / Local Devnet Mapping
+## Local Devnet Mapping
 
-当前仓库没有直接连接真实 ENS、0G 或 AXL 网络，而是通过 `packages/sdk/src/client/local-devnet.ts` 把这些概念映射到仓库根目录下的 `.opentoolmesh/`：
+The repository does not connect directly to real ENS, 0G, or AXL networks. `packages/sdk/src/client/local-devnet.ts` maps those concepts into `.opentoolmesh/`:
 
-- `ens-records.json`：ENS text records 与 ownerAddress
-- `axl-peers.json`：peerId 到本地 HTTP base URL 的映射
-- `storage/`：manifest、artifacts、traces、reports
-- `kv/`：capability index 与 trace summary
+- `ens-records.json`: ENS-style text records and owner addresses.
+- `axl-peers.json`: peer IDs mapped to local HTTP base URLs.
+- `kv/`: capability index and trace summaries.
+- `storage/`: manifest, trace, artifact, and report JSON blobs.
 
-这意味着文档里提到的 ENS / 0G / AXL，在当前实现里都是“接口语义存在，本地文件系统 adapter 落地”。
+In this MVP, ENS, 0G, and AXL terms describe interface semantics implemented by local filesystem adapters.
 
-## 真实调用链入口 / Real Code Entry Points
+## Real Code Entry Points
 
-- 发布链路：`packages/cli/src/commands/publish.ts` 和 `packages/cli/src/commands/helpers.ts`
-- CLI 调用链：`packages/cli/src/commands/call.ts`
-- Agent 调用链：`examples/audit-agent/src/run-audit.ts`
-- 远端执行：`services/tool-node/src/handlers/invoke-tool.ts`
-- Dashboard 读路径：`apps/dashboard/lib/demo-run.ts`
+- Publish path: `packages/cli/src/commands/publish.ts` and `packages/cli/src/commands/helpers.ts`
+- CLI invocation path: `packages/cli/src/commands/call.ts`
+- Agent invocation path: `examples/audit-agent/src/run-audit.ts`
+- Remote execution: `services/tool-node/src/handlers/invoke-tool.ts`
+- Dashboard data path: `apps/dashboard/lib/demo-run.ts`
 
-## 当前 MVP 范围 / Current MVP Scope
+## Current MVP Scope
 
-当前文档描述的“已实现”范围严格限制在 Solidity Audit Agent demo 闭环：
+The implemented scope is limited to the Solidity audit-agent demo loop:
 
-- 一个示例 capability：`solidity-static-analysis`
-- 一个示例 tool node：`solidity-pattern-scanner`
-- 一个参考 agent：`audit-agent-example`
-- 一个只读 dashboard：展示 publish、discover、verify、call、trace、report 六步
+- Capability: `solidity-static-analysis`
+- Tool node: `solidity-pattern-scanner`
+- Reference agent: `audit-agent-example`
+- Dashboard: a read-only view of publish, discover, verify, call, trace, and report steps
 
-## 当前非目标 / Current Non-Goals
+## Current Non-Goals
 
-以下能力在仓库里并未作为已实现产品交付，阅读时不要把它们误认为现状：
+The repository does not currently ship:
 
-- 通用工具市场
-- 支付与结算
-- 多租户权限系统
-- 多 agent 编排平台
-- 真实去中心化后端集成
+- A generic tool marketplace.
+- Payments or settlement.
+- Multi-tenant permissions.
+- A multi-agent orchestration platform.
+- Real decentralized backend integration.

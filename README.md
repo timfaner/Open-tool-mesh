@@ -1,170 +1,149 @@
 # OpenTool Mesh
 
-> 中文主文档 | Chinese README  
-> English labels are provided in key headings for quick scanning.
+OpenTool Mesh is an open-source MVP for agent tool invocation. It connects tool publishing, capability discovery, manifest verification, remote invocation, trace persistence, and audit reporting into one reproducible loop.
 
-OpenTool Mesh 是一个面向 Agent 工具调用场景的开源 MVP：它把远程工具发布、能力发现、Manifest 校验、远程调用、Trace 留痕与审计报告串成一条可复现闭环。
+This repository is most useful for two audiences:
 
-当前仓库最适合两类读者：
+- Developers who want to run a `publish -> discover -> verify -> call -> trace -> report` demo end to end.
+- Contributors who want to understand how the CLI, SDK, tool node, example agent, and dashboard fit together.
 
-- 想快速跑通一条 `publish -> discover -> verify -> call -> trace -> report` 演示链路的开发者
-- 想理解 CLI、SDK、tool node、example agent、dashboard 如何协作的贡献者
+## Why This Repo Exists
 
-## 项目价值（Why This Repo Exists）
+The goal is not to build a generic tool marketplace. The goal is to prove a working foundation for auditable remote tool calls:
 
-这个仓库关注的不是“做一个工具市场”，而是验证一条可运行的工具调用基础链路：
+1. Describe a tool with a manifest.
+2. Discover tools through a capability index and ENS-style identity records.
+3. Verify manifest integrity and identity binding before invocation.
+4. Execute the request through a remote tool node.
+5. Persist request, response, tool output, trace, and report evidence.
+6. Replay the run through the dashboard.
 
-1. 用 manifest 描述工具能力与调用入口
-2. 通过 capability index + ENS 风格身份解析发现工具
-3. 在调用前校验 manifest 与身份绑定关系
-4. 通过远程 tool node 执行调用
-5. 把请求、响应、tool output、trace、report 落盘为可审计证据
-6. 在 dashboard 中复盘一次真实运行
+## Quick Start
 
-## 快速开始 / Quick Start
-
-所有命令默认在仓库根目录执行：
+Run all commands from the repository root:
 
 ```bash
-cd /workspace/project
+corepack enable
 corepack pnpm install
 corepack pnpm test
 corepack pnpm demo:run
 ```
 
-环境前提：
+Prerequisites:
 
-- Node.js `>= 22`
-- `corepack` 可用
+- Node.js 20 or newer
+- `corepack`
 
-成功信号：
+Success signals:
 
-- `corepack pnpm test` 通过 workspace 测试
-- `corepack pnpm demo:run` 输出 `manifestUri`、`traceId`、`traceUri`、`reportUri`
-- 本地生成 `.opentoolmesh/` 运行时目录，包含 traces / artifacts / reports / manifests
+- `corepack pnpm test` passes the workspace tests.
+- `corepack pnpm demo:run` prints `manifestUri`, `traceId`, `traceUri`, and `reportUri`.
+- A local `.opentoolmesh/` runtime directory is generated with traces, artifacts, reports, and manifests.
 
-如果你想先检查环境，再决定是否启动服务，可执行：
+To check the environment before starting services:
 
 ```bash
-bash docs/demo/demo-prereflight.sh
+corepack pnpm demo:preflight
 ```
 
-详细版安装、测试、dashboard 启动与错误排查，请直接阅读[开始使用 / Getting Started](./docs/getting-started/README.md)。
+For installation, testing, dashboard startup, and troubleshooting details, see [Getting Started](./docs/getting-started/README.md).
 
-## 常用命令 / Common Commands
+## Common Commands
 
 ```bash
 corepack pnpm install
 corepack pnpm build
 corepack pnpm test
-corepack pnpm typecheck
-corepack pnpm demo:publish
-corepack pnpm demo:tool-node
-corepack pnpm demo:audit-agent
+corepack pnpm demo:preflight
 corepack pnpm demo:run
 ```
 
-单独启动 dashboard：
+Start only the dashboard:
 
 ```bash
-cd apps/dashboard
-npm run dev -- --hostname 127.0.0.1 --port 3000
+corepack pnpm dashboard:dev
 ```
 
-服务健康检查：
+Run service health checks:
 
 ```bash
-bash docs/demo/demo-health-check.sh
+corepack pnpm demo:health
 ```
 
-## 仓库结构 / Repository Map
+## Repository Map
 
-| 路径 | 作用 |
+| Path | Purpose |
 | --- | --- |
-| `packages/shared` | 共享类型与 schema 契约 |
-| `packages/sdk` | 核心运行时编排，负责 discover / resolve / verify / invoke / trace |
-| `packages/cli` | `opentool` CLI 命令入口 |
-| `services/tool-node` | 远程工具执行服务，暴露 `/health` 与 `/invokeTool` |
-| `examples/audit-agent` | 参考接入方示例，演示 agent 如何消费远程能力 |
-| `apps/dashboard` | 只读 dashboard，用于复盘最近一次 demo 运行 |
-| `docs/demo` | 演示说明、前置检查与健康检查脚本 |
-| `docs/architecture` | 架构总览、接口与 schema 说明 |
+| `packages/shared` | Shared types and schema contracts. |
+| `packages/sdk` | Runtime orchestration for discover, resolve, verify, invoke, and trace. |
+| `packages/cli` | `opentool` CLI entrypoint. |
+| `services/tool-node` | Remote tool execution service exposing `/health` and `/invokeTool`. |
+| `examples/audit-agent` | Reference consumer showing how an agent uses remote capabilities. |
+| `apps/dashboard` | Read-only dashboard for reviewing the latest demo run. |
+| `docs/demo` | Demo runbook, preflight checks, and health checks. |
+| `docs/architecture` | System overview, module boundaries, interfaces, and schema notes. |
 
-## 推荐阅读路径 / Reading Path
+## Reading Path
 
-1. 先读本文，了解项目目标与最快上手命令
-2. 再读 [开始使用 / Getting Started](./docs/getting-started/README.md)，按顺序完成环境准备、tests 与 dashboard 启动
-3. 想跑完整演示时，读 [Demo 文档索引 / Demo Docs](./docs/demo/README.md)，选择一键运行或分步演示
-4. 如需理解系统边界，读 [架构文档导航](./docs/architecture/README.md)
-5. 如需理解真实调用链，读 [审计示例说明](./examples/audit-agent/README.md) 与 `examples/audit-agent/src/run-audit.ts`
+1. Start here to understand the project goal and fastest commands.
+2. Read [Getting Started](./docs/getting-started/README.md) to prepare the environment, run tests, and launch the dashboard.
+3. Read [Demo Docs](./docs/demo/README.md) when you want the full demo path.
+4. Read [Architecture Docs](./docs/architecture/README.md) to understand system boundaries.
+5. Read [Audit Agent Example](./examples/audit-agent/README.md) with `examples/audit-agent/src/run-audit.ts` to follow the real invocation chain.
 
-## 文档入口 / Documentation Index
+## Documentation Index
 
-- [开始使用 / Getting Started](./docs/getting-started/README.md)
-- [快速开始 / Quick Start](./docs/getting-started/quickstart.md)
-- [常见错误与排查 / Troubleshooting](./docs/getting-started/troubleshooting.md)
-- [贡献指南 / Contributing Guide](./CONTRIBUTING.md)
-- [Demo 文档索引 / Demo Docs](./docs/demo/README.md)
-- [术语表与命令速查 / Glossary and Command Quick Reference](./docs/reference/glossary-and-command-quick-reference.md)
-- [完整 Demo Runbook](./docs/demo/opentool-mesh-demo-runbook.md)
-- [审计示例说明 / Audit Agent Example](./examples/audit-agent/README.md)
-- [产品说明与验收边界](./docs/product/opentool-mesh-产品说明与验收边界.md)
-- [架构文档导航](./docs/architecture/README.md)
-- [系统总览 / System Overview](./docs/architecture/system-overview.md)
-- [模块接口说明](./docs/architecture/module-interfaces.md)
-- [Manifest Schema](./docs/architecture/manifest-schema.md)
-- [Trace Schema](./docs/architecture/trace-schema.md)
-- [参考资料 / Reference Docs](./docs/reference/README.md)
+- [Getting Started](./docs/getting-started/README.md)
+- [Quick Start](./docs/getting-started/quickstart.md)
+- [Troubleshooting](./docs/getting-started/troubleshooting.md)
+- [Contributing Guide](./CONTRIBUTING.md)
+- [Demo Docs](./docs/demo/README.md)
+- [Glossary and Command Quick Reference](./docs/reference/glossary-and-command-quick-reference.md)
+- [Demo Runbook](./docs/demo/opentool-mesh-demo-runbook.md)
+- [Audit Agent Example](./examples/audit-agent/README.md)
+- [Product Scope and Acceptance](./docs/product/product-scope-and-acceptance.md)
+- [Architecture Docs](./docs/architecture/README.md)
+- [System Overview](./docs/architecture/system-overview.md)
+- [Module Interfaces](./docs/architecture/module-interfaces.md)
+- [Reference Docs](./docs/reference/README.md)
 
-## 架构导航 / Architecture Navigation
+## Architecture Navigation
 
-按当前代码现状，最值得优先理解的是这几条真实路径：
+The most important real paths in the current implementation are:
 
-- 发布链路：manifest JSON -> `demo:publish` -> 本地 storage + ENS 风格记录 + capability index
-- 调用链路：`discover -> resolve -> loadManifest -> verify -> invokeTool -> recordTrace -> buildAuditReport`
-- 展示链路：dashboard 优先读取最新成功 trace，找不到时回退到 fixtures
+- Publish path: manifest JSON -> `demo:publish` -> local storage + ENS-style records + capability index.
+- Invocation path: `discover -> resolve -> loadManifest -> verify -> invokeTool -> recordTrace -> buildAuditReport`.
+- Display path: the dashboard reads the latest successful trace first, then falls back to fixtures when no runtime trace exists.
 
-如果你要顺着代码走：
+Code entrypoints:
 
-- Agent 视角入口：`examples/audit-agent/src/run-audit.ts`
-- CLI 视角入口：`packages/cli/src/index.ts`
-- Tool node 入口：`services/tool-node/src/server.ts`
-- Dashboard 读路径入口：`apps/dashboard/lib/demo-run.ts`
+- Agent: `examples/audit-agent/src/run-audit.ts`
+- CLI: `packages/cli/src/index.ts`
+- Tool node: `services/tool-node/src/server.ts`
+- Dashboard data: `apps/dashboard/lib/demo-run.ts`
 
-## 贡献方式 / Contributing
+## Contributing
 
-当前最适合的贡献方向：
+The best contribution paths right now are:
 
-- 跑通 demo，确认 README 与 docs 是否足以支持首次上手
-- 对齐架构文档与真实代码实现，补齐占位 schema 文档
-- 改进 CLI、SDK、tool node、dashboard 的说明与测试
+- Run the demo and check whether the README and docs are enough for first-time setup.
+- Keep architecture docs aligned with the current code.
+- Improve explanations and tests for the CLI, SDK, tool node, and dashboard.
 
-建议贡献流程：
+Recommended flow:
 
 ```bash
+git checkout -b your-branch-name
 corepack pnpm install
 corepack pnpm test
-corepack pnpm demo:run
 ```
 
-首次贡献前，建议先阅读[贡献指南 / Contributing Guide](./CONTRIBUTING.md)。其中整理了环境准备、文档与代码改动要求、提交前最小验证，以及 PR 描述建议。
+Before opening a PR, verify that documentation links work, commands run from the repository root, and any runtime-path change has a matching test or minimal demo check. Read [Contributing Guide](./CONTRIBUTING.md) before your first contribution.
 
-在提交前，至少确认：
+## Troubleshooting
 
-- 改动涉及的文档链接有效
-- 命令在仓库根路径可执行
-- 若修改运行链路，相关测试或最小 demo 验证已完成
+`vitest: not found` usually means dependencies have not been installed. Run `corepack pnpm install`, then rerun `corepack pnpm test`.
 
-## 常见问题 / Troubleshooting
+`tsc: not found` usually means workspace dependencies are missing before a build or demo command. Run `corepack pnpm install`, then retry `corepack pnpm build` or `corepack pnpm demo:run`.
 
-`vitest: not found`
-
-- 原因：通常是还没执行 `corepack pnpm install`
-- 处理：先安装依赖，再重新运行 `corepack pnpm test`
-
-`tsc: not found`
-
-- 原因：通常是还没安装 workspace 依赖就直接运行构建或 demo
-- 处理：先执行 `corepack pnpm install`，再运行 `corepack pnpm build` 或 `corepack pnpm demo:run`
-
-更多启动排障场景见[常见错误与排查 / Troubleshooting](./docs/getting-started/troubleshooting.md)。
+For more startup issues, see [Troubleshooting](./docs/getting-started/troubleshooting.md).

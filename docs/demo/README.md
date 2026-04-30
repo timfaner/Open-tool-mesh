@@ -1,46 +1,44 @@
-# Demo 文档索引
+# Demo Docs
 
-> 中文主文档 | Demo Docs Overview
+This directory explains how to run OpenTool Mesh for real. It assumes you have installed dependencies from the repository root, or have at least read the quick start in the [repository README](../../README.md).
 
-本目录服务于“如何把 OpenTool Mesh 真实跑起来”这一件事。默认假设你已经在仓库根目录执行过依赖安装，或至少先看过 [根 README](../../README.md) 的快速开始。
+## What These Docs Answer
 
-## 这组文档解决什么问题
+- Which command runs the full demo loop.
+- What order to use for dashboard, tool node, publish, and audit-agent steps when presenting the demo manually.
+- Which output fields and runtime files indicate success.
+- How these demo docs relate to the `examples/audit-agent` code.
 
-- 一键跑完整演示链路时，应该执行什么命令
-- 分步骤演示时，dashboard、tool node、publish、audit agent 的顺序是什么
-- 成功后应该看到哪些输出字段与运行时文件
-- 这些 demo 文档与 `examples/audit-agent` 的示例代码是什么关系
+## Reading Order
 
-## 阅读顺序
+1. [Demo Runbook](./opentool-mesh-demo-runbook.md)  
+   Use this for a first full run. It covers one-command execution, step-by-step execution, dashboard alignment rules, and closed-loop checks.
+2. [Preflight script](./demo-prereflight.sh)  
+   Use this before running the demo to check key files, Node.js version, and build-output status.
+3. [Health-check script](./demo-health-check.sh)  
+   Use this after dashboard and tool node startup to confirm the services are alive.
+4. [Runtime product inventory and health-check scope](./opentool-mesh-demo-runbook.md#56-runtime-product-inventory-and-health-check-scope)  
+   Use this when `/opt/wanman/products.json` is missing or when you need the repository-level source of truth for product health.
+5. [Audit Agent Example](../../examples/audit-agent/README.md)  
+   Use this to understand what the example agent actually does.
 
-1. [opentool-mesh-demo-runbook.md](./opentool-mesh-demo-runbook.md)
-   适合第一次运行仓库，覆盖一键执行、分步执行、dashboard 对齐口径与闭环检查项。
-2. `demo-prereflight.sh`
-   适合先做环境前置检查，确认关键文件、Node 版本与构建产物状态。
-3. `demo-health-check.sh`
-   适合在 dashboard 与 tool node 已启动后确认服务存活。
-4. [运行时产品清单与健康检查口径](./opentool-mesh-demo-runbook.md#56-运行时产品清单与健康检查口径)
-   适合排查 `/opt/wanman/products.json` 缺失、明确当前仓库的产品来源链路与降级策略。
-5. [examples/audit-agent/README.md](../../examples/audit-agent/README.md)
-   适合想继续看“示例 agent 到底做了什么”的读者。
-
-## 最短运行方式
+## Shortest Run Path
 
 ```bash
-cd /workspace/project
 corepack pnpm install
 corepack pnpm demo:run
 ```
 
-如果你更希望拆步演示：
+If you prefer a step-by-step presentation:
 
 ```bash
-cd /workspace/project
+corepack pnpm dashboard:dev
 corepack pnpm demo:tool-node
 corepack pnpm demo:publish
 corepack pnpm demo:audit-agent
+corepack pnpm demo:health
 ```
 
-## 与主系统的关系
+## Relationship to the Main System
 
-`docs/demo` 负责说明“怎么跑”；`examples/audit-agent` 负责展示“一个 agent 如何消费这套能力”；`apps/dashboard` 负责展示“跑完以后如何复盘证据链”。三者共同对应主系统中的调用闭环，而不是互相独立的孤立 demo。
+`docs/demo` explains how to run the system. `examples/audit-agent` shows how an agent consumes the capability. `apps/dashboard` shows how to review the evidence chain after a run. Together they represent the main invocation loop rather than three unrelated demos.

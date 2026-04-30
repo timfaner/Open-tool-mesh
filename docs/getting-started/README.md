@@ -1,37 +1,34 @@
-# 开始使用 OpenTool Mesh
-> Getting Started with OpenTool Mesh
+# Getting Started with OpenTool Mesh
 
-这组文档面向第一次接触仓库的开发者，目标是在 10 到 15 分钟内完成环境准备、依赖安装、测试验证、dashboard 启动，以及常见启动问题排查。
+These docs are for developers opening the repository for the first time. The goal is to complete environment setup, dependency installation, tests, dashboard startup, and basic troubleshooting in about 10 to 15 minutes.
 
-> Prepare the environment, install dependencies, run tests, start the dashboard, and troubleshoot common startup issues in 10-15 minutes.
+## What You Will Accomplish
 
-## 你会得到什么 / What You Will Accomplish
+- Confirm that local Node.js, `corepack`, and the repository directory meet the requirements.
+- Install workspace dependencies from the repository root.
+- Run workspace tests to verify the codebase is usable.
+- Start the dashboard by itself and know how to check service readiness.
+- Jump directly to troubleshooting docs for common startup failures.
 
-- 确认本地 Node.js、`corepack` 与仓库目录满足要求
-- 在仓库根目录安装 workspace 依赖
-- 运行 workspace tests，验证代码库处于可用状态
-- 单独启动 dashboard，并知道如何检查服务是否 ready
-- 在遇到常见错误时，能直接跳到对应排障文档
+## Recommended Reading Order
 
-## 推荐阅读顺序 / Recommended Reading Order
+1. Read [Quick Start](./quickstart.md) and follow it in order for the first run.
+2. If an environment or command issue appears, open [Troubleshooting](./troubleshooting.md).
+3. When you want the complete demo loop, read [Demo Docs](../demo/README.md).
+4. To understand why the system is organized this way, read [Architecture Docs](../architecture/README.md), then [System Overview](../architecture/system-overview.md). Do not treat older planning drafts as the default entrypoint.
 
-1. 先读[快速开始 / Quick Start](./quickstart.md)，按顺序完成第一次上手。
-2. 遇到环境或命令问题时，跳转到[常见错误与排查 / Troubleshooting](./troubleshooting.md)。
-3. 想继续跑完整演示链路时，阅读[Demo 文档索引 / Demo Docs](../demo/README.md)。
-4. 想理解系统为什么这样组织时，先阅读[架构文档导航 / Architecture Docs](../architecture/README.md)，再进入[系统总览 / System Overview](../architecture/system-overview.md)，不要把历史草案当作默认入口。
+## Document Roles
 
-## 文档分工 / Document Roles
+### [Quick Start](./quickstart.md)
 
-### [快速开始 / Quick Start](./quickstart.md)
+Covers the shortest first-run path: environment checks, dependency installation, tests, dashboard startup, success signals, and next reading steps.
 
-覆盖第一次上手所需的最短路径：环境准备、安装依赖、运行 tests、运行 dashboard、成功标志，以及下一步该看什么。
+### [Troubleshooting](./troubleshooting.md)
 
-### [常见错误与排查 / Troubleshooting](./troubleshooting.md)
+Covers common startup problems such as `vitest: not found`, `tsc: not found`, old Node.js versions, occupied dashboard ports, and missing latest runtime data in the dashboard.
 
-收敛启动阶段最容易遇到的报错与症状，包括 `vitest: not found`、`tsc: not found`、Node 版本不足、dashboard 端口占用和 dashboard 没有读到最新运行态数据。
+## Next Steps
 
-## 下一步阅读 / Next Steps
-
-- 想先跑通完整闭环：阅读[Demo Runbook](../demo/opentool-mesh-demo-runbook.md)
-- 想理解示例 agent 如何消费这套能力：阅读[Audit Agent 示例说明](../../examples/audit-agent/README.md)
-- 想理解 CLI、SDK、tool node、dashboard 的关系：先读[架构文档导航 / Architecture Docs](../architecture/README.md)，按其中推荐顺序继续阅读[系统总览 / System Overview](../architecture/system-overview.md)
+- To run the complete loop, read [Demo Runbook](../demo/opentool-mesh-demo-runbook.md).
+- To understand how the example agent consumes the system, read [Audit Agent Example](../../examples/audit-agent/README.md).
+- To understand the CLI, SDK, tool node, and dashboard relationship, start with [Architecture Docs](../architecture/README.md), then follow the recommended path to [System Overview](../architecture/system-overview.md).

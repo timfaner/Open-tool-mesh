@@ -22,37 +22,37 @@ check_endpoint() {
       IFS=',' read -r -a expected_codes <<< "$expected_csv"
       for expected in "${expected_codes[@]}"; do
         if [[ "$code" == "$expected" ]]; then
-          printf '[OK] %s 返回 %s: %s\n' "$name" "$code" "$url"
+          printf '[OK] %s returned %s: %s\n' "$name" "$code" "$url"
           return 0
         fi
       done
 
       if (( attempt < MAX_ATTEMPTS )); then
-        printf '[WAIT] %s 第 %s/%s 次返回 %s，等待 %ss 后重试: %s\n' \
+        printf '[WAIT] %s attempt %s/%s returned %s; retrying after %ss: %s\n' \
           "$name" "$attempt" "$MAX_ATTEMPTS" "$code" "$SLEEP_SECONDS" "$url"
         sleep "$SLEEP_SECONDS"
         continue
       fi
 
-      printf '[WARN] %s 返回 %s，期望 %s: %s\n' "$name" "$code" "$expected_csv" "$url"
+      printf '[WARN] %s returned %s, expected %s: %s\n' "$name" "$code" "$expected_csv" "$url"
       FAILURES=$((FAILURES + 1))
       return 1
     fi
 
     if (( attempt < MAX_ATTEMPTS )); then
-      printf '[WAIT] %s 尚未响应，第 %s/%s 次重试前等待 %ss: %s\n' \
-        "$name" "$attempt" "$MAX_ATTEMPTS" "$SLEEP_SECONDS" "$url"
+      printf '[WAIT] %s did not respond; waiting %ss before retry %s/%s: %s\n' \
+        "$name" "$SLEEP_SECONDS" "$attempt" "$MAX_ATTEMPTS" "$url"
       sleep "$SLEEP_SECONDS"
       continue
     fi
   done
 
-  printf '[FAIL] %s 未响应: %s\n' "$name" "$url"
+  printf '[FAIL] %s did not respond: %s\n' "$name" "$url"
   FAILURES=$((FAILURES + 1))
   return 1
 }
 
-echo "== OpenTool Mesh demo 健康检查 =="
+echo "== OpenTool Mesh demo health check =="
 
 check_endpoint "dashboard" "$DASHBOARD_URL" "200" || true
 check_endpoint "tool-node" "$TOOL_NODE_URL" "200" || true
