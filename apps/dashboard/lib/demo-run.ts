@@ -43,6 +43,8 @@ type TraceRecord = {
     transport?: string;
     peerId?: string;
     method?: string;
+    requestUri?: string;
+    responseUri?: string;
     startedAt?: string;
     finishedAt?: string;
     status?: string;
