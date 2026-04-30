@@ -68,6 +68,7 @@
 - [开始使用 / Getting Started](./getting-started/README.md)
 - [快速开始 / Quick Start](./getting-started/quickstart.md)
 - [常见错误与排查 / Troubleshooting](./getting-started/troubleshooting.md)
+- [贡献指南 / Contributing Guide](../CONTRIBUTING.md)
 - [Demo 文档索引 / Demo Docs](./demo/README.md)
 - [完整 Demo Runbook / Demo Runbook](./demo/opentool-mesh-demo-runbook.md)
 - [架构目录 / Architecture Directory](./architecture/)
@@ -82,3 +83,5 @@
 如果你已经完成快速开始并跑通 demo，下一步进入[架构目录](./architecture/) 看系统边界与调用链。
 
 如果你正在判断项目是否符合预期，下一步进入[产品说明与验收边界](./product/opentool-mesh-产品说明与验收边界.md)。
+
+如果你准备提交文档或代码改动，下一步进入[贡献指南 / Contributing Guide](../CONTRIBUTING.md)。

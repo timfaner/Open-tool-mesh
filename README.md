@@ -103,6 +103,7 @@ bash docs/demo/demo-health-check.sh
 - [开始使用 / Getting Started](./docs/getting-started/README.md)
 - [快速开始 / Quick Start](./docs/getting-started/quickstart.md)
 - [常见错误与排查 / Troubleshooting](./docs/getting-started/troubleshooting.md)
+- [贡献指南 / Contributing Guide](./CONTRIBUTING.md)
 - [Demo 文档索引 / Demo Docs](./docs/demo/README.md)
 - [完整 Demo Runbook](./docs/demo/opentool-mesh-demo-runbook.md)
 - [审计示例说明 / Audit Agent Example](./examples/audit-agent/README.md)
@@ -143,6 +144,8 @@ corepack pnpm install
 corepack pnpm test
 corepack pnpm demo:run
 ```
+
+首次贡献前，建议先阅读[贡献指南 / Contributing Guide](./CONTRIBUTING.md)。其中整理了环境准备、文档与代码改动要求、提交前最小验证，以及 PR 描述建议。
 
 在提交前，至少确认：
 
