@@ -11,8 +11,8 @@
 2. [模块边界 / Module Boundaries](./module-boundaries.md)：再看 `packages/shared`、`packages/sdk`、`packages/cli`、`services/tool-node`、`examples/audit-agent`、`apps/dashboard` 各自负责什么。
 3. [运行时生命周期 / Runtime Lifecycle](./runtime-lifecycle.md)：最后顺着真实调用链阅读 CLI、agent、tool node、storage、dashboard 如何串起来。
 4. [模块接口参考 / Module Interface Reference](./module-interfaces.md)：在理解模块职责后，再看跨模块输入输出契约与依赖方向。
-5. [Trace 契约参考 / Trace Contract Reference](./trace-schema.md)：继续把 runtime trace 当作证据对象来阅读，理解 CLI、SDK、tool node、agent、dashboard 如何共享运行态事实。
-6. [Manifest 契约参考 / Manifest Contract Reference](./manifest-schema.md)：继续阅读 manifest 字段、identity 解析、capability index 与发布/校验入口，作为 manifest 相关契约的正式入口。
+5. [Manifest 契约参考 / Manifest Contract Reference](./manifest-schema.md)：继续阅读 manifest 字段、identity 解析、capability index 与发布/校验入口，作为 manifest 相关契约的正式入口。
+6. [Trace 契约参考 / Trace Contract Reference](./trace-schema.md)：最后把 runtime trace 当作证据对象来阅读，理解 CLI、SDK、tool node、agent、dashboard 如何共享运行态事实。
 7. [MVP 架构草案 / MVP Architecture Draft](./opentool-mesh-mvp-architecture.md)：作为历史背景参考，不再是优先入口。
 
 ## 按读者入口阅读 / Entry Points by Reader Type
@@ -56,7 +56,7 @@
 
 ## 契约文档状态 / Contract Doc Status
 
-当前三篇契约参考文档的状态如下：
+当前三篇契约参考文档均已完成，状态如下：
 
 - [模块接口 / Module Interfaces](./module-interfaces.md)：已完成，可作为 `shared -> sdk -> cli/tool-node/example/dashboard` 输入输出边界的正式入口。
 - [Trace Schema](./trace-schema.md)：已完成，可作为 runtime trace 字段、artifact 关系与 dashboard 消费口径的正式入口。
