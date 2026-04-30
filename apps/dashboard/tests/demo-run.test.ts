@@ -173,15 +173,21 @@ function writeRuntimeBundle(id: string, options: { persistedAt: string; status?:
     manifestUri,
     contractName: 'Vault',
     summary: 'Runtime summary',
-    findings: [{ severity: 'high', title: 'Finding', description: 'Description', traceId: id }],
+    findings: [
+      { severity: 'high', title: 'Finding', description: 'Description', traceId: id },
+      { severity: 'medium', title: 'Secondary finding', description: 'Secondary description', traceId: id },
+    ],
     generatedAt: options.persistedAt,
   });
   writeJson(path.join(artifactsDir, `${id}.json`), {
     traceId: id,
     toolId: 'otm:ens:solidity-scanner.auditagent.eth',
     output: {
-      findings: [{ severity: 'high', message: 'Description' }],
-      summary: { totalFindings: 1, high: 1, medium: 0, low: 0 },
+      findings: [
+        { severity: 'high', message: 'Description' },
+        { severity: 'medium', message: 'Secondary description' },
+      ],
+      summary: { totalFindings: 2, high: 1, medium: 1, low: 0 },
     },
   });
 }
@@ -258,4 +264,27 @@ test('uses manifest mcp toolName instead of guessing from the ENS prefix', async
   assert.equal(demoRun.source, 'runtime');
   assert.equal(demoRun.invocation.remoteNode, 'solidity-pattern-scanner');
   assert.equal(demoRun.report.toolReference, 'solidity-pattern-scanner');
+});
+
+test('formats the contract reference as Vault.sol in runtime header-facing data', async () => {
+  writeRuntimeBundle('contract-reference-runtime', { persistedAt: '2026-04-29T00:00:00.000Z' });
+
+  const demoRun = await getDashboardRun();
+
+  assert.equal(demoRun.source, 'runtime');
+  assert.equal(demoRun.contractReference, 'Vault.sol');
+  assert.equal(demoRun.invocation.requestSummary, 'solidity-static-analysis against Vault.sol');
+});
+
+test('keeps the top finding separate from the secondary issue summary', async () => {
+  writeRuntimeBundle('secondary-finding-runtime', { persistedAt: '2026-04-29T01:00:00.000Z' });
+
+  const demoRun = await getDashboardRun();
+
+  assert.equal(demoRun.source, 'runtime');
+  assert.equal(demoRun.report.title, 'Finding');
+  assert.equal(
+    demoRun.report.secondaryFinding,
+    'MEDIUM · Secondary finding — Secondary description',
+  );
 });

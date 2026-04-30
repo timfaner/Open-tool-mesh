@@ -16,7 +16,7 @@ const lifecycleLegend = [
 ] as const;
 
 export function DashboardPage({ demoRun }: { demoRun: DashboardRun }) {
-  const secondaryIssue = demoRun.report.summary.find((item) => item !== demoRun.report.title);
+  const secondaryIssue = demoRun.report.secondaryFinding;
 
   return (
     <main className={styles.pageShell}>

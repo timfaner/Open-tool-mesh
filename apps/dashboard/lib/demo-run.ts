@@ -108,14 +108,6 @@ type ArtifactRecord = {
   };
 };
 
-function formatContractReference(contractName?: string): string {
-  if (!contractName) {
-    return fixtureDemoRun.contractReference;
-  }
-
-  return contractName.endsWith('.sol') ? contractName : `${contractName}.sol`;
-}
-
 export interface DashboardRun {
   source: 'fixture' | 'runtime';
   runId: string;
@@ -428,12 +420,22 @@ function buildRuntimeDemoRunFromTrace(trace: TraceRecord): DashboardRun | null {
   const topFinding = findings.find((finding) => finding.severity === 'high') ?? findings[0];
   const transportLabel = (trace.invocation?.transport ?? 'axl').toUpperCase();
   const toolDisplayName = getToolDisplayName(trace, manifest);
+  const contractReference = formatContractReference(report.contractName);
+  const topFindingSummary = topFinding
+    ? `${(topFinding.severity ?? 'low').toUpperCase()} · ${topFinding.title ?? 'Untitled finding'} — ${topFinding.description ?? 'No description provided.'}`
+    : null;
+  const secondaryFinding = findings
+    .map(
+      (finding) =>
+        `${(finding.severity ?? 'low').toUpperCase()} · ${finding.title ?? 'Untitled finding'} — ${finding.description ?? 'No description provided.'}`,
+    )
+    .find((summaryLine) => summaryLine !== topFindingSummary);
 
   return {
     source: 'runtime' as const,
     runId: trace.runId ?? trace.traceId,
     environment: 'Hackathon MVP',
-    contractReference: formatContractReference(report.contractName),
+    contractReference,
     headerStatus: [
       { label: 'Verified', tone: 'success' as ChipTone },
       { label: `${transportLabel} Live`, tone: 'info' as ChipTone },
@@ -491,7 +493,7 @@ function buildRuntimeDemoRunFromTrace(trace: TraceRecord): DashboardRun | null {
       status: trace.invocation?.status ?? fixtureDemoRun.invocation.status,
       requestUri: requestArtifact?.uri ?? trace.invocation?.requestUri ?? fixtureDemoRun.invocation.requestUri,
       responseUri: responseArtifact?.uri ?? trace.invocation?.responseUri ?? fixtureDemoRun.invocation.responseUri,
-      requestSummary: `${trace.requestedCapability ?? fixtureDemoRun.discovery.requestedCapability} against ${formatContractReference(report.contractName)}`,
+      requestSummary: `${trace.requestedCapability ?? fixtureDemoRun.discovery.requestedCapability} against ${contractReference}`,
       responseSummary: `${summary?.totalFindings ?? findings.length} findings returned`,
       startedAt: trace.invocation?.startedAt ?? fixtureDemoRun.invocation.startedAt,
       finishedAt: trace.invocation?.finishedAt ?? fixtureDemoRun.invocation.finishedAt,
@@ -523,10 +525,7 @@ function buildRuntimeDemoRunFromTrace(trace: TraceRecord): DashboardRun | null {
       generatedAt: report.generatedAt ?? fixtureDemoRun.report.generatedAt,
       traceReference: trace.traceId,
       toolReference: toolDisplayName,
-      summary: findings.map(
-        (finding) =>
-          `${(finding.severity ?? 'low').toUpperCase()} · ${finding.title ?? 'Untitled finding'} — ${finding.description ?? 'No description provided.'}`,
-      ),
+      secondaryFinding,
     },
     artifact,
   };
