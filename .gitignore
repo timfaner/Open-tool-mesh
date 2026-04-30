@@ -4,4 +4,6 @@ dist
 .next
 coverage
 pnpm-lock.yaml
+package-lock.json
+*.tsbuildinfo
 .opentoolmesh
