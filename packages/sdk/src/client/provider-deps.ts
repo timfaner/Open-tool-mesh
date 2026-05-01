@@ -5,6 +5,7 @@ import type {
   KvIndexAdapter,
   OpenToolMeshClientDeps
 } from "./create-client.js";
+import { mainnet, sepolia } from "viem/chains";
 import { createLocalDevnetClientDeps } from "./local-devnet.js";
 import type { NetworkProviderConfig, ProviderConfig } from "./provider-config.js";
 import { createEnsResolverAdapter } from "./providers/ens.js";
@@ -30,6 +31,7 @@ export function createProviderClientDeps(config: ProviderConfig): OpenToolMeshCl
 export function createProviderEnsAdapter(config: NetworkProviderConfig): EnsAdapter {
   return createEnsResolverAdapter({
     rpcUrl: config.ens.rpcUrl,
+    chain: config.network === "testnet" ? sepolia : mainnet,
     walletPrivateKey: config.ens.publisherPrivateKey
   });
 }
