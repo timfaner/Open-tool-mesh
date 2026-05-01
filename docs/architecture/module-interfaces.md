@@ -95,6 +95,24 @@ Publish a manifest into local runtime storage and update local identity/index st
 
 Build an audit report from a trace and tool output.
 
+## Provider Adapter Boundary
+
+The SDK already receives its external dependencies through `OpenToolMeshClientDeps`:
+
+- `ens`
+- `blob`
+- `kv`
+- `transport`
+
+Provider-backed work should add implementations for these interfaces rather than changing CLI, audit-agent, or dashboard call sites. The expected real-provider mapping is documented in [Real Provider Integration Notes](./real-provider-integration.md):
+
+- ENS resolver adapter for `EnsAdapter`.
+- 0G Storage adapter for `BlobStorageAdapter`.
+- 0G KV adapter for `KvIndexAdapter`.
+- Gensyn AXL adapter for `InvocationTransport`.
+
+The local devnet adapters should stay available for deterministic tests and offline demos.
+
 ## CLI as a Thin Shell
 
 The CLI owns:
@@ -169,13 +187,14 @@ const output = await client.invokeTool({
 In scope:
 
 - Local MVP discovery and invocation contracts.
+- Provider adapter contracts that preserve the current SDK dependency shape.
 - SDK and CLI boundaries.
 - Tool-node HTTP invocation.
 - Dashboard runtime-data reads.
 
 Out of scope:
 
-- Production decentralized verification.
+- Production decentralized verification inside the baseline MVP.
 - Payment and settlement interfaces.
 - Multi-tenant authorization.
 - General marketplace APIs.

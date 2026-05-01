@@ -17,6 +17,69 @@ const lifecycleLegend = [
 
 export function DashboardPage({ demoRun }: { demoRun: DashboardRun }) {
   const secondaryIssue = demoRun.report.secondaryFinding;
+  const demoFlow = [
+    {
+      number: '01',
+      title: 'Provide Contract',
+      detail: demoRun.contractReference,
+      meta: 'Solidity source enters the agent runtime',
+    },
+    {
+      number: '02',
+      title: 'Choose Capability',
+      detail: demoRun.discovery.requestedCapability,
+      meta: 'Agent asks the mesh for a matching tool',
+    },
+    {
+      number: '03',
+      title: 'Resolve Tool',
+      detail: demoRun.invocation.remoteNode,
+      meta: 'ENS identity points at the manifest',
+    },
+    {
+      number: '04',
+      title: 'Run Scanner',
+      detail: demoRun.invocation.peer,
+      meta: 'AXL call reaches the remote tool node',
+    },
+    {
+      number: '05',
+      title: 'Review Evidence',
+      detail: 'Trace + Report',
+      meta: 'Trace, artifacts, and report are persisted',
+    },
+  ] as const;
+  const usageCommands = [
+    {
+      label: 'Start tool node',
+      command: 'corepack pnpm demo:tool-node',
+      result: `${demoRun.invocation.remoteNode} listens for ${demoRun.invocation.method}`,
+    },
+    {
+      label: 'Publish manifest',
+      command: 'corepack pnpm demo:publish',
+      result: demoRun.publish.manifestUri,
+    },
+    {
+      label: 'Run audit agent',
+      command: 'corepack pnpm demo:audit-agent',
+      result: `${demoRun.report.findings} findings, trace ${demoRun.memory.traceId}`,
+    },
+    {
+      label: 'One-command demo',
+      command: 'corepack pnpm demo:run',
+      result: 'Builds, publishes, invokes, traces, and reports',
+    },
+  ] as const;
+  const evidenceRows = [
+    { label: 'input', value: demoRun.contractReference },
+    { label: 'capability', value: demoRun.discovery.requestedCapability },
+    { label: 'identity', value: demoRun.discovery.resolvedIdentity },
+    { label: 'manifest', value: demoRun.manifest.uri },
+    { label: 'peer', value: demoRun.invocation.peer },
+    { label: 'trace', value: demoRun.memory.traceUri },
+    { label: 'report', value: demoRun.report.reportUri },
+  ] as const;
 
   return (
     <main className={styles.pageShell}>
@@ -73,6 +136,63 @@ export function DashboardPage({ demoRun }: { demoRun: DashboardRun }) {
           </aside>
 
           <section className={styles.mainPanel}>
+            <section className={styles.operatorDeck}>
+              <div className={styles.operatorHeader}>
+                <div>
+                  <h2>Demo Flow</h2>
+                  <p>
+                    Follow this path during the live demo: submit a contract, let the agent discover a tool,
+                    verify the manifest, run the remote scanner, then inspect the stored evidence.
+                  </p>
+                </div>
+                <div className={styles.operatorStatus}>
+                  <span>Current run</span>
+                  <strong>{demoRun.runId}</strong>
+                </div>
+              </div>
+
+              <div className={styles.flowGrid}>
+                {demoFlow.map((step) => (
+                  <article key={step.number} className={styles.flowStep}>
+                    <span className={styles.flowNumber}>{step.number}</span>
+                    <h3>{step.title}</h3>
+                    <strong>{step.detail}</strong>
+                    <p>{step.meta}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            <section className={styles.usageGrid}>
+              <div className={styles.usagePanel}>
+                <div className={styles.panelHeader}>
+                  <span className={styles.reportEyebrow}>Tool Usage</span>
+                  <h2>How the demo is operated</h2>
+                </div>
+                <div className={styles.commandList}>
+                  {usageCommands.map((item) => (
+                    <div key={item.label} className={styles.commandRow}>
+                      <span>{item.label}</span>
+                      <code>{item.command}</code>
+                      <p>{item.result}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className={styles.evidencePanel}>
+                <div className={styles.panelHeader}>
+                  <span className={styles.reportEyebrow}>Live Run Evidence</span>
+                  <h2>What to point at on screen</h2>
+                </div>
+                <div className={styles.evidenceList}>
+                  {evidenceRows.map((item) => (
+                    <InfoRow key={item.label} label={item.label} value={item.value} mono />
+                  ))}
+                </div>
+              </div>
+            </section>
+
             <div className={styles.cardGrid}>
               <SectionCard
                 title="Discovery"

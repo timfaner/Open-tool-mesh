@@ -8,8 +8,9 @@ This directory explains the current OpenTool Mesh implementation. Prefer these d
 2. [Module Boundaries](./module-boundaries.md)
 3. [Runtime Lifecycle](./runtime-lifecycle.md)
 4. [Module Interfaces](./module-interfaces.md)
-5. [Manifest Schema](./manifest-schema.md)
-6. [Trace Schema](./trace-schema.md)
+5. [Real Provider Integration Notes](./real-provider-integration.md)
+6. [Manifest Schema](./manifest-schema.md)
+7. [Trace Schema](./trace-schema.md)
 
 The older [MVP Architecture Draft](./opentool-mesh-mvp-architecture.md) remains useful as background, but the implementation-facing docs above should be treated as the default source.
 
@@ -28,6 +29,7 @@ Read:
 Read:
 
 - [Module Interfaces](./module-interfaces.md)
+- [Real Provider Integration Notes](./real-provider-integration.md)
 - [Manifest Schema](./manifest-schema.md)
 - [Trace Schema](./trace-schema.md)
 
@@ -38,6 +40,7 @@ Read:
 - [Runtime Lifecycle](./runtime-lifecycle.md)
 - [Trace Schema](./trace-schema.md)
 - [Demo Runbook](../demo/opentool-mesh-demo-runbook.md)
+- [0G KV Node Runbook](../operations/0g-kv-node-runbook.md)
 
 ## What This Set Covers
 
@@ -46,6 +49,7 @@ Read:
 - Manifest and trace contract shapes.
 - Runtime state persistence under `.opentoolmesh/`.
 - Dashboard runtime-data selection.
+- The design path from local MVP adapters to ENS, 0G, and Gensyn AXL provider adapters.
 - Source files worth reading.
 
 ## Contract Doc Status
@@ -69,6 +73,8 @@ The current repository does not implement:
 | Shared contracts | `packages/shared/src/` |
 | SDK client | `packages/sdk/src/client/create-client.ts` |
 | Local devnet | `packages/sdk/src/client/local-devnet.ts` |
+| Provider integration design | `docs/architecture/real-provider-integration.md` |
+| 0G KV node operations | `docs/operations/0g-kv-node-runbook.md` |
 | CLI entrypoint | `packages/cli/src/index.ts` |
 | Tool node | `services/tool-node/src/server.ts` |
 | Invocation handler | `services/tool-node/src/handlers/invoke-tool.ts` |

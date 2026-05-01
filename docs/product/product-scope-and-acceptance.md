@@ -107,7 +107,7 @@ Recommended:
 
 Explicitly out of scope:
 
-- Real ENS, 0G, or AXL network integration.
+- Real ENS, 0G, or AXL network integration for the baseline local MVP. Provider-backed integration is a follow-on track documented in [Real Provider Integration Notes](../architecture/real-provider-integration.md).
 - Payments or settlement.
 - User accounts and permissions.
 - Multi-agent orchestration.
@@ -204,6 +204,7 @@ Implementation constraints:
 
 - Keep docs aligned with source paths.
 - Do not claim real decentralized integration when the MVP uses local adapters.
+- When provider adapters are added, keep local adapters available as the default demo and test profile.
 - Keep CLI and SDK responsibilities separated.
 - Keep dashboard data read-only.
 

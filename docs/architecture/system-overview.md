@@ -68,6 +68,17 @@ The repository does not connect directly to real ENS, 0G, or AXL networks. `pack
 
 In this MVP, ENS, 0G, and AXL terms describe interface semantics implemented by local filesystem adapters.
 
+## Real Provider Integration Direction
+
+The local devnet boundary is intentionally shaped like provider adapters. The design target is to keep `packages/sdk/src/client/create-client.ts` stable and replace only the dependencies supplied to it:
+
+- ENS text records replace `.opentoolmesh/ens-records.json` for manifest URI, manifest hash, owner, version, and capability metadata.
+- 0G Storage replaces `.opentoolmesh/storage/` for manifests, traces, reports, and artifacts.
+- 0G KV replaces `.opentoolmesh/kv/` for capability indexes and trace summaries.
+- Gensyn AXL replaces the local AXL peer map for remote tool invocation over a P2P mesh.
+
+Read [Real Provider Integration Notes](./real-provider-integration.md) before implementing provider-backed adapters. The current repository still defaults to local adapters for tests and demos.
+
 ## Real Code Entry Points
 
 - Publish path: `packages/cli/src/commands/publish.ts` and `packages/cli/src/commands/helpers.ts`

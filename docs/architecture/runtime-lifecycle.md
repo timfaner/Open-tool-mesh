@@ -121,6 +121,26 @@ Relevant code:
 | Artifacts | `.opentoolmesh/storage/artifacts/` |
 | Reports | `.opentoolmesh/storage/reports/` |
 
+## 8. Provider-Backed Lifecycle Target
+
+The provider-backed lifecycle keeps the same high-level order but swaps storage and transport adapters:
+
+```text
+manifest JSON
+  -> upload manifest to 0G Storage
+  -> write ENS text records with manifest URI/hash/version
+  -> write capability index to 0G KV
+  -> discover
+  -> resolve identity from ENS
+  -> load manifest from 0G
+  -> verify manifest hash and owner binding
+  -> invoke remote tool through Gensyn AXL
+  -> persist trace, artifacts, and report to 0G
+  -> read provider-backed evidence in CLI or dashboard
+```
+
+Provider work should not remove the local lifecycle. The local path remains the default test and demo profile; provider profiles should be opt-in through configuration.
+
 ## Suggested Source Pairing
 
 Read this document together with:
@@ -128,4 +148,5 @@ Read this document together with:
 - [Module Interfaces](./module-interfaces.md)
 - [Manifest Schema](./manifest-schema.md)
 - [Trace Schema](./trace-schema.md)
+- [Real Provider Integration Notes](./real-provider-integration.md)
 - [Demo Runbook](../demo/opentool-mesh-demo-runbook.md)
