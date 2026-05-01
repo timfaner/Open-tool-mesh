@@ -83,9 +83,13 @@ MCP-compatible tool metadata, including name, description, input schema, and out
 
 Invocation metadata, including the AXL peer ID and method used by the SDK to call the tool node.
 
+For provider-backed Gensyn AXL integration, `axlPeerId` should map to the remote AXL peer ID. The current `axlMethod` field can carry the transitional call target, but a future schema revision should separate the AXL MCP service name from the tool method if the runtime uses `POST /mcp/{peer_id}/{service}`.
+
 ### `storage`
 
 Manifest storage metadata, including the local 0G-style `manifestUri`.
+
+For provider-backed 0G integration, `manifestUri` should resolve to a 0G root or equivalent provider URI, with transaction metadata recorded in trace or publish output rather than hard-coded into local paths.
 
 ### `compatibility`
 
@@ -208,6 +212,8 @@ Out of scope:
 - A stable public protocol specification.
 - Real chain-based ownership verification.
 - Marketplace metadata beyond the sample demo.
+
+See [Real Provider Integration Notes](./real-provider-integration.md) for the current provider-backed design direction.
 
 ## Code Entry Points
 

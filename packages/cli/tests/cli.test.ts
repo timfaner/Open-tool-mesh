@@ -1,11 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { runCallCommand } from "../src/commands/call.js";
-import type { OpenToolMeshClient } from "@opentoolmesh/sdk";
+import type { OpenToolMeshClient, ProviderConfig } from "@opentoolmesh/sdk";
 import type { ToolIdentity, ToolManifest } from "@opentoolmesh/shared";
 
 const traceId1 = "11111111-1111-1111-1111-111111111111";
 const traceId2 = "22222222-2222-2222-2222-222222222222";
+const localProviderConfig: ProviderConfig = {
+  profile: "local",
+  rootDir: "/tmp"
+};
 
 function createIdentity(): ToolIdentity {
   return {
@@ -117,7 +121,7 @@ describe("cli skeleton", () => {
     const stdout = { log: vi.fn(), error: vi.fn() };
 
     await runCallCommand(["--tool", "tool.eth", "--input", "input.json"], { cwd: "/tmp", stdout }, {
-      createCliClient: async () => ({ client: client as unknown as OpenToolMeshClient, rootDir: "/tmp" }),
+      createCliClient: async () => ({ client: client as unknown as OpenToolMeshClient, rootDir: "/tmp", providerConfig: localProviderConfig }),
       readJsonFromFile: async <T>() => ({ source: "contract Vault {}" } as T),
       readFile: readFileSync as never,
       randomUUID: () => traceId1,
@@ -163,7 +167,7 @@ describe("cli skeleton", () => {
     const stdout = { log: vi.fn(), error: vi.fn() };
 
     await runCallCommand(["--tool", "tool.eth", "--input", "input.json"], { cwd: "/tmp", stdout }, {
-      createCliClient: async () => ({ client: client as unknown as OpenToolMeshClient, rootDir: "/tmp" }),
+      createCliClient: async () => ({ client: client as unknown as OpenToolMeshClient, rootDir: "/tmp", providerConfig: localProviderConfig }),
       readJsonFromFile: async <T>() => ({ source: "contract Vault {}" } as T),
       readFile: readFileSync as never,
       randomUUID: () => traceId2,
@@ -238,7 +242,7 @@ describe("cli skeleton", () => {
     const stdout = { log: vi.fn(), error: vi.fn() };
 
     await runCallCommand(["--capability", "solidity-static-analysis", "--input", "input.json"], { cwd: "/tmp", stdout }, {
-      createCliClient: async () => ({ client: client as unknown as OpenToolMeshClient, rootDir: "/tmp" }),
+      createCliClient: async () => ({ client: client as unknown as OpenToolMeshClient, rootDir: "/tmp", providerConfig: localProviderConfig }),
       readJsonFromFile: async <T>() => ({ source: "contract Vault {}" } as T),
       readFile: readFileSync as never,
       randomUUID: () => traceId1,

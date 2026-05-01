@@ -67,6 +67,10 @@ The publish flow writes both blob storage and index/identity metadata. Keep mani
 
 Verification checks fields that exist in the local MVP: hash, owner binding, schema version, and SDK compatibility. It is not a substitute for production chain verification.
 
+### Provider adapters must stay behind SDK interfaces
+
+Real ENS, 0G, and Gensyn AXL integration should be added as dependency implementations for the SDK client. CLI commands, the audit-agent example, and dashboard readers should not learn provider-specific APIs unless a separate boundary document explicitly changes that contract.
+
 ### The dashboard is read-only
 
 Dashboard code should choose the latest valid runtime data and fall back to fixtures when needed. It should not generate traces, rewrite reports, or patch missing manifests.
@@ -75,6 +79,7 @@ Dashboard code should choose the latest valid runtime data and fall back to fixt
 
 - Shared types should not import SDK, CLI, tool-node, example, or dashboard code.
 - SDK should expose reusable runtime behavior.
+- Provider implementations should plug into SDK dependency interfaces instead of bypassing them.
 - CLI should stay close to command orchestration.
 - Example agent should show consumer behavior, not core runtime logic.
 - Tool node should only own execution behavior.

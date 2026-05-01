@@ -3,8 +3,9 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import type { ExecutionTrace } from "@opentoolmesh/shared";
 import {
-  createLocalDevnetClientDeps,
   createOpenToolMeshClient,
+  createProviderClientDeps,
+  createProviderConfigFromEnv,
   fileDir,
   findWorkspaceRoot,
   hashJson
@@ -125,7 +126,8 @@ export function buildTrace(
 
 export async function runAuditDemo() {
   const rootDir = await findWorkspaceRoot(fileDir(import.meta.url));
-  const client = createOpenToolMeshClient(createLocalDevnetClientDeps(rootDir));
+  const providerConfig = createProviderConfigFromEnv(process.env, rootDir);
+  const client = createOpenToolMeshClient(createProviderClientDeps(providerConfig));
   const discovered = await client.discoverTools({ capability: "solidity-static-analysis", limit: 1 });
   const discoveredTool = discovered[0];
 

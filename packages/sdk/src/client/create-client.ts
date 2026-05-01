@@ -194,17 +194,19 @@ export function createOpenToolMeshClient(_deps: OpenToolMeshClientDeps): OpenToo
       const persisted = await _deps.blob.putJson("manifests", storedManifest);
       storedManifest.storage.manifestUri = persisted.uri;
       storedManifest.integrity.manifestHash = hashManifest(storedManifest);
-      await _deps.blob.putJson("manifests", storedManifest);
+      const finalPersisted = await _deps.blob.putJson("manifests", storedManifest);
+      const publishedManifestUri = finalPersisted.uri;
       const toolEnsName = storedManifest.toolId.replace("otm:ens:", "");
       await _deps.ens.setTextRecords?.(toolEnsName, {
-        "opentoolmesh.manifest_uri": storedManifest.storage.manifestUri,
+        "opentoolmesh.manifest_uri": publishedManifestUri,
         "opentoolmesh.manifest_hash": storedManifest.integrity.manifestHash,
         "opentoolmesh.owner": storedManifest.owner.address,
         "opentoolmesh.latest_version": storedManifest.version,
         "opentoolmesh.capabilities": JSON.stringify(storedManifest.capabilities.map((capability) => capability.id))
       });
+      await indexManifestCapabilities(_deps.kv, storedManifest, publishedManifestUri);
       return {
-        manifestUri: storedManifest.storage.manifestUri,
+        manifestUri: publishedManifestUri,
         manifestHash: storedManifest.integrity.manifestHash,
         version: storedManifest.version
       };
@@ -225,6 +227,35 @@ export function createOpenToolMeshClient(_deps: OpenToolMeshClientDeps): OpenToo
       };
     }
   };
+}
+
+async function indexManifestCapabilities(
+  kv: KvIndexAdapter,
+  manifest: ToolManifest,
+  manifestUri: string
+): Promise<void> {
+  for (const capability of manifest.capabilities) {
+    const key = `capability:${capability.id}`;
+    const current =
+      (await kv.get<CapabilityIndexEntry>(key)) ??
+      ({
+        capability: capability.id,
+        tools: []
+      } satisfies CapabilityIndexEntry);
+
+    current.tools = current.tools.filter((tool) => tool.toolId !== manifest.toolId);
+    current.tools.push({
+      toolId: manifest.toolId,
+      ensName: manifest.toolId.replace("otm:ens:", ""),
+      manifestUri,
+      manifestHash: manifest.integrity.manifestHash,
+      version: manifest.version,
+      ownerAddress: manifest.owner.address,
+      updatedAt: new Date().toISOString(),
+      priority: 1
+    });
+    await kv.put(key, current);
+  }
 }
 
 function buildTraceSummary(trace: ExecutionTrace, traceUri: string) {

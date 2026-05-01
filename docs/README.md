@@ -10,8 +10,10 @@ If you are new to the project, read in this order:
 2. Read [Getting Started](./getting-started/README.md) to prepare the environment, install dependencies, run tests, and start the dashboard.
 3. Read [Demo Docs](./demo/README.md) to run the `publish -> discover -> verify -> call -> trace -> report` loop.
 4. Read [Architecture Docs](./architecture/) to understand the actual boundaries between the CLI, SDK, tool node, example agent, and dashboard.
-5. Use [Reference Docs](./reference/README.md) when you need terminology or command reminders.
-6. Read [Product Scope](./product/product-scope-and-acceptance.md) for the project narrative, MVP boundary, and acceptance criteria.
+5. Read [Real Provider Integration Notes](./architecture/real-provider-integration.md) when planning ENS, 0G, or Gensyn AXL integration.
+6. Use [Operations Runbooks](./operations/0g-kv-node-runbook.md) when setting up live provider infrastructure such as a self-hosted 0G KV node.
+7. Use [Reference Docs](./reference/README.md) when you need terminology or command reminders.
+8. Read [Product Scope](./product/product-scope-and-acceptance.md) for the project narrative, MVP boundary, and acceptance criteria.
 
 ## Entry Points by Reader Type
 
@@ -34,6 +36,7 @@ Start with:
 - [System Overview](./architecture/system-overview.md)
 - [Module Boundaries](./architecture/module-boundaries.md)
 - [Runtime Lifecycle](./architecture/runtime-lifecycle.md)
+- [Real Provider Integration Notes](./architecture/real-provider-integration.md)
 
 This path is for contributors, maintainers, and readers building a code map.
 
@@ -53,6 +56,8 @@ This path is for readers judging project value, hackathon scope, and explicit no
 | [`docs/getting-started/`](./getting-started/README.md) | First-run setup, dependency installation, tests, dashboard startup, and startup troubleshooting. |
 | [`docs/demo/`](./demo/README.md) | How to run the demo, perform preflight checks, and confirm dashboard and tool-node health. |
 | [`docs/architecture/`](./architecture/) | System boundaries, module responsibilities, key schemas, and the real invocation chain. |
+| [`docs/architecture/real-provider-integration.md`](./architecture/real-provider-integration.md) | Provider research and design path for ENS, 0G, and Gensyn AXL integration. |
+| [`docs/operations/0g-kv-node-runbook.md`](./operations/0g-kv-node-runbook.md) | Runbook for self-hosting the 0G KV node used by provider-backed KV discovery. |
 | [`docs/reference/`](./reference/README.md) | Glossary, command quick reference, and short operational notes. |
 | [`docs/product/`](./product/product-scope-and-acceptance.md) | Product positioning, target users, narrative boundary, and MVP acceptance scope. |
 
@@ -68,6 +73,8 @@ This path is for readers judging project value, hackathon scope, and explicit no
 - [Glossary and Command Quick Reference](./reference/glossary-and-command-quick-reference.md)
 - [Architecture Directory](./architecture/)
 - [Architecture Docs](./architecture/README.md)
+- [Real Provider Integration Notes](./architecture/real-provider-integration.md)
+- [0G KV Node Runbook](./operations/0g-kv-node-runbook.md)
 - [Product Scope and Acceptance](./product/product-scope-and-acceptance.md)
 - [Audit Agent Example](../examples/audit-agent/README.md)
 

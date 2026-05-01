@@ -2,6 +2,7 @@
   "name": "opentool-mesh",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "packageManager": "pnpm@10.0.0",
   "engines": {
     "node": ">=22.0.0"
@@ -15,6 +16,7 @@
     "demo:publish": "node --experimental-strip-types scripts/publish-tool.ts",
     "demo:seed": "node --experimental-strip-types scripts/seed-capability-index.ts",
     "demo:run": "node --experimental-strip-types scripts/demo-run.ts",
+    "provider:smoke": "node --experimental-strip-types scripts/provider-live-smoke.ts",
     "demo:tool-node": "corepack pnpm --filter @opentoolmesh/tool-node build && node services/tool-node/dist/services/tool-node/src/server.js",
     "demo:audit-agent": "corepack pnpm --filter @opentoolmesh/audit-agent build && node examples/audit-agent/dist/examples/audit-agent/src/run-audit.js"
   },

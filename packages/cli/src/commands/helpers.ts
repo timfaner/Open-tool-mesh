@@ -3,8 +3,9 @@ import { join, resolve } from "node:path";
 import type { ToolManifest } from "@opentoolmesh/shared";
 import {
   createLocalDevnetPaths,
-  createLocalDevnetClientDeps,
   createOpenToolMeshClient,
+  createProviderClientDeps,
+  createProviderConfigFromEnv,
   findWorkspaceRoot,
   hashManifest,
   seedCapabilityIndex
@@ -12,8 +13,9 @@ import {
 
 export async function createCliClient(startDir: string) {
   const rootDir = await findWorkspaceRoot(startDir);
-  const client = createOpenToolMeshClient(createLocalDevnetClientDeps(rootDir));
-  return { client, rootDir };
+  const providerConfig = createProviderConfigFromEnv(process.env, rootDir);
+  const client = createOpenToolMeshClient(createProviderClientDeps(providerConfig));
+  return { client, rootDir, providerConfig };
 }
 
 export function getFlag(args: string[], name: string, fallback?: string): string {
@@ -36,13 +38,15 @@ export async function readManifestFromFile(cwd: string, filePath: string): Promi
 }
 
 export async function publishAndIndexManifest(cwd: string, filePath: string) {
-  const { client, rootDir } = await createCliClient(cwd);
+  const { client, rootDir, providerConfig } = await createCliClient(cwd);
   const manifest = await readManifestFromFile(cwd, filePath);
   const published = await client.publishManifest({ manifest });
   manifest.storage.manifestUri = published.manifestUri;
   manifest.integrity.manifestHash = published.manifestHash;
-  await seedCapabilityIndex(rootDir, manifest);
-  return { client, rootDir, manifest, published };
+  if (providerConfig.profile === "local") {
+    await seedCapabilityIndex(rootDir, manifest);
+  }
+  return { client, rootDir, manifest, published, providerConfig };
 }
 
 export async function readStoredTrace(cwd: string, traceId: string) {

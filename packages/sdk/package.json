@@ -12,6 +12,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@opentoolmesh/shared": "workspace:*"
+    "@0gfoundation/0g-ts-sdk": "^1.2.8",
+    "@opentoolmesh/shared": "workspace:*",
+    "ethers": "^6.13.1",
+    "viem": "^2.48.4"
   }
 }
