@@ -7,6 +7,8 @@ type OptionalModule = Record<string, unknown>;
 type UnknownConstructor<T> = new (...args: unknown[]) => T;
 type UnknownFunction<T = unknown> = (...args: unknown[]) => T;
 
+const DEFAULT_0G_FLOW_CONTRACT = "0x22E03a6A89B950F1c82ec5e74F8eCa321a105296";
+
 export interface ZeroGBlobStorageAdapterConfig {
   rpcUrl?: string;
   indexerRpcUrl: string;
@@ -110,20 +112,27 @@ export function createZeroGKvAdapter(config: ZeroGKvAdapterConfig): KvIndexAdapt
     },
     async get<T>(key: string) {
       validateKvReadConfig(config);
-      const { zeroG, ethers } = await loadZeroGDeps();
+      const zeroG = await loadZeroGSdk();
 
       if (typeof zeroG.KvClient !== "function") {
         throw new Error("0G KV get requires KvClient export from @0gfoundation/0g-ts-sdk");
       }
 
       const KvClient = zeroG.KvClient as UnknownConstructor<{
-        getValue(streamId: string, key: string): Promise<unknown>;
+        getValue(streamId: string, key: Uint8Array): Promise<unknown>;
       }>;
       const kvClient = new KvClient(config.kvNodeUrl);
-      const encodedKey = encodeBase64(ethers, bytesFromString(key));
-      const value = await kvClient.getValue(config.streamId, encodedKey);
+      const value = await kvClient.getValue(config.streamId, bytesFromString(key));
 
-      if (value === null || value === undefined || value === "") {
+      if (
+        value === null ||
+        value === undefined ||
+        value === "" ||
+        (typeof value === "object" &&
+          value !== null &&
+          typeof (value as { data?: unknown }).data === "string" &&
+          (value as { data: string }).data.length === 0)
+      ) {
         return null;
       }
 
@@ -257,7 +266,7 @@ function createFlowContract(zeroG: OptionalModule, ethers: OptionalModule, confi
     throw new Error("0G KV put requires rpcUrl and privateKey to create a flow contract");
   }
   const signer = createSigner(ethers, config.rpcUrl, config.privateKey);
-  return zeroG.getFlowContract(config.rpcUrl, signer);
+  return zeroG.getFlowContract(DEFAULT_0G_FLOW_CONTRACT, signer);
 }
 
 function parseRootUri(uri: string): string {
@@ -276,14 +285,14 @@ function bytesFromString(value: string): Uint8Array {
   return Uint8Array.from(Buffer.from(value, "utf8"));
 }
 
-function encodeBase64(ethers: OptionalModule, value: Uint8Array): string {
-  if (typeof ethers.encodeBase64 === "function") {
-    return ethers.encodeBase64(value);
-  }
-  return Buffer.from(value).toString("base64");
-}
-
 function decodeKvValue(value: unknown): string {
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as { data?: unknown }).data === "string"
+  ) {
+    return Buffer.from((value as { data: string }).data, "base64").toString("utf8");
+  }
   if (typeof value === "string") {
     return Buffer.from(value, "base64").toString("utf8");
   }
@@ -300,7 +309,11 @@ function isObjectWithFunction<TName extends string>(
   value: unknown,
   name: TName
 ): value is Record<TName, UnknownFunction> {
-  return typeof value === "object" && value !== null && typeof (value as Record<TName, unknown>)[name] === "function";
+  return (
+    (typeof value === "object" || typeof value === "function") &&
+    value !== null &&
+    typeof (value as Record<TName, unknown>)[name] === "function"
+  );
 }
 
 function formatError(error: unknown): string {

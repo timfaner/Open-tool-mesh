@@ -105,6 +105,7 @@ corepack pnpm demo:health
 - [Architecture Docs](./docs/architecture/README.md)
 - [System Overview](./docs/architecture/system-overview.md)
 - [Module Interfaces](./docs/architecture/module-interfaces.md)
+- [Real Provider MVP Runbook](./docs/operations/real-provider-mvp-runbook.md)
 - [Reference Docs](./docs/reference/README.md)
 
 ## Architecture Navigation
