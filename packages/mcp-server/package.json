@@ -1,0 +1,23 @@
+{
+  "name": "@opentoolmesh/mcp-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "opentoolmesh-mcp": "./dist/mcp-server/src/cli.js"
+  },
+  "main": "./dist/mcp-server/src/index.js",
+  "types": "./dist/mcp-server/src/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/mcp-server/src/cli.js --transport stdio",
+    "start:http": "node dist/mcp-server/src/cli.js --transport http --host 127.0.0.1 --port 8765",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@opentoolmesh/sdk": "workspace:*",
+    "@opentoolmesh/shared": "workspace:*"
+  }
+}

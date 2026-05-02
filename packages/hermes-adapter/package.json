@@ -1,0 +1,25 @@
+{
+  "name": "@opentoolmesh/hermes-adapter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "opentoolmesh-hermes-call": "./dist/hermes-adapter/src/cli.js"
+  },
+  "main": "./dist/hermes-adapter/src/index.js",
+  "types": "./dist/hermes-adapter/src/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@opentoolmesh/mcp-server": "workspace:*"
+  },
+  "files": [
+    "dist",
+    "skills",
+    "README.md"
+  ]
+}

@@ -48,6 +48,7 @@ Start with:
 - [Integration Guides](./integration/README.md)
 - [Tool Provider Guide](./integration/tool-provider-guide.md)
 - [Agent Integration Guide](./integration/agent-integration-guide.md)
+- [MCP Agent Packaging](./integration/mcp-agent-packaging.md)
 - [Real Provider MVP Runbook](./operations/real-provider-mvp-runbook.md)
 
 This path is for providers publishing tools and agents consuming OpenTool Mesh capabilities against ENS, 0G, and AXL-backed infrastructure.
@@ -88,6 +89,7 @@ This path is for readers judging project value, hackathon scope, and explicit no
 - [Integration Guides](./integration/README.md)
 - [Tool Provider Guide](./integration/tool-provider-guide.md)
 - [Agent Integration Guide](./integration/agent-integration-guide.md)
+- [MCP Agent Packaging](./integration/mcp-agent-packaging.md)
 - [Architecture Directory](./architecture/)
 - [Architecture Docs](./architecture/README.md)
 - [Real Provider Integration Notes](./architecture/real-provider-integration.md)

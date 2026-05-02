@@ -14,7 +14,8 @@
     "baseUrl": ".",
     "paths": {
       "@opentoolmesh/shared": ["packages/shared/src/index.ts"],
-      "@opentoolmesh/sdk": ["packages/sdk/src/index.ts"]
+      "@opentoolmesh/sdk": ["packages/sdk/src/index.ts"],
+      "@opentoolmesh/mcp-server": ["packages/mcp-server/src/index.ts"]
     }
   }
 }

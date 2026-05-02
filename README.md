@@ -56,6 +56,7 @@ corepack pnpm build
 corepack pnpm test
 corepack pnpm demo:preflight
 corepack pnpm demo:run
+corepack pnpm mcp:build
 ```
 
 Start only the dashboard:
@@ -77,6 +78,10 @@ corepack pnpm demo:health
 | `packages/shared` | Shared types and schema contracts. |
 | `packages/sdk` | Runtime orchestration for discover, resolve, verify, invoke, and trace. |
 | `packages/cli` | `opentool` CLI entrypoint. |
+| `packages/mcp-server` | MCP server exposing OpenTool Mesh capabilities to agent hosts. |
+| `packages/agent-install` | Install templates for Codex, Claude Code, Cursor, Docker, OpenClaw, and Hermes. |
+| `packages/openclaw-adapter` | OpenClaw plugin metadata, tool registration helpers, and skill text. |
+| `packages/hermes-adapter` | Hermes skill metadata and fallback command. |
 | `services/tool-node` | Remote tool execution service exposing `/health` and `/invokeTool`. |
 | `examples/audit-agent` | Reference consumer showing how an agent uses remote capabilities. |
 | `apps/dashboard` | Read-only dashboard for reviewing the latest demo run. |
@@ -103,6 +108,7 @@ corepack pnpm demo:health
 - [Audit Agent Example](./examples/audit-agent/README.md)
 - [Tool Provider Guide](./docs/integration/tool-provider-guide.md)
 - [Agent Integration Guide](./docs/integration/agent-integration-guide.md)
+- [MCP Agent Packaging](./docs/integration/mcp-agent-packaging.md)
 - [Product Scope and Acceptance](./docs/product/product-scope-and-acceptance.md)
 - [Architecture Docs](./docs/architecture/README.md)
 - [System Overview](./docs/architecture/system-overview.md)
@@ -121,6 +127,10 @@ The most important real paths in the current implementation are:
 Code entrypoints:
 
 - Agent: `examples/audit-agent/src/run-audit.ts`
+- MCP Server: `packages/mcp-server/src/index.ts`
+- Install Templates: `packages/agent-install/src/templates.ts`
+- OpenClaw Adapter: `packages/openclaw-adapter/src/index.ts`
+- Hermes Adapter: `packages/hermes-adapter/src/index.ts`
 - CLI: `packages/cli/src/index.ts`
 - Tool node: `services/tool-node/src/server.ts`
 - Dashboard data: `apps/dashboard/lib/demo-run.ts`

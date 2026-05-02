@@ -1,0 +1,153 @@
+{
+  "name": "@opentoolmesh/openclaw-adapter",
+  "version": "0.1.0",
+  "description": "OpenClaw adapter for OpenTool Mesh MCP and direct tool registration.",
+  "entry": "dist/openclaw-adapter/src/index.js",
+  "skills": [
+    "skills/opentool-mesh/SKILL.md"
+  ],
+  "tools": [
+    {
+      "name": "opentoolmesh_call_capability",
+      "description": "Discover, verify, invoke, and trace an OpenTool Mesh capability.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "capability": {
+            "type": "string"
+          },
+          "input": {
+            "type": "object"
+          },
+          "agentId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "capability",
+          "input"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "opentoolmesh_publish_tool",
+      "description": "Publish an OpenTool Mesh manifest and index its capabilities.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "manifestPath": {
+            "type": "string"
+          },
+          "manifest": {
+            "type": "object"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "opentoolmesh_discover_tools",
+      "description": "Discover OpenTool Mesh tools by capability.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "capability": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "capability"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "opentoolmesh_resolve_tool",
+      "description": "Resolve an OpenTool Mesh tool identity by ENS name.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "ensName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "ensName"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "opentoolmesh_verify_tool",
+      "description": "Verify an OpenTool Mesh tool manifest.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "ensName": {
+            "type": "string"
+          },
+          "manifestUri": {
+            "type": "string"
+          },
+          "sdkVersion": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "ensName"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "opentoolmesh_get_trace",
+      "description": "Load an OpenTool Mesh execution trace by trace URI or trace ID.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "traceUri": {
+            "type": "string"
+          },
+          "traceId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "opentoolmesh_solidity_static_analysis",
+      "description": "Run the OpenTool Mesh solidity-static-analysis capability.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "agentId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "source"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ],
+  "mcpServers": {
+    "opentoolmesh": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@opentoolmesh/mcp-server",
+        "--transport",
+        "stdio"
+      ]
+    }
+  }
+}

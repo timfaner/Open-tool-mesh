@@ -1,0 +1,23 @@
+{
+  "name": "@opentoolmesh/openclaw-adapter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/openclaw-adapter/src/index.js",
+  "types": "./dist/openclaw-adapter/src/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@opentoolmesh/mcp-server": "workspace:*"
+  },
+  "files": [
+    "dist",
+    "openclaw",
+    "skills",
+    "README.md"
+  ]
+}

@@ -113,6 +113,8 @@ corepack pnpm provider:smoke -- --full
 
 The full run additionally invokes the tool, stores request/response/output/report artifacts in 0G, writes an execution trace to 0G, and mirrors the trace for dashboard display.
 
+Agents connected through MCP can publish a manifest with `opentoolmesh_publish_tool` instead of shelling out to the CLI. Pass either `manifestPath` or a full `manifest` object. After publishing, use `opentoolmesh_discover_tools`, `opentoolmesh_resolve_tool`, and `opentoolmesh_verify_tool` to prove the indexed capability and identity before invoking.
+
 Audit the latest local dashboard mirror after the full run:
 
 ```sh
