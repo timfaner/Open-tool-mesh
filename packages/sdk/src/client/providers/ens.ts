@@ -12,7 +12,7 @@ type OptionalModule = Record<string, unknown>;
 
 export interface EnsResolverAdapterConfig {
   rpcUrl: string;
-  chain?: unknown;
+  chain?: unknown | (() => Promise<unknown>);
   textRecordKeys?: readonly string[];
   walletPrivateKey?: `0x${string}`;
   resolverAddress?: `0x${string}`;
@@ -23,7 +23,7 @@ export function createEnsResolverAdapter(config: EnsResolverAdapterConfig): EnsA
   return {
     async resolveTextRecords(ensName) {
       const viem = await loadViem();
-      const client = createPublicClient(viem, config);
+      const client = await createPublicClient(viem, config);
       const name = normalizeEnsName(viem, ensName);
       const records: Record<string, string | undefined> = {};
 
@@ -38,7 +38,7 @@ export function createEnsResolverAdapter(config: EnsResolverAdapterConfig): EnsA
     },
     async resolveOwner(ensName) {
       const viem = await loadViem();
-      const client = createPublicClient(viem, config);
+      const client = await createPublicClient(viem, config);
       const name = normalizeEnsName(viem, ensName);
       const owner = await client.getEnsText({ name, key: "opentoolmesh.owner" });
       if (isHexAddress(owner)) {
@@ -64,7 +64,7 @@ export function createEnsResolverAdapter(config: EnsResolverAdapterConfig): EnsA
 
       const viem = await loadViem();
       const accounts = await loadViemAccounts();
-      const publicClient = createPublicClient(viem, config);
+      const publicClient = await createPublicClient(viem, config);
       const resolverAddress = config.resolverAddress ?? (await publicClient.getEnsResolver?.({ name: ensName }));
 
       if (!isHexAddress(resolverAddress)) {
@@ -84,7 +84,7 @@ export function createEnsResolverAdapter(config: EnsResolverAdapterConfig): EnsA
       const account = accounts.privateKeyToAccount(config.walletPrivateKey);
       const walletClient = viem.createWalletClient({
         account,
-        chain: config.chain,
+        chain: await resolveChain(config),
         transport: viem.http(config.rpcUrl)
       }) as {
         writeContract(input: {
@@ -117,13 +117,13 @@ export function createEnsResolverAdapter(config: EnsResolverAdapterConfig): EnsA
   };
 }
 
-function createPublicClient(viem: OptionalModule, config: EnsResolverAdapterConfig) {
+async function createPublicClient(viem: OptionalModule, config: EnsResolverAdapterConfig) {
   if (typeof viem.createPublicClient !== "function" || typeof viem.http !== "function") {
     throw new Error("ENS adapter requires viem exports createPublicClient and http");
   }
 
   return viem.createPublicClient({
-    chain: config.chain,
+    chain: await resolveChain(config),
     transport: viem.http(config.rpcUrl)
   }) as {
     getEnsText(input: { name: string; key: string }): Promise<string | null | undefined>;
@@ -131,6 +131,10 @@ function createPublicClient(viem: OptionalModule, config: EnsResolverAdapterConf
     getEnsResolver?(input: { name: string }): Promise<string | null | undefined>;
     waitForTransactionReceipt?(input: { hash: string }): Promise<unknown>;
   };
+}
+
+async function resolveChain(config: EnsResolverAdapterConfig): Promise<unknown> {
+  return typeof config.chain === "function" ? config.chain() : config.chain;
 }
 
 function normalizeEnsName(viem: OptionalModule, ensName: string): string {

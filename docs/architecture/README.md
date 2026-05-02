@@ -60,11 +60,12 @@ The schema docs are implementation notes, not external protocol standards. The s
 
 The current repository does not implement:
 
-- Real ENS, 0G, or AXL network integration.
 - A generic tool marketplace.
 - Payments or settlement.
 - Multi-tenant permissions.
 - Multi-agent orchestration.
+
+Real ENS, 0G, and Gensyn AXL provider adapters exist behind the provider profile. They are opt-in, require live credentials and endpoints, and are documented in [Real Provider Integration Notes](./real-provider-integration.md) and [Real Provider MVP Runbook](../operations/real-provider-mvp-runbook.md).
 
 ## Code Entry Points
 
@@ -74,6 +75,7 @@ The current repository does not implement:
 | SDK client | `packages/sdk/src/client/create-client.ts` |
 | Local devnet | `packages/sdk/src/client/local-devnet.ts` |
 | Provider integration design | `docs/architecture/real-provider-integration.md` |
+| Tool/agent integration guides | `docs/integration/` |
 | 0G KV node operations | `docs/operations/0g-kv-node-runbook.md` |
 | CLI entrypoint | `packages/cli/src/index.ts` |
 | Tool node | `services/tool-node/src/server.ts` |

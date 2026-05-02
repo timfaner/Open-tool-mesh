@@ -5,7 +5,6 @@ import type {
   KvIndexAdapter,
   OpenToolMeshClientDeps
 } from "./create-client.js";
-import { mainnet, sepolia } from "viem/chains";
 import { createLocalDevnetClientDeps } from "./local-devnet.js";
 import type { NetworkProviderConfig, ProviderConfig } from "./provider-config.js";
 import { createEnsResolverAdapter } from "./providers/ens.js";
@@ -31,7 +30,7 @@ export function createProviderClientDeps(config: ProviderConfig): OpenToolMeshCl
 export function createProviderEnsAdapter(config: NetworkProviderConfig): EnsAdapter {
   return createEnsResolverAdapter({
     rpcUrl: config.ens.rpcUrl,
-    chain: config.network === "testnet" ? sepolia : mainnet,
+    chain: () => loadViemEnsChain(config.network),
     walletPrivateKey: config.ens.publisherPrivateKey
   });
 }
@@ -61,3 +60,21 @@ export function createGensynAxlInvocationTransport(
     baseUrl: config.gensynAxl.apiUrl
   });
 }
+
+async function loadViemEnsChain(network: NetworkProviderConfig["network"]): Promise<unknown> {
+  try {
+    const chains = (await optionalImport("viem/chains")) as {
+      mainnet?: unknown;
+      sepolia?: unknown;
+    };
+    return network === "testnet" ? chains.sepolia : chains.mainnet;
+  } catch (error) {
+    throw new Error("ENS provider profile requires optional dependency viem/chains; install viem to use real ENS", {
+      cause: error
+    });
+  }
+}
+
+const optionalImport = new Function("specifier", "return import(specifier)") as (
+  specifier: string
+) => Promise<unknown>;

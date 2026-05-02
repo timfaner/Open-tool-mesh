@@ -9,7 +9,7 @@ Last verified: 2026-05-01.
 The provider-backed smoke covers this loop:
 
 ```text
-publish manifest -> upload to 0G Storage -> write ENS text records -> write 0G KV capability index -> resolve ENS -> download manifest -> verify -> invoke through local AXL bridge
+publish manifest -> upload to 0G Storage -> write ENS text records -> write 0G KV capability index -> discover by capability -> resolve ENS -> download 0G manifest -> verify -> invoke through AXL -> store request/response/output/report -> write 0G trace -> mirror the provider run for the dashboard
 ```
 
 The verified setup used:
@@ -19,6 +19,8 @@ The verified setup used:
 - 0G Galileo testnet RPC and storage indexer.
 - A locally hosted 0G KV node.
 - The sample tool node as the local AXL-compatible MCP bridge.
+- 0G Storage for manifest, invocation artifacts, audit report, and execution trace.
+- 0G KV for capability discovery and trace summary records.
 
 Do not commit real private keys. Keep `.env.provider` local; the file is intentionally ignored by git.
 
@@ -130,26 +132,54 @@ Expected result:
 {"ok":true,"capability":"solidity-static-analysis"}
 ```
 
+## Provider Preflight
+
+Before writing to ENS or 0G, run the read-only preflight:
+
+```sh
+corepack pnpm provider:preflight
+```
+
+This validates `.env.provider`, checks provider SDK dependencies, confirms the ENS and 0G EVM RPC endpoints respond to `eth_chainId`, checks 0G KV status and stream ownership, and checks either the local tool-node bridge `/health` endpoint or a real AXL node `/topology` endpoint.
+
+For local-only validation without network calls:
+
+```sh
+corepack pnpm provider:preflight -- --no-network
+```
+
+Preflight does not publish a manifest, write ENS records, write 0G KV entries, upload 0G artifacts, or invoke the tool. It is a readiness check before the write-producing smoke.
+
 ## Run the Provider Smoke
 
 Run the full provider-backed smoke from the repository root:
 
 ```sh
-corepack pnpm provider:smoke -- --call
+corepack pnpm provider:smoke -- --full
 ```
 
-The script loads `.env.provider`, publishes the manifest, resolves the ENS identity, downloads the manifest from 0G Storage, verifies it, and invokes the tool through the local AXL bridge.
+`--full` is equivalent to `--call`. The script loads `.env.provider`, publishes the manifest, discovers the tool by `solidity-static-analysis`, resolves the ENS identity, downloads the manifest from 0G Storage, verifies it, invokes the tool through AXL, stores invocation artifacts and the report in 0G, writes the execution trace to 0G, and writes a local dashboard mirror under `.opentoolmesh/storage/`.
 
 Successful output includes:
 
 ```json
 {
   "profile": "provider-testnet",
+  "discover": {
+    "requestedCapability": "solidity-static-analysis",
+    "candidateCount": 1
+  },
   "verify": {
     "ok": true
   },
   "call": {
     "status": "ok"
+  },
+  "trace": {
+    "traceUri": "0g://root/<trace-root-hash>"
+  },
+  "report": {
+    "reportUri": "0g://root/<report-root-hash>"
   }
 }
 ```
@@ -159,6 +189,65 @@ The verified run produced a provider-backed manifest URI in this form:
 ```text
 0g://root/<rootHash>
 ```
+
+The full run should also produce provider-backed URIs for:
+
+- invocation request
+- invocation response
+- tool output
+- audit report
+- execution trace
+
+The dashboard mirror is local and intentionally separate from provider persistence. It lets `apps/dashboard` read the latest provider run while preserving the real `0g://root/...` URIs in the displayed provenance fields.
+
+## Audit the Provider Acceptance Evidence
+
+After the full smoke command succeeds, audit the latest dashboard mirror:
+
+```sh
+corepack pnpm provider:acceptance
+```
+
+To audit a specific trace mirror:
+
+```sh
+corepack pnpm provider:acceptance -- --trace <trace-id-or-path>
+```
+
+This is a read-only local check. It intentionally rejects local demo traces and only accepts `provider-live-smoke` traces whose manifest, invocation request, invocation response, tool output, audit report, and execution trace all use real provider-style `0g://root/...` URIs and have local dashboard mirrors.
+
+## Open the Dashboard After a Provider Run
+
+After `provider:smoke -- --full` succeeds, start the dashboard:
+
+```sh
+corepack pnpm dashboard:dev
+```
+
+Open:
+
+```text
+http://127.0.0.1:3000/
+```
+
+The dashboard chooses the latest successful trace from `.opentoolmesh/storage/traces/`. For provider smoke runs, that trace is a dashboard mirror whose manifest, artifact, report, and trace fields point at the real 0G roots produced by the smoke command.
+
+## Provider Acceptance Checklist
+
+Before presenting the run, confirm the smoke output and dashboard show:
+
+- `requestedCapability=solidity-static-analysis`
+- one discovered candidate
+- `resolvedIdentity=otm:ens:<your-tool-name>`
+- provider manifest URI in `0g://root/<hash>` form
+- manifest hash, owner, version, and schema status
+- `transport=axl`
+- AXL peer from the manifest
+- tool call status `ok`
+- input hash and output hash
+- trace URI in `0g://root/<hash>` form
+- final report URI in `0g://root/<hash>` form
+- `corepack pnpm provider:acceptance` returns `"ok": true`
 
 ## Troubleshooting
 

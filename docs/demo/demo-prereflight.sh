@@ -86,7 +86,7 @@ fi
 
 echo
 echo "Suggested next steps:"
-echo "1. To check service health, run: bash docs/demo/demo-health-check.sh"
-echo "2. To start the dashboard, run from apps/dashboard: npm run dev -- --hostname 127.0.0.1 --port 3000"
+echo "1. To check service health, run: corepack pnpm demo:health"
+echo "2. To start the dashboard, run: corepack pnpm dashboard:dev"
 echo "3. Health checks may need a few seconds before the dashboard is ready; this script has retries built in"
 echo "4. For a step-by-step demo, prefer: corepack pnpm demo:tool-node / demo:publish / demo:audit-agent"

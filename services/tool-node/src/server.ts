@@ -10,7 +10,7 @@ export function createToolNodeServer() {
   return {
     capability: "solidity-static-analysis",
     handler: scanner,
-    listen(port = Number(process.env.PORT ?? "4318")) {
+    listen(port = Number(process.env.PORT ?? "4318"), host = process.env.HOST ?? "127.0.0.1") {
       const server = createServer(async (request, response) => {
         const url = new URL(request.url ?? "/", "http://127.0.0.1");
 
@@ -51,7 +51,7 @@ export function createToolNodeServer() {
         }
       });
 
-      server.listen(port);
+      server.listen(port, host);
       return server;
     }
   };

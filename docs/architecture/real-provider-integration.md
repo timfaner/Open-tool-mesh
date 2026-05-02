@@ -249,6 +249,7 @@ The SDK now has an opt-in provider profile path:
 - CLI commands and the audit-agent example use the provider profile factory by default.
 - `publishManifest()` writes the capability index through the configured KV adapter, so provider-backed publish can update 0G KV without a local-only seed step.
 - The sample tool node exposes an AXL-compatible MCP bridge at `POST /mcp/{peer}/{service}` while preserving the existing `/health` and `/invokeTool` routes.
+- `scripts/provider-live-smoke.ts --full` now exercises the full provider acceptance path: publish, discover, resolve, load 0G manifest, verify, AXL invoke, save request/response/output/report artifacts, record the 0G trace, and mirror the run for dashboard display.
 
 Provider profiles are live-code integration points, but real network execution still requires credentials, endpoints, and optional runtime packages:
 

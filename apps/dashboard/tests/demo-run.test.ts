@@ -192,6 +192,96 @@ function writeRuntimeBundle(id: string, options: { persistedAt: string; status?:
   });
 }
 
+function writeProviderRootRuntimeBundle(id: string, persistedAt: string) {
+  const manifestUri = '0g://root/provider-manifest-root';
+  const traceUri = '0g://root/provider-trace-root';
+  const reportUri = '0g://root/provider-report-root';
+  const artifactUri = '0g://root/provider-output-root';
+
+  const trace: TraceRecord = {
+    traceId: id,
+    runId: id,
+    requestedCapability: 'solidity-static-analysis',
+    tool: {
+      toolId: 'otm:ens:provider-scanner.auditagent.eth',
+      ensName: 'provider-scanner.auditagent.eth',
+      manifestUri,
+      manifestHash: 'sha256:provider-manifest',
+      version: '0.1.0',
+      ownerAddress: '0x1234567890abcdef1234567890abcdef12345678',
+    },
+    discovery: {
+      candidateCount: 1,
+      capabilityIndexUri: '0g://kv/capability:solidity-static-analysis',
+      selectedReason: 'selected from 0G KV capability discovery candidates before ENS resolution',
+      resolvedAt: persistedAt,
+      resolve: {
+        ensName: 'provider-scanner.auditagent.eth',
+        identityId: 'otm:ens:provider-scanner.auditagent.eth',
+        manifestUri,
+        manifestHash: 'sha256:provider-manifest',
+        version: '0.1.0',
+        ownerAddress: '0x1234567890abcdef1234567890abcdef12345678',
+        evidence: `discover(solidity-static-analysis) -> resolveIdentity(provider-scanner.auditagent.eth) -> loadManifest(${manifestUri}) -> verifyManifest -> invokeTool`,
+      },
+    },
+    verification: {
+      manifestHashValid: true,
+      ownerValid: true,
+      schemaValid: true,
+      versionCompatible: true,
+      verifiedAt: persistedAt,
+    },
+    invocation: {
+      transport: 'axl',
+      peerId: 'axl-peer-provider-01',
+      method: 'invokeTool',
+      startedAt: persistedAt,
+      finishedAt: persistedAt,
+      status: 'ok',
+    },
+    io: {
+      inputHash: 'sha256:provider-input',
+      outputHash: 'sha256:provider-output',
+    },
+    artifacts: [
+      { kind: 'tool-output', uri: artifactUri, hash: 'sha256:provider-output-artifact' },
+      { kind: 'audit-report', uri: reportUri, hash: 'sha256:provider-report' },
+    ],
+    storage: {
+      traceUri,
+      persistedAt,
+      backend: '0g-storage',
+    },
+  };
+
+  writeJson(path.join(tracesDir, `${id}.json`), trace);
+  writeJson(path.join(storageRoot, 'root', 'provider-manifest-root'), {
+    version: '0.1.0',
+    owner: { address: '0x1234567890abcdef1234567890abcdef12345678' },
+    compatibility: { sdkVersionRange: '^0.1.0' },
+    mcp: { toolName: 'provider-solidity-pattern-scanner' },
+  });
+  writeJson(path.join(storageRoot, 'root', 'provider-report-root'), {
+    reportId: `report-${id}`,
+    traceId: id,
+    traceUri,
+    manifestUri,
+    contractName: 'Vault',
+    summary: 'Provider runtime summary',
+    findings: [{ severity: 'high', title: 'Provider finding', description: 'Provider description', traceId: id }],
+    generatedAt: persistedAt,
+  });
+  writeJson(path.join(storageRoot, 'root', 'provider-output-root'), {
+    traceId: id,
+    toolId: 'otm:ens:provider-scanner.auditagent.eth',
+    output: {
+      findings: [{ severity: 'high', message: 'Provider description' }],
+      summary: { totalFindings: 1, high: 1, medium: 0, low: 0 },
+    },
+  });
+}
+
 test.after(() => {
   rmSync(tempRoot, { recursive: true, force: true });
   delete process.env.OPENTOOLMESH_DASHBOARD_REPO_ROOT;
@@ -287,4 +377,18 @@ test('keeps the top finding separate from the secondary issue summary', async ()
     demoRun.report.secondaryFinding,
     'MEDIUM · Secondary finding — Secondary description',
   );
+});
+
+test('loads provider-backed root URI mirrors as a complete runtime run', async () => {
+  writeProviderRootRuntimeBundle('provider-root-runtime', '2026-04-29T02:00:00.000Z');
+
+  const demoRun = await getDashboardRun();
+
+  assert.equal(demoRun.source, 'runtime');
+  assert.equal(demoRun.runId, 'provider-root-runtime');
+  assert.equal(demoRun.manifest.uri, '0g://root/provider-manifest-root');
+  assert.equal(demoRun.invocation.peer, 'axl-peer-provider-01');
+  assert.equal(demoRun.memory.traceUri, '0g://root/provider-trace-root');
+  assert.equal(demoRun.report.reportUri, '0g://root/provider-report-root');
+  assert.equal(demoRun.report.toolReference, 'provider-solidity-pattern-scanner');
 });

@@ -101,6 +101,8 @@ corepack pnpm demo:health
 - [Glossary and Command Quick Reference](./docs/reference/glossary-and-command-quick-reference.md)
 - [Demo Runbook](./docs/demo/opentool-mesh-demo-runbook.md)
 - [Audit Agent Example](./examples/audit-agent/README.md)
+- [Tool Provider Guide](./docs/integration/tool-provider-guide.md)
+- [Agent Integration Guide](./docs/integration/agent-integration-guide.md)
 - [Product Scope and Acceptance](./docs/product/product-scope-and-acceptance.md)
 - [Architecture Docs](./docs/architecture/README.md)
 - [System Overview](./docs/architecture/system-overview.md)
