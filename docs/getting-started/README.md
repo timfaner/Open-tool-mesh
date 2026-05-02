@@ -14,7 +14,7 @@ These docs are for developers opening the repository for the first time. The goa
 
 1. Read [Quick Start](./quickstart.md) and follow it in order for the first run.
 2. If an environment or command issue appears, open [Troubleshooting](./troubleshooting.md).
-3. When you want the complete demo loop, read [Demo Docs](../demo/README.md).
+3. When you want the complete runtime loop, use [Glossary and Command Quick Reference](../reference/glossary-and-command-quick-reference.md).
 4. To understand why the system is organized this way, read [Architecture Docs](../architecture/README.md), then [System Overview](../architecture/system-overview.md). Do not treat older planning drafts as the default entrypoint.
 
 ## Document Roles
@@ -29,6 +29,6 @@ Covers common startup problems such as `vitest: not found`, `tsc: not found`, ol
 
 ## Next Steps
 
-- To run the complete loop, read [Demo Runbook](../demo/opentool-mesh-demo-runbook.md).
+- To run the complete loop, use `corepack pnpm demo:run` and [Glossary and Command Quick Reference](../reference/glossary-and-command-quick-reference.md).
 - To understand how the example agent consumes the system, read [Audit Agent Example](../../examples/audit-agent/README.md).
 - To understand the CLI, SDK, tool node, and dashboard relationship, start with [Architecture Docs](../architecture/README.md), then follow the recommended path to [System Overview](../architecture/system-overview.md).

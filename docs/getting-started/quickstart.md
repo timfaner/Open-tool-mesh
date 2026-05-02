@@ -86,7 +86,7 @@ corepack pnpm demo:health
 ## What To Do Next
 
 - To run the full loop, use `corepack pnpm demo:run`.
-- To present the demo step by step, read [Demo Runbook](../demo/opentool-mesh-demo-runbook.md).
+- To present the runtime loop step by step, use [Glossary and Command Quick Reference](../reference/glossary-and-command-quick-reference.md).
 - To understand the system, read [Architecture Docs](../architecture/README.md).
 
 ## Next Steps
@@ -94,5 +94,5 @@ corepack pnpm demo:health
 Recommended next documents:
 
 - [Troubleshooting](./troubleshooting.md)
-- [Demo Docs](../demo/README.md)
+- [Glossary and Command Quick Reference](../reference/glossary-and-command-quick-reference.md)
 - [System Overview](../architecture/system-overview.md)

@@ -33,13 +33,13 @@ Read:
 - [Manifest Schema](./manifest-schema.md)
 - [Trace Schema](./trace-schema.md)
 
-### Demo and Dashboard Maintainers
+### Runtime and Dashboard Maintainers
 
 Read:
 
 - [Runtime Lifecycle](./runtime-lifecycle.md)
 - [Trace Schema](./trace-schema.md)
-- [Demo Runbook](../demo/opentool-mesh-demo-runbook.md)
+- [Glossary and Command Quick Reference](../reference/glossary-and-command-quick-reference.md)
 - [0G KV Node Runbook](../operations/0g-kv-node-runbook.md)
 
 ## What This Set Covers

@@ -8,7 +8,7 @@ If you are new to the project, read in this order:
 
 1. Return to the [repository README](../README.md) to confirm the project purpose, requirements, and shortest startup commands.
 2. Read [Getting Started](./getting-started/README.md) to prepare the environment, install dependencies, run tests, and start the dashboard.
-3. Read [Demo Docs](./demo/README.md) to run the `publish -> discover -> verify -> call -> trace -> report` loop.
+3. Use `corepack pnpm demo:run` and [Glossary and Command Quick Reference](./reference/glossary-and-command-quick-reference.md) to run the `publish -> discover -> verify -> call -> trace -> report` loop.
 4. Read [Architecture Docs](./architecture/) to understand the actual boundaries between the CLI, SDK, tool node, example agent, and dashboard.
 5. Read [Integration Guides](./integration/README.md) when publishing a tool or connecting an agent.
 6. Read [Real Provider Integration Notes](./architecture/real-provider-integration.md) when planning ENS, 0G, or Gensyn AXL integration.
@@ -22,8 +22,8 @@ If you are new to the project, read in this order:
 
 Start with:
 
-- [Demo Docs](./demo/README.md)
-- [Demo Runbook](./demo/opentool-mesh-demo-runbook.md)
+- [Quick Start](./getting-started/quickstart.md)
+- [Glossary and Command Quick Reference](./reference/glossary-and-command-quick-reference.md)
 - [Audit Agent Example](../examples/audit-agent/README.md)
 
 This path is for readers who want to prove the repository runs before studying implementation details.
@@ -67,7 +67,6 @@ This path is for readers judging project value, hackathon scope, and explicit no
 | Path | Purpose |
 | --- | --- |
 | [`docs/getting-started/`](./getting-started/README.md) | First-run setup, dependency installation, tests, dashboard startup, and startup troubleshooting. |
-| [`docs/demo/`](./demo/README.md) | How to run the demo, perform preflight checks, and confirm dashboard and tool-node health. |
 | [`docs/architecture/`](./architecture/) | System boundaries, module responsibilities, key schemas, and the real invocation chain. |
 | [`docs/architecture/real-provider-integration.md`](./architecture/real-provider-integration.md) | Provider research and design path for ENS, 0G, and Gensyn AXL integration. |
 | [`docs/integration/`](./integration/README.md) | Tool provider and agent integration guides. |
@@ -82,8 +81,6 @@ This path is for readers judging project value, hackathon scope, and explicit no
 - [Quick Start](./getting-started/quickstart.md)
 - [Troubleshooting](./getting-started/troubleshooting.md)
 - [Contributing Guide](../CONTRIBUTING.md)
-- [Demo Docs](./demo/README.md)
-- [Demo Runbook](./demo/opentool-mesh-demo-runbook.md)
 - [Reference Docs](./reference/README.md)
 - [Glossary and Command Quick Reference](./reference/glossary-and-command-quick-reference.md)
 - [Integration Guides](./integration/README.md)

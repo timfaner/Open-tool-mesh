@@ -85,14 +85,14 @@ corepack pnpm demo:health
 | `services/tool-node` | Remote tool execution service exposing `/health` and `/invokeTool`. |
 | `examples/audit-agent` | Reference consumer showing how an agent uses remote capabilities. |
 | `apps/dashboard` | Read-only dashboard for reviewing the latest demo run. |
-| `docs/demo` | Demo runbook, preflight checks, and health checks. |
+| `scripts` | Repository-level helper scripts for demo, provider, and runtime checks. |
 | `docs/architecture` | System overview, module boundaries, interfaces, and schema notes. |
 
 ## Reading Path
 
 1. Start here to understand the project goal and fastest commands.
 2. Read [Getting Started](./docs/getting-started/README.md) to prepare the environment, run tests, and launch the dashboard.
-3. Read [Demo Docs](./docs/demo/README.md) when you want the full demo path.
+3. Run `corepack pnpm demo:run` and read [Audit Agent Example](./examples/audit-agent/README.md) when you want the full invocation path.
 4. Read [Architecture Docs](./docs/architecture/README.md) to understand system boundaries.
 5. Read [Audit Agent Example](./examples/audit-agent/README.md) with `examples/audit-agent/src/run-audit.ts` to follow the real invocation chain.
 
@@ -102,9 +102,7 @@ corepack pnpm demo:health
 - [Quick Start](./docs/getting-started/quickstart.md)
 - [Troubleshooting](./docs/getting-started/troubleshooting.md)
 - [Contributing Guide](./CONTRIBUTING.md)
-- [Demo Docs](./docs/demo/README.md)
 - [Glossary and Command Quick Reference](./docs/reference/glossary-and-command-quick-reference.md)
-- [Demo Runbook](./docs/demo/opentool-mesh-demo-runbook.md)
 - [Audit Agent Example](./examples/audit-agent/README.md)
 - [Tool Provider Guide](./docs/integration/tool-provider-guide.md)
 - [Agent Integration Guide](./docs/integration/agent-integration-guide.md)

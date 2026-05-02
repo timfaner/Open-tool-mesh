@@ -158,10 +158,10 @@ Capture:
 - Whether `corepack pnpm install` completed.
 - Whether `.opentoolmesh/` exists after `demo:run`.
 
-Then compare the command path with [Demo Runbook](../demo/opentool-mesh-demo-runbook.md).
+Then compare the command path with [Glossary and Command Quick Reference](../reference/glossary-and-command-quick-reference.md).
 
 ## Next Steps
 
 - [Quick Start](./quickstart.md)
-- [Demo Docs](../demo/README.md)
+- [Glossary and Command Quick Reference](../reference/glossary-and-command-quick-reference.md)
 - [Architecture Docs](../architecture/README.md)

@@ -149,4 +149,4 @@ Read this document together with:
 - [Manifest Schema](./manifest-schema.md)
 - [Trace Schema](./trace-schema.md)
 - [Real Provider Integration Notes](./real-provider-integration.md)
-- [Demo Runbook](../demo/opentool-mesh-demo-runbook.md)
+- [Glossary and Command Quick Reference](../reference/glossary-and-command-quick-reference.md)

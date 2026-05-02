@@ -111,5 +111,5 @@ corepack pnpm demo:health
 ## Read Next
 
 - [Getting Started](../getting-started/README.md)
-- [Demo Runbook](../demo/opentool-mesh-demo-runbook.md)
+- [Audit Agent Example](../../examples/audit-agent/README.md)
 - [Architecture Docs](../architecture/README.md)

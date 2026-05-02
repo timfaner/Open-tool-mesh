@@ -16,5 +16,5 @@
 ## Relation To Other Docs
 
 - For first-run setup, go back to [Getting Started](../getting-started/README.md).
-- For the full demo, go to [Demo Docs](../demo/README.md).
+- For the complete runtime loop, use [Glossary and Command Quick Reference](./glossary-and-command-quick-reference.md).
 - For real module boundaries, go to [Architecture Docs](../architecture/README.md).

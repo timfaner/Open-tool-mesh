@@ -167,6 +167,14 @@ The fallback command is for terminal-only skill execution:
 opentoolmesh-hermes-call examples/audit-agent/fixtures/sample-contract.sol
 ```
 
+For the repository's real-agent demo, run:
+
+```sh
+corepack pnpm demo:hermes-agent
+```
+
+That script mounts the local `agent_data/` directory into the Hermes container at `/opt/data`, mounts the repository at `/workspace`, publishes the demo tool with a Docker-visible peer URL, and asks Hermes to invoke the native `mcp_opentoolmesh_opentoolmesh_solidity_static_analysis` tool.
+
 ## Runtime Expectations
 
 For local invocation runs, the OpenTool Mesh local state must contain a published manifest, capability index, and AXL peer record. The fastest way to create all of that state is still:

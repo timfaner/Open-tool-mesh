@@ -18,8 +18,8 @@
     "mcp:http": "node packages/mcp-server/dist/mcp-server/src/cli.js --transport http --host 127.0.0.1 --port 8765",
     "agent:install:templates": "node packages/agent-install/dist/src/cli.js --all",
     "dashboard:dev": "corepack pnpm --filter @opentoolmesh/dashboard dev -- --hostname 127.0.0.1 --port 3000",
-    "demo:preflight": "bash docs/demo/demo-prereflight.sh",
-    "demo:health": "bash docs/demo/demo-health-check.sh",
+    "demo:preflight": "bash scripts/demo-preflight.sh",
+    "demo:health": "bash scripts/demo-health-check.sh",
     "demo:publish": "node --experimental-strip-types scripts/publish-tool.ts",
     "demo:seed": "node --experimental-strip-types scripts/seed-capability-index.ts",
     "demo:run": "node --experimental-strip-types scripts/demo-run.ts",
@@ -27,7 +27,8 @@
     "provider:smoke": "node --experimental-strip-types scripts/provider-live-smoke.ts",
     "provider:acceptance": "node --experimental-strip-types scripts/provider-acceptance-audit.ts",
     "demo:tool-node": "corepack pnpm --filter @opentoolmesh/tool-node build && node services/tool-node/dist/services/tool-node/src/server.js",
-    "demo:audit-agent": "corepack pnpm --filter @opentoolmesh/audit-agent build && node examples/audit-agent/dist/examples/audit-agent/src/run-audit.js"
+    "demo:audit-agent": "corepack pnpm --filter @opentoolmesh/audit-agent build && node examples/audit-agent/dist/examples/audit-agent/src/run-audit.js",
+    "demo:hermes-agent": "bash scripts/hermes-agent-demo.sh"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",

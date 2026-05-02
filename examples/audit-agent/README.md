@@ -87,5 +87,5 @@ Do not use this example as:
 Recommended reading order:
 
 1. [Root README](../../README.md)
-2. [Demo Runbook](../../docs/demo/opentool-mesh-demo-runbook.md)
+2. [Glossary and Command Quick Reference](../../docs/reference/glossary-and-command-quick-reference.md)
 3. `src/run-audit.ts`
